@@ -32,6 +32,21 @@ export default function Navbar() {
                                 Cadastrar Usuários
                             </NavLink>
                         </li>
+                        <li className="nav-item">
+                            <NavLink className="nav-link" to="/userlist">
+                                L. Usuários
+                            </NavLink>
+                        </li>
+                        <li className="nav-item">
+                            <NavLink className="nav-link" to="/plantlist">
+                                L. Plantas
+                            </NavLink>
+                        </li>
+                        <li className="nav-item">
+                            <NavLink className="nav-link" to="/createplant">
+                                C. Plantas
+                            </NavLink>
+                        </li>
                     </ul>
                 </div>
             </nav>

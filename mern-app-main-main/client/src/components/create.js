@@ -115,7 +115,7 @@ export default function Create() {
                 <div className="form-group">
                     <input
                         type="submit"
-                        value="Enviar dados"
+                       value="Enviar dados"
                         className="btn btn-primary"
                     />
                 </div>
