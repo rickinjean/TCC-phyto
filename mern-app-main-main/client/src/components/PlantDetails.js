@@ -179,7 +179,7 @@ export default function PlantDetails() {
               {/* Cuidados básicos */}
               <h6 className="fw-bold mt-2">Cuidados Gerais</h6>
               <p><strong>Plantio:</strong> {plant.planting}</p>
-              <p><strong>Exposição Solar:</strong> {plant.luminosity}</p>
+              <p><strong>Exposição Solar:</strong> {plant.exhibition}</p>
               <p><strong>Manutenção:</strong> {plant.maintenance}</p>
               <hr />
 
@@ -191,7 +191,7 @@ export default function PlantDetails() {
 
               {/* Exposição Solar */}
               <h6 className="fw-bold">Exposição Solar</h6>
-              <p><strong>Sol diário:</strong> {plant.luminosity}</p>
+              <p><strong>Sol diário:</strong> {plant.iluminosity}</p>
               <p><strong>Proteção:</strong> {plant.protection}</p>
               <hr />
 
