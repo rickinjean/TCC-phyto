@@ -1,6 +1,7 @@
 const express = require("express")
 const app = express()
 const cors = require("cors")
+const path = require('path');
 
 const port = 5050
 
@@ -11,9 +12,18 @@ app.use(require("./routes/plant")) // cria as rotas para manipulação de planta
 
 const dbo = require("./db/conn")
 
-app.get("/", function(req, res) {
-    res.redirect("/../client/src/components/Plantlist.js")
-})
+// 1. Libera o acesso aos seus arquivos .js e .css (da pasta client)
+app.use(express.static(path.join(__dirname, 'client')));
+
+// 2. Se acessar a raiz "/", redireciona direto no navegador para "/plantlist"
+app.get('/', (req, res) => {
+    res.redirect('/Plantlist');
+});
+
+// 3. Quando o navegador for para "/plantlist", o servidor entrega o seu index.html
+app.get('/Plantlist', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client', 'index.html'));
+});
 
 dbo.connectToMongoDB(function (error) {
     if (error) throw error
