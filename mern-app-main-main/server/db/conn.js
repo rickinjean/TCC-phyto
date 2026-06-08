@@ -1,9 +1,12 @@
 const { MongoClient } = require("mongodb")
 
 //const Db = 'mongodb+srv://rickzin:phyto@cluster0.6pqsfbl.mongodb.net/?appName=Cluster0'
-const Db = "mongodb://rickzin:phyto@ac-wsibqzi-shard-00-00.6pqsfbl.mongodb.net:27017,ac-wsibqzi-shard-00-01.6pqsfbl.mongodb.net:27017,ac-wsibqzi-shard-00-02.6pqsfbl.mongodb.net:27017/?ssl=true&replicaSet=atlas-a8v6i8-shard-0&authSource=admin&appName=Cluster0"
+const dev_db_url = "mongodb://rickzin:phyto@ac-wsibqzi-shard-00-00.6pqsfbl.mongodb.net:27017,ac-wsibqzi-shard-00-01.6pqsfbl.mongodb.net:27017,ac-wsibqzi-shard-00-02.6pqsfbl.mongodb.net:27017/?ssl=true&replicaSet=atlas-a8v6i8-shard-0&authSource=admin&appName=Cluster0"
 
-const client = new MongoClient(Db, {
+const mongoDB = process.env.MONGODB_URI || dev_db_url;
+
+
+const client = new MongoClient(mongoDB, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
