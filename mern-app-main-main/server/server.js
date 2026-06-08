@@ -12,7 +12,7 @@ app.use(require("./routes/plant")) // cria as rotas para manipulação de planta
 const dbo = require("./db/conn")
 
 app.get("/", function(req, res) {
-    res.send("App is running")
+    res.redirect("/Plantlist")
 })
 
 dbo.connectToMongoDB(function (error) {
