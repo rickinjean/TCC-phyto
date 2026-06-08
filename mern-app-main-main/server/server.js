@@ -11,6 +11,8 @@ app.use(require("./routes/plant")) // cria as rotas para manipulação de planta
 
 const dbo = require("./db/conn")
 
+app.use(express.static(path.join(__dirname, 'client')));
+
 app.get('/', (req, res) => {
     res.redirect('/plant'); 
 });
