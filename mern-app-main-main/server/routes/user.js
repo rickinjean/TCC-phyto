@@ -2,10 +2,8 @@ const express = require("express")
 const userRoutes = express.Router()
 const dbo = require("../db/conn")
 const ObjectId = require("mongodb").ObjectId
-const jwt = require("jsonwebtoken")
+const { authenticateToken, authorizeRoles, signToken } = require("../middleware/auth")
 const bcrypt = require("bcrypt")
-
-const JWT_SECRET = "secret-key"
 
 userRoutes.route('/user/login').post(async function (req, res) {
     const db_connect = dbo.getDb()
@@ -25,7 +23,7 @@ userRoutes.route('/user/login').post(async function (req, res) {
             return res.status(400).json({ mensagem: 'Senha incorreta' });
         }
 
-        const token = jwt.sign({ userId: usuario._id, tipo: usuario.function }, JWT_SECRET, { expiresIn: '1h' });
+        const token = signToken({ userId: usuario._id, tipo: usuario.function })
 
         res.json({ mensagem: 'Login bem-sucedido', token });
     } catch (erro) {
@@ -39,6 +37,7 @@ userRoutes.route('/user/register').post(async function (req, res) {
     const db_connect = dbo.getDb()
 
     const { nome, email, senha, function: tipo } = req.body;
+    const tipoUsuario = tipo || "User"
 
     try {
         const userExistente = await db_connect.collection("users").findOne({ email })
@@ -53,7 +52,7 @@ userRoutes.route('/user/register').post(async function (req, res) {
             name: nome,
             email,
             senha: senhaHash,
-            function: tipo, // Tipo de perfil do usuário (ADM ou User)
+            function: tipoUsuario, // Tipo de perfil do usuário (ADM ou User)
         };
 
         const result = await db_connect.collection("users").insertOne(novoUsuario);
@@ -69,7 +68,7 @@ userRoutes.route('/user/register').post(async function (req, res) {
 
 
 // This section will help you get a list of all the users.
-userRoutes.route("/user").get(async function (req, res) {
+userRoutes.route("/user").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
     // console.log("ROUTE: /user")
 
@@ -82,7 +81,7 @@ userRoutes.route("/user").get(async function (req, res) {
 })
 
 // This section will help you get a single user by id
-userRoutes.route("/user/:id").get(async function (req, res) {
+userRoutes.route("/user/:id").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
     const myquery = { _id: new ObjectId(req.params.id) }
     try {
@@ -94,7 +93,7 @@ userRoutes.route("/user/:id").get(async function (req, res) {
 })
 
 // This section will help you create a new user.
-userRoutes.route("/user/add").post(async function (req, res) {
+userRoutes.route("/user/add").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
     const myobj = {
         name: req.body.name,
@@ -112,7 +111,7 @@ userRoutes.route("/user/add").post(async function (req, res) {
 })
 
 // This section will help you update a user by id.
-userRoutes.route("/update/:id").post(async function (req, res) {
+userRoutes.route("/update/:id").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
     const myquery = { _id: new ObjectId(req.params.id) }
     const newvalues = {
@@ -133,7 +132,7 @@ userRoutes.route("/update/:id").post(async function (req, res) {
 })
 
 // This section will help you delete a user
-userRoutes.route("/:id").delete(async function (req, res) {
+userRoutes.route("/user/:id").delete(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
     const myquery = { _id: new ObjectId(req.params.id) }
     try {

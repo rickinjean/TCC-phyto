@@ -22,11 +22,17 @@ export default function Create() {
         e.preventDefault()
 
         const newPerson = { ...form }
+        const token = localStorage.getItem('token')
+        const headers = {
+            "Content-Type": "application/json"
+        }
+        if (token) {
+            headers.Authorization = `Bearer ${token}`
+        }
+
         const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/add`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers,
             body: JSON.stringify(newPerson)
         })
 
@@ -80,36 +86,24 @@ export default function Create() {
                             className="form-check-input"
                             type="radio"
                             name="positionOptions"
-                            id="positionEstudante"
-                            value="Estudante"
-                            checked={form.function === "Estudante"}
+                            id="positionUsuario"
+                            value="Usuario"
+                            checked={form.function === "Usuario"}
                             onChange={(e) => updateForm({ function: e.target.value })}
                         />
-                        <label htmlFor="positionEstudante" className="form-check-label">Estudante</label>
+                        <label htmlFor="positionUsuario" className="form-check-label">Usuário</label>
                     </div>
                     <div className="form-check form-check-inline">
                         <input
                             className="form-check-input"
                             type="radio"
                             name="positionOptions"
-                            id="positionDocente"
-                            value="Docente"
-                            checked={form.function === "Docente"}
+                            id="positionADM"
+                            value="ADM"
+                            checked={form.function === "ADM"}
                             onChange={(e) => updateForm({ function: e.target.value })}
                         />
-                        <label htmlFor="positionDocente" className="form-check-label">Docente</label>
-                    </div>
-                    <div className="form-check form-check-inline">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            name="positionOptions"
-                            id="positionTae"
-                            value="Tae"
-                            checked={form.function === "Tae"}
-                            onChange={(e) => updateForm({ function: e.target.value })}
-                        />
-                        <label htmlFor="positionTae" className="form-check-label">Técnico Administrativo</label>
+                        <label htmlFor="positionADM" className="form-check-label">ADM</label>
                     </div>
                 </div>
                 <div className="form-group">

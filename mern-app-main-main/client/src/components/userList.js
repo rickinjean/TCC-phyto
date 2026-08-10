@@ -30,7 +30,9 @@ export default function UserList() {
 
     useEffect(() => {
         async function getUsers() {
-            const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/`)
+            const token = localStorage.getItem('token')
+            const headers = token ? { Authorization: `Bearer ${token}` } : {}
+            const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/`, { headers })
 
             if (!response.ok) {
                 const message = `Um erro ocorreu: ${response.statusText}`
@@ -53,8 +55,11 @@ export default function UserList() {
             return
         }
 
-        await fetch(`${REACT_APP_YOUR_HOSTNAME}/${id}`, {
-            method: "DELETE"
+        const token = localStorage.getItem('token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+        await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/${id}`, {
+            method: "DELETE",
+            headers
         })
 
         const newUsers = users.filter((record) => record._id !== id)

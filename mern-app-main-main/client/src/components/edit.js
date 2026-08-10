@@ -16,7 +16,9 @@ export default function Edit() {
     useEffect(() => {
         async function fetchData() {
             const id = params.id
-            const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/${id}`)
+            const token = localStorage.getItem('token')
+            const headers = token ? { Authorization: `Bearer ${token}` } : {}
+            const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/${id}`, { headers })
             if (!response.ok) {
                 const message = `An error occurred: ${response.statusText}`
                 window.alert(message)
@@ -48,11 +50,14 @@ export default function Edit() {
         e.preventDefault()
 
         const editedPerson = { ...form }
+        const token = localStorage.getItem('token')
+        const headers = {
+            "Content-Type": "application/json"
+        }
+        if (token) headers.Authorization = `Bearer ${token}`
         const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/update/${params.id}`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers,
             body: JSON.stringify(editedPerson)
         })
 
@@ -105,12 +110,12 @@ export default function Edit() {
                             className="form-check-input"
                             type="radio"
                             name="positionOptions"
-                            id="positionEstudante"
-                            value="Estudante"
-                            checked={form.function === "Estudante"}
+                            id="positionUsuario"
+                            value="Usuario"
+                            checked={form.function === "Usuario"}
                             onChange={(e) => updateForm({ function: e.target.value })}
                         />
-                        <label htmlFor="positionEstudante" className="form-check-label">Estudante</label>
+                        <label htmlFor="positionUsuario" className="form-check-label">Usuário</label>
                     </div>
                     <div className="form-check form-check-inline">
                         <input
@@ -118,23 +123,11 @@ export default function Edit() {
                             type="radio"
                             name="positionOptions"
                             id="positionDocente"
-                            value="Docente"
-                            checked={form.function === "Docente"}
+                            value="ADM"
+                            checked={form.function === "ADM"}
                             onChange={(e) => updateForm({ function: e.target.value })}
                         />
-                        <label htmlFor="positionDocente" className="form-check-label">Docente</label>
-                    </div>
-                    <div className="form-check form-check-inline">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            name="positionOptions"
-                            id="positionTae"
-                            value="Tae"
-                            checked={form.function === "Tae"}
-                            onChange={(e) => updateForm({ function: e.target.value })}
-                        />
-                        <label htmlFor="positionTae" className="form-check-label">Técnico Administrativo</label>
+                        <label htmlFor="positionADM" className="form-check-label">ADM</label>
                     </div>
                 </div>
                 <div className="form-group">

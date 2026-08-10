@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
 
 const REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'; // IP do Servidor
 
@@ -6,94 +9,223 @@ export default function Register() {
     const [nome, setNome] = useState('');
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
+    const [confirmarSenha, setConfirmarSenha] = useState('');
+    const [showSenha, setShowSenha] = useState(false);
+    const [showConfirmar, setShowConfirmar] = useState(false);
     const [mensagem, setMensagem] = useState('');
+    const [sucesso, setSucesso] = useState(false);
+    const navigate = useNavigate();
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setMensagem('');
+        setSucesso(false);
 
-        console.log(`${REACT_APP_YOUR_HOSTNAME}/user/register`);
+        if (senha !== confirmarSenha) {
+            setMensagem('As senhas não coincidem.');
+            return;
+        }
+
         try {
             const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/register`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ nome, email, senha })
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, email, senha, function: 'Usuario' }),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                return setMensagem(data.message || 'Erro ao registrar');
+                return setMensagem(data.mensagem || 'Erro ao registrar');
             }
 
+            setSucesso(true);
             setMensagem('Usuário registrado com sucesso!');
             setNome('');
             setEmail('');
             setSenha('');
+            setConfirmarSenha('');
         } catch (error) {
             setMensagem('Erro ao conectar com o servidor');
         }
     };
 
     return (
-        <div className="container w-50">
-            <form id="login-form" className="form" onSubmit={handleRegister}>
-                <h3 className="text-center">Registro</h3>
+        <div className="min-vh-100 d-flex">
 
-                {mensagem && <p className="text-danger">{mensagem}</p>}
-
-                <div className="form-group">
-                    <label htmlFor="nome">Nome:</label>
-                    <input
-                        type="text"
-                        name="nome"
-                        id="nome"
-                        className="form-control"
-                        value={nome}
-                        onChange={(e) => setNome(e.target.value)}
-                        required
-                    />
+            {/* Painel esquerdo — hero */}
+            <div className="d-none d-md-flex flex-column justify-content-between col-md-5 p-5">
+                {/* Logo */}
+                <div className="d-flex align-items-center gap-2">
+                    <i className="fas fa-leaf"></i>
+                    <span className="fw-semibold fs-5">Phytografia</span>
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="email">Email:</label>
-                    <input
-                        type="email"
-                        name="email"
-                        id="email"
-                        className="form-control"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
+                {/* Texto hero */}
+                <div>
+                    <h1 className="display-5 fw-normal">
+                        Junte-se à comunidade botânica
+                    </h1>
+                    <p className="mt-2">Explore, pesquise e descubra o mundo das plantas</p>
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="senha">Senha:</label>
-                    <input
-                        type="password"
-                        name="senha"
-                        id="senha"
-                        className="form-control"
-                        value={senha}
-                        onChange={(e) => setSenha(e.target.value)}
-                        required
-                    />
-                </div>
+                {/* Rodapé do painel */}
+                <p className="small">&copy; 2024 Phytografia</p>
+            </div>
 
-                <div className="form-group d-flex justify-content-between mt-4">
-                    <input
-                        type="submit"
-                        name="submit"
-                        className="btn btn-primary btn-md"
-                        value="Registrar"
-                    />
-                    <a href="/login" className="btn btn-secondary btn-md ml-3">Voltar para login</a>
+            {/* Painel direito — formulário */}
+            <div className="col-12 col-md-7 d-flex align-items-center justify-content-center p-4">
+                <div className="w-100" style={{ maxWidth: 400 }}>
+
+                    {/* Logo mobile */}
+                    <div className="d-flex d-md-none align-items-center gap-2 mb-4">
+                        <i className="fas fa-leaf"></i>
+                        <span className="fw-semibold">Phytografia</span>
+                    </div>
+
+                    <h2 className="fw-normal mb-1">Criar conta</h2>
+                    <p className="mb-4 small">Preencha os dados para se cadastrar</p>
+
+                    {mensagem && (
+                        <div className={`alert py-2 small ${sucesso ? 'alert-success' : 'alert-danger'}`} role="alert">
+                            {mensagem}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleRegister}>
+
+                        {/* Campo nome */}
+                        <div className="mb-3">
+                            <label htmlFor="nome" className="form-label small fw-medium">Nome completo</label>
+                            <div className="input-group">
+                                <span className="input-group-text">
+                                    <i className="fas fa-user"></i>
+                                </span>
+                                <input
+                                    type="text"
+                                    id="nome"
+                                    className="form-control"
+                                    placeholder="Seu nome"
+                                    value={nome}
+                                    onChange={(e) => setNome(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {/* Campo email */}
+                        <div className="mb-3">
+                            <label htmlFor="email" className="form-label small fw-medium">E-mail</label>
+                            <div className="input-group">
+                                <span className="input-group-text">
+                                    <i className="fas fa-envelope"></i>
+                                </span>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    className="form-control"
+                                    placeholder="seu@email.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {/* Campo senha */}
+                        <div className="mb-3">
+                            <label htmlFor="senha" className="form-label small fw-medium">Senha</label>
+                            <div className="input-group">
+                                <span className="input-group-text">
+                                    <i className="fas fa-lock"></i>
+                                </span>
+                                <input
+                                    type={showSenha ? 'text' : 'password'}
+                                    id="senha"
+                                    className="form-control"
+                                    placeholder="••••••••"
+                                    value={senha}
+                                    onChange={(e) => setSenha(e.target.value)}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    className="input-group-text"
+                                    onClick={() => setShowSenha(!showSenha)}
+                                    aria-label={showSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                                >
+                                    <i className={showSenha ? 'fas fa-eye-slash' : 'fas fa-eye'}></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Campo confirmar senha */}
+                        <div className="mb-4">
+                            <label htmlFor="confirmarSenha" className="form-label small fw-medium">Confirmar senha</label>
+                            <div className="input-group">
+                                <span className="input-group-text">
+                                    <i className="fas fa-lock"></i>
+                                </span>
+                                <input
+                                    type={showConfirmar ? 'text' : 'password'}
+                                    id="confirmarSenha"
+                                    className="form-control"
+                                    placeholder="••••••••"
+                                    value={confirmarSenha}
+                                    onChange={(e) => setConfirmarSenha(e.target.value)}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    className="input-group-text"
+                                    onClick={() => setShowConfirmar(!showConfirmar)}
+                                    aria-label={showConfirmar ? 'Ocultar senha' : 'Mostrar senha'}
+                                >
+                                    <i className={showConfirmar ? 'fas fa-eye-slash' : 'fas fa-eye'}></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Botão registrar */}
+                        <button type="submit" className="btn btn-primary w-100 py-2">
+                            Criar conta
+                        </button>
+
+                    </form>
+
+                    {/* Divisor */}
+                    <div className="d-flex align-items-center gap-2 my-3">
+                        <hr className="flex-grow-1 m-0" />
+                        <span className="small">ou registre-se com</span>
+                        <hr className="flex-grow-1 m-0" />
+                    </div>
+
+                    {/* Social login */}
+                    <div className="d-flex gap-2">
+    <button className="btn btn-outline-secondary w-50 d-flex align-items-center justify-content-center gap-2">
+        <FontAwesomeIcon icon={faGoogle} />
+        <span className="small">Google</span>
+    </button>
+
+    <button className="btn btn-outline-secondary w-50 d-flex align-items-center justify-content-center gap-2">
+        <FontAwesomeIcon icon={faGithub} />
+        <span className="small">GitHub</span>
+    </button>
+</div>
+
+                    {/* Link login */}
+                    <p className="text-center small mt-4">
+                        Já tem conta?{' '}
+                        <button
+                            className="btn btn-link p-0 small text-decoration-none"
+                            onClick={() => navigate('/login')}
+                        >
+                            Entrar
+                        </button>
+                    </p>
+
                 </div>
-            </form>
+            </div>
         </div>
     );
-
 }
