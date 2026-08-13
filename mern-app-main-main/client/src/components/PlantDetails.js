@@ -89,255 +89,252 @@ useEffect(() => {
 
 
 
-  if (!plant) return <p className="text-center mt-5">Carregando...</p>;
+  if (!plant) return <div style={{ background: "#3d3d3d", minHeight: "100vh", color: "#f0f0f0" }} className="d-flex align-items-center justify-content-center"><p>Carregando...</p></div>;
 
   return (
-    <div className="container mt-4 mb-5">
-      {/* BOTÃO VOLTAR */}
-      <button
-        className="btn btn-outline-secondary mb-3"
-        onClick={() => navigate(-1)}
-      >
-        ← Voltar
-      </button>
-
-      {/* HEADER */}
-      <div className="mb-4">
-        <h1 className="fw-bold">{plant.name}</h1>
-        <h5 className="text-muted fst-italic">
-          {plant.scientificName}
-        </h5>
+    <div style={{ background: "#3d3d3d", minHeight: "100vh", color: "#f0f0f0" }}>
+      {/* HEADER COM BOTÃO VOLTAR */}
+      <div style={{ background: "#444444", paddingTop: "2rem", paddingBottom: "2rem" }}>
+        <div className="container">
+          <button
+            className="btn btn-outline-light mb-3 btn-sm"
+            onClick={() => navigate(-1)}
+            style={{ borderColor: "#7db3dd", color: "#7db3dd" }}
+          >
+            ← Voltar
+          </button>
+          <h1 className="fw-bold" style={{ color: "#f0f0f0", marginBottom: "0.5rem" }}>{plant.name}</h1>
+          <h5 style={{ color: "#b0b0b0", fontStyle: "italic" }}>{plant.scientificName}</h5>
+        </div>
       </div>
 
-      {plant.imagesPath?.length > 0 ? (
-        <div id="plantImagesCarousel" className="carousel slide mb-4" data-bs-ride="carousel">
-          <div className="carousel-indicators">
-            {plant.imagesPath.map((_, index) => (
-              <button
-                type="button"
-                key={index}
-                data-bs-target="#plantImagesCarousel"
-                data-bs-slide-to={index}
-                className={index === 0 ? "active" : ""}
-                aria-current={index === 0 ? "true" : undefined}
-                aria-label={`Imagem ${index + 1}`}
-              />
-            ))}
-          </div>
-
-          <div className="carousel-inner rounded-4 overflow-hidden" style={{ maxHeight: "420px" }}>
-            {plant.imagesPath.map((src, index) => (
-              <div className={`carousel-item ${index === 0 ? "active" : ""}`} key={index}>
-                <img
-                  src={`${REACT_APP_YOUR_HOSTNAME}${src}`}
-                  alt={`${plant.name} ${index + 1}`}
-                  className="d-block w-100"
-                  style={{ maxHeight: "420px", objectFit: "cover" }}
+      {/* CAROUSEL DE IMAGENS */}
+      <div className="container" style={{ marginTop: "2rem", marginBottom: "2rem" }}>
+        {plant.imagesPath?.length > 0 ? (
+          <div id="plantImagesCarousel" className="carousel slide mb-4" data-bs-ride="carousel">
+            <div className="carousel-indicators">
+              {plant.imagesPath.map((_, index) => (
+                <button
+                  type="button"
+                  key={index}
+                  data-bs-target="#plantImagesCarousel"
+                  data-bs-slide-to={index}
+                  className={index === 0 ? "active" : ""}
+                  aria-current={index === 0 ? "true" : undefined}
+                  aria-label={`Imagem ${index + 1}`}
+                  style={{ backgroundColor: "#7db3dd" }}
                 />
-              </div>
-            ))}
+              ))}
+            </div>
+
+            <div className="carousel-inner rounded-4 overflow-hidden" style={{ maxHeight: "500px" }}>
+              {plant.imagesPath.map((src, index) => (
+                <div className={`carousel-item ${index === 0 ? "active" : ""}`} key={index}>
+                  <img
+                    src={`${REACT_APP_YOUR_HOSTNAME}${src}`}
+                    alt={`${plant.name} ${index + 1}`}
+                    className="d-block w-100"
+                    style={{ maxHeight: "500px", objectFit: "cover" }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {plant.imagesPath.length > 1 && (
+              <>
+                <button
+                  className="carousel-control-prev"
+                  type="button"
+                  data-bs-target="#plantImagesCarousel"
+                  data-bs-slide="prev"
+                >
+                  <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+                </button>
+                <button
+                  className="carousel-control-next"
+                  type="button"
+                  data-bs-target="#plantImagesCarousel"
+                  data-bs-slide="next"
+                >
+                  <span className="carousel-control-next-icon" aria-hidden="true"></span>
+                </button>
+              </>
+            )}
           </div>
+        ) : plant.imagePath ? (
+          <div className="mb-4">
+            <img
+              src={`${REACT_APP_YOUR_HOSTNAME}${plant.imagePath}`}
+              alt={plant.name}
+              style={{ width: "100%", maxHeight: "500px", objectFit: "cover", borderRadius: "12px" }}
+            />
+          </div>
+        ) : null}
 
-          {plant.imagesPath.length > 1 && (
-            <>
-              <button
-                className="carousel-control-prev"
-                type="button"
-                data-bs-target="#plantImagesCarousel"
-                data-bs-slide="prev"
-              >
-                <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span className="visually-hidden">Anterior</span>
-              </button>
-              <button
-                className="carousel-control-next"
-                type="button"
-                data-bs-target="#plantImagesCarousel"
-                data-bs-slide="next"
-              >
-                <span className="carousel-control-next-icon" aria-hidden="true"></span>
-                <span className="visually-hidden">Próximo</span>
-              </button>
-            </>
-          )}
-        </div>
-      ) : plant.imagePath ? (
-        <div className="mb-4">
-          <img
-            src={`${REACT_APP_YOUR_HOSTNAME}${plant.imagePath}`}
-            alt={plant.name}
-            style={{ width: "100%", maxHeight: "420px", objectFit: "cover", borderRadius: "12px" }}
-          />
-        </div>
-      ) : null}
-
-      {/* DESCRIÇÃO */}
-      <div className="card mb-4 shadow-sm">
-        <div className="card-body">
-          <h4 className="text-success">Descrição</h4>
-          <p>{plant.description}</p>
+        {/* DESCRIÇÃO */}
+        <div style={{ background: "#4a4a4a", padding: "2rem", borderRadius: "12px", marginBottom: "2rem", borderLeft: "4px solid #7db3dd" }}>
+          <h4 style={{ color: "#7db3dd", marginBottom: "1rem" }}>Descrição</h4>
+          <p style={{ color: "#d0d0d0", lineHeight: "1.6" }}>{plant.description}</p>
         </div>
       </div>
 
       {/* GRID DE INFORMAÇÕES */}
-      <div className="row">
+      <div className="container" style={{ marginBottom: "2rem" }}>
+        <div className="row g-4">
 
-        {/* INFORMAÇÕES GERAIS */}
-        <div className="col-md-6 mb-4">
-          <div className="card h-100 shadow-sm">
-            <div className="card-body">
-              <h5 className="text-success">Informações Botânicas</h5>
-              <div className="row">
-                <div className="col-md-6">
-                  <p><strong>Fruto:</strong> {plant.fruitData?.name || plant.fruit || "—"}</p>
-                  <p><strong>Origem:</strong> {plant.originData?.name || plant.origin || "—"}</p>
-                  <p><strong>Tipo:</strong> {plant.typeData?.name || plant.type || "—"}</p>
-                </div>
-                <div className="col-md-6">
-                  <p><strong>Propagação:</strong> {plant.propagationData?.name || plant.propagation || "—"}</p>
-                  <p><strong>Toxicidade:</strong> {plant.toxicityData?.name || plant.toxicity || "—"}</p>
-                  <p><strong>Dificuldade:</strong> {plant.dificultyData?.name || plant.dificulty || "—"}</p>
-                </div>
+        {/* INFORMAÇÕES BOTÂNICAS */}
+        <div className="col-lg-6 mb-4">
+          <div style={{ background: "#4a4a4a", padding: "2rem", borderRadius: "12px", height: "100%", borderLeft: "4px solid #7db3dd" }}>
+            <h5 style={{ color: "#7db3dd", marginBottom: "1.5rem" }}>Informações Botânicas</h5>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Fruto</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.fruitData?.name || plant.fruit || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Origem</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.originData?.name || plant.origin || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Tipo</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.typeData?.name || plant.type || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Propagação</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.propagationData?.name || plant.propagation || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Toxicidade</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.toxicityData?.name || plant.toxicity || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Dificuldade</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.dificultyData?.name || plant.dificulty || "—"}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* CARACTERÍSTICAS */}
-        <div className="col-md-6 mb-4">
-          <div className="card h-100 shadow-sm">
-            <div className="card-body">
-              <h5 className="text-success">Características Físicas</h5>
-              <div className="row">
-                <div className="col-md-6">
-                  <p><strong>Altura:</strong> {plant.heightData?.name || plant.height || "—"}</p>
-                  <p><strong>Cor da Flor:</strong> {plant.flowercolorData?.name || plant.flowercolor || "—"}</p>
-                </div>
-                <div className="col-md-6">
-                  <p><strong>Folhagem:</strong> {plant.foliageData?.name || plant.foliage || "—"}</p>
-                  <p><strong>Floração:</strong> {plant.floweringData?.name || plant.flowering || "—" }</p>
-                </div>
+        {/* CARACTERÍSTICAS FÍSICAS */}
+        <div className="col-lg-6 mb-4">
+          <div style={{ background: "#4a4a4a", padding: "2rem", borderRadius: "12px", height: "100%", borderLeft: "4px solid #7db3dd" }}>
+            <h5 style={{ color: "#7db3dd", marginBottom: "1.5rem" }}>Características Físicas</h5>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Altura</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.heightData?.name || plant.height || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Cor da Flor</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.flowercolorData?.name || plant.flowercolor || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Folhagem</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.foliageData?.name || plant.foliage || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Floração</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.floweringData?.name || plant.flowering || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Tamanho</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.sizeData?.name || plant.size || "—"}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* NECESSIDADES */}
-        <div className="col-md-6 mb-4">
-          <div className="card h-100 shadow-sm">
-            <div className="card-body">
-              <h5 className="text-success">Necessidades Ambientais</h5>
-              <div className="row">
-                <div className="col-md-6">
-                  <p><strong>Luz:</strong> {plant.lightData?.name || plant.light || "—"}</p>
-                  <p><strong>Água:</strong> {plant.waterData?.name || plant.water || "—"}</p>
-                </div>
-                <div className="col-md-6">
-                  <p><strong>Solo:</strong> {plant.soilData?.name || plant.soil || "—"}</p>
-                  <p><strong>Tamanho:</strong> {plant.sizeData?.name || plant.size || "—"}</p>
-                </div>
+        {/* NECESSIDADES AMBIENTAIS */}
+        <div className="col-lg-6 mb-4">
+          <div style={{ background: "#4a4a4a", padding: "2rem", borderRadius: "12px", height: "100%", borderLeft: "4px solid #7db3dd" }}>
+            <h5 style={{ color: "#7db3dd", marginBottom: "1.5rem" }}>Necessidades Ambientais</h5>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Luz</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.lightData?.name || plant.light || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Água</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.waterData?.name || plant.water || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Solo</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.soilData?.name || plant.soil || "—"}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Classificação Taxonômica */}
-        <div className="col-md-6 mb-4">
-          <div className="card h-100 shadow-sm">
-            <div className="card-body">
-              <h5 className="text-success">Classificação Taxonômica</h5>
-              <div className="row">
-                <div className="col-md-6">
-                  <p><strong>Filo:</strong> {plant.FiloData?.name || plant.Filo || "—"}</p>
-                  <p><strong>Classe:</strong> {plant.ClasseData?.name || plant.Classe || "—"}</p>
-                  <p><strong>Ordem:</strong> {plant.OrdemData?.name || plant.Ordem || "—"}</p>
-                </div>
-                <div className="col-md-6">
-                  <p><strong>Família:</strong> {plant.FamilyData?.name || plant.Family || "—"}</p>
-                  <p><strong>Gênero:</strong> {plant.GeneroData?.name || plant.Genero || "—"}</p>
-                  <p><strong>Especie:</strong> {plant.EspecieData?.name || plant.Especie || "—"}</p>
-                </div>
+        {/* CLASSIFICAÇÃO TAXONÔMICA */}
+        <div className="col-lg-6 mb-4">
+          <div style={{ background: "#4a4a4a", padding: "2rem", borderRadius: "12px", height: "100%", borderLeft: "4px solid #7db3dd" }}>
+            <h5 style={{ color: "#7db3dd", marginBottom: "1.5rem" }}>Classificação Taxonômica</h5>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Filo</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.FiloData?.name || plant.Filo || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Classe</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.ClasseData?.name || plant.Classe || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Ordem</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.OrdemData?.name || plant.Ordem || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Família</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.FamilyData?.name || plant.Family || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Gênero</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.GeneroData?.name || plant.Genero || "—"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Espécie</p>
+                <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.EspecieData?.name || plant.Especie || "—"}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* CUIDADOS da Planta */}
-        <div className="col-md-6 mb-4">
-          <div className="card h-100 shadow-sm">
-            <div className="card-body">
-              <h5 className="text-success mb-3">Cuidados da Planta</h5>
-
-              {/* Cuidados básicos */}
-              <h6 className="fw-bold mt-2">Cuidados Gerais</h6>
-              <p><strong>Rega:</strong> {plant.wateringData?.name || plant.watering || "—"}</p>
-              <p><strong>Fertilização:</strong> {plant.fertilizingData?.name || plant.fertilizing || "—"}</p>
-              <p><strong>Poda:</strong> {plant.pruningData?.name || plant.pruning || "—"}</p>
-              <p><strong>Pragas:</strong> {plant.pestsData?.name || plant.pests || "—"}</p>
-              <hr />
-
-              {/* Dicas de rega */}
-              <h6 className="fw-bold">Dicas de Rega</h6>
-              <p><strong>Melhor horário:</strong> {plant.manhaData?.name || plant.manha || "—"}</p>
-              <p><strong>Quantidade:</strong> {plant.amountData?.name || plant.amount || "—"}</p>
-              <hr />
-
-              {/* Dicas de fertilização */}
-              <h6 className="fw-bold">Fertilização</h6>
-              <p><strong>Frequência:</strong> {plant.frequencyData?.name || plant.frequency || "—"}</p>
-              <p><strong>NPK:</strong> {plant.NPKData?.name || plant.NPK || "—"}</p>
-              <hr />
-
-              {/* Poda */}
-              <h6 className="fw-bold">Poda</h6>
-              <p><strong>Época:</strong> {plant.seasonData?.name || plant.season || "—"}</p>
-              <p><strong>Ferramentas:</strong> {plant.toolsData?.name || plant.tools || "—"}</p>
-              <hr />
-
-              {/* Pragas */}
-              <h6 className="fw-bold">Controle de Pragas</h6>
-              <p><strong>Prevenção:</strong> {plant.preventionData?.name || plant.prevention || "—"}</p>
-              <p><strong>Monitoramento:</strong> {plant.monitoringData?.name || plant.monitoring || "—"}</p>
-
+        {/* CUIDADOS */}
+        <div className="col-lg-6 mb-4">
+          <div style={{ background: "#4a4a4a", padding: "2rem", borderRadius: "12px", height: "100%", borderLeft: "4px solid #7db3dd" }}>
+            <h5 style={{ color: "#7db3dd", marginBottom: "1.5rem" }}>Cuidados da Planta</h5>
+            
+            <div style={{ marginBottom: "1rem" }}>
+              <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Rega</p>
+              <p style={{ color: "#f0f0f0", fontWeight: 600, marginBottom: "1rem" }}>{plant.wateringData?.name || plant.watering || "—"}</p>
+              
+              <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Fertilização</p>
+              <p style={{ color: "#f0f0f0", fontWeight: 600, marginBottom: "1rem" }}>{plant.fertilizingData?.name || plant.fertilizing || "—"}</p>
+              
+              <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Poda</p>
+              <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.pruningData?.name || plant.pruning || "—"}</p>
             </div>
           </div>
         </div>
 
-        {/* Cultivo da Planta */}
-        <div className="col-md-6 mb-4">
-          <div className="card h-100 shadow-sm">
-            <div className="card-body">
-              <h5 className="text-success mb-3">Cultivo da Planta</h5>
-
-              {/* Cuidados básicos */}
-              <h6 className="fw-bold mt-2">Cuidados Gerais</h6>
-              <p><strong>Plantio:</strong> {plant.plantingData?.name || plant.planting || "—"}</p>
-              <p><strong>Exposição Solar:</strong> {plant.exhibitionData?.name || plant.exhibition || "—"}</p>
-              <p><strong>Manutenção:</strong> {plant.maintenanceData?.name || plant.maintenance || "—"}</p>
-              <hr />
-
-              {/* Plantio */}
-              <h6 className="fw-bold">Plantio</h6>
-              <p><strong>Estação:</strong> {plant.stationData?.name || plant.station || "—"}</p>
-              <p><strong>Espaçamento entre mudas:</strong> {plant.spacingData?.name || plant.spacing || "—"}</p>
-              <hr />
-
-              {/* Exposição Solar */}
-              <h6 className="fw-bold">Exposição Solar</h6>
-              <p><strong>Sol diário:</strong> {plant.iluminosityData?.name || plant.iluminosity || "—"}</p>
-              <p><strong>Proteção:</strong> {plant.protectionData?.name || plant.protection || "—"}</p>
-              <hr />
-
-              {/* Manutenção */}
-              <h6 className="fw-bold">Manutenção</h6>
-              <p><strong>Temperatura ideal:</strong> {plant.idealTemperatureData?.name || plant.idealTemperature || "—"}</p>
-              <p><strong>Tolerância:</strong> {plant.toleranceData?.name || plant.tolerance || "—"}</p>
-              <hr />
-
+        {/* CULTIVO */}
+        <div className="col-lg-6 mb-4">
+          <div style={{ background: "#4a4a4a", padding: "2rem", borderRadius: "12px", height: "100%", borderLeft: "4px solid #7db3dd" }}>
+            <h5 style={{ color: "#7db3dd", marginBottom: "1.5rem" }}>Cultivo da Planta</h5>
+            
+            <div style={{ marginBottom: "1rem" }}>
+              <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Plantio</p>
+              <p style={{ color: "#f0f0f0", fontWeight: 600, marginBottom: "1rem" }}>{plant.plantingData?.name || plant.planting || "—"}</p>
+              
+              <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Estação</p>
+              <p style={{ color: "#f0f0f0", fontWeight: 600, marginBottom: "1rem" }}>{plant.stationData?.name || plant.station || "—"}</p>
+              
+              <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginBottom: "0.3rem" }}>Temperatura Ideal</p>
+              <p style={{ color: "#f0f0f0", fontWeight: 600 }}>{plant.idealTemperatureData?.name || plant.idealTemperature || "—"}</p>
             </div>
           </div>
         </div>
 
+        </div>
       </div>
     </div>
   );

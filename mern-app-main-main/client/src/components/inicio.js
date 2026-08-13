@@ -5,16 +5,26 @@ const REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'; // IP do Servidor
 
 // Card de uma planta na seção "Em Destaque"
 const PlantCard = (props) => {
+    const images = props.plant.imagesPath?.length > 0 ? props.plant.imagesPath : props.plant.imagePath ? [props.plant.imagePath] : []
+    const imageUrl = images.length > 0 ? `${REACT_APP_YOUR_HOSTNAME}${images[0]}` : "https://via.placeholder.com/400x250/4a4a4a/7db3dd?text=🌿"
+
     return (
         <div className="col-sm-6 col-md-3">
-            <div className="card h-100 shadow-sm">
+            <div className="card h-100 shadow-sm" style={{ background: "#4a4a4a", borderColor: "#555555", color: "#f0f0f0", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <div style={{ width: "100%", height: "200px", overflow: "hidden", background: "#555555" }}>
+                    <img
+                        src={imageUrl}
+                        alt={props.plant.name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                </div>
                 <div className="card-body d-flex flex-column">
                     <h5 className="card-title">{props.plant.name}</h5>
-                    <p className="card-subtitle text-muted fst-italic mb-3">
+                    <p className="card-subtitle fst-italic mb-3" style={{ color: "#b0b0b0", fontSize: "0.9rem" }}>
                         {props.plant.scientificName}
                     </p>
                     <Link
-                        className="btn btn-outline-success mt-auto"
+                        className="mt-auto btn btn-primary rounded-pill btn-sm"
                         to={`/plantdetails/${props.plant._id}`}
                     >
                         Ver Detalhes
@@ -30,7 +40,7 @@ const TabButton = (props) => {
     return (
         <button
             type="button"
-            className={`btn rounded-pill ${props.active ? "btn-success" : "btn-outline-success"}`}
+            className={`btn rounded-pill ${props.active ? 'btn-primary' : 'btn-outline-secondary'}`}
             onClick={props.onClick}
         >
             {props.label}
@@ -42,12 +52,9 @@ const TabButton = (props) => {
 const StatBox = (props) => {
     return (
         <div className="col-6 col-md-3">
-            <div className="bg-white bg-opacity-10 border border-light border-opacity-25 rounded-4 text-center py-4 h-100">
-                <div className="fs-1 fw-bold">{props.value}</div>
-                <div
-                    className="text-white-50 text-uppercase small mt-1"
-                    style={{ letterSpacing: 1 }}
-                >
+            <div className="card text-center py-5 h-100" style={{ background: "#3d3d3d", borderColor: "#4a4a4a", color: "#f0f0f0", minHeight: "200px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                <div className="fs-1 fw-bold" style={{ color: "#7db3dd" }}>{props.value}</div>
+                <div className="text-uppercase small mt-3" style={{ color: "#a0a0a0" }}>
                     {props.label}
                 </div>
             </div>
@@ -94,7 +101,26 @@ export default function Home() {
     const [users, setUsers] = useState([])
     const [searchTerm, setSearchTerm] = useState("")
     const [activeTab, setActiveTab] = useState("dia")
+    const [searchesToday, setSearchesToday] = useState(0)
     const navigate = useNavigate()
+
+    // Função para rastrear pesquisas
+    function trackSearch() {
+        const today = new Date().toDateString()
+        const storageKey = `searches_${today}`
+        const currentSearches = parseInt(localStorage.getItem(storageKey) || "0")
+        localStorage.setItem(storageKey, String(currentSearches + 1))
+        setSearchesToday(currentSearches + 1)
+    }
+
+    // Função para contar categorias únicas
+    function getUniqueCategories() {
+        const categories = new Set()
+        plants.forEach(plant => {
+            if (plant.category) categories.add(plant.category)
+        })
+        return categories.size
+    }
 
     useEffect(() => {
         async function getPlants() {
@@ -118,6 +144,12 @@ export default function Home() {
             setUsers(await response.json())
         }
 
+        // Recuperar contagem de pesquisas de hoje
+        const today = new Date().toDateString()
+        const storageKey = `searches_${today}`
+        const savedSearches = parseInt(localStorage.getItem(storageKey) || "0")
+        setSearchesToday(savedSearches)
+
         getPlants()
         getUsers()
     }, [])
@@ -134,9 +166,11 @@ export default function Home() {
 
         if (matches.length === 1) {
             // resultado único: vai direto para a página da planta
+            trackSearch()
             navigate(`/plantdetails/${matches[0]._id}`)
         } else {
             // zero ou várias plantas encontradas: mostra a lista filtrada
+            trackSearch()
             navigate(`/plantlist?search=${searchTerm}`)
         }
     }
@@ -185,79 +219,86 @@ export default function Home() {
     const destaque = plantasEmDestaque()
 
     return (
-        <div>
+        <div style={{ background: "#3d3d3d", minHeight: "100vh", color: "#f0f0f0" }}>
             {/* ----- Hero + Busca ----- */}
-            <div className="bg-light text-center py-5 px-3">
-                <h1 className="fw-bold">Phytografia</h1>
-                <h5 className="text-success mb-4">Sistema de Pesquisa Botânica</h5>
+            <div className="text-center px-3 py-5" style={{ background: "#444444", marginBottom: "2rem" }}>
+                <div className="container">
+                    <h1 className="fw-bold" style={{ color: "#f0f0f0" }}>Phytografia</h1>
+                    <h5 className="mb-4" style={{ color: "#c0c0c0" }}>Sistema de Pesquisa Botânica</h5>
 
-                <form onSubmit={handleSearch} className="d-flex justify-content-center">
-                    <div className="input-group" style={{ maxWidth: 500 }}>
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Pesquise por plantas, cores ou características..."
-                            value={searchTerm}
-                            onChange={(event) => setSearchTerm(event.target.value)}
-                        />
-                        <button type="submit" className="btn btn-success">
-                            Buscar
-                        </button>
-                    </div>
-                </form>
+                    <form onSubmit={handleSearch} className="d-flex justify-content-center">
+                        <div className="input-group" style={{ maxWidth: 500 }}>
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Pesquise por plantas, cores ou características..."
+                                value={searchTerm}
+                                onChange={(event) => setSearchTerm(event.target.value)}
+                                style={{ background: "#555555", color: "#f0f0f0", borderColor: "#666666" }}
+                            />
+                            <button type="submit" className="btn btn-primary">
+                                Buscar
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             {/* ----- Cards de Acesso rápido ----- */}
-            <div className="container py-4">
-                <h3 className="text-center mb-4">Acesso Rápido</h3>
-                <div className="row g-4">
-                    {QUICK_ACCESS_CARDS.map((card, index) => (
-                        <div key={index} className="col-12 col-md-4">
-                            <div className="card h-100 shadow-sm">
-                                <div className="card-body d-flex flex-column">
-                                    <h5 className="card-title">{card.title}</h5>
-                                    <p className="card-text mb-4">{card.text}</p>
-                                    <a href={card.href} className="btn btn-success mt-auto">
-                                        Explorar
-                                    </a>
+            <div className="px-3" style={{ background: "#3d3d3d", paddingTop: "3rem", paddingBottom: "3rem", marginBottom: "2rem" }}>
+                <div className="container">
+                    <h3 className="text-center mb-5" style={{ color: "#f0f0f0" }}>Acesso Rápido</h3>
+                    <div className="row g-4">
+                        {QUICK_ACCESS_CARDS.map((card, index) => (
+                            <div key={index} className="col-12 col-md-4">
+                                <div className="card h-100 shadow-sm" style={{ background: "#4a4a4a", borderColor: "#555555", color: "#f0f0f0", minHeight: "300px", display: "flex", flexDirection: "column" }}>
+                                    <div className="card-body d-flex flex-column">
+                                        <h5 className="card-title">{card.title}</h5>
+                                        <p className="card-text mb-4" style={{ color: "#c0c0c0" }}>{card.text}</p>
+                                        <a href={card.href} className="btn btn-primary mt-auto">
+                                            Explorar
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             </div>
 
             {/* ----- Plantas em Destaque ----- */}
-            <div className="container py-5">
-                <h3 className="text-center mb-4">Plantas em Destaque</h3>
+            <div className="px-3" style={{ background: "#3d3d3d", paddingTop: "3rem", paddingBottom: "3rem", marginBottom: "2rem" }}>
+                <div className="container">
+                    <h3 className="text-center mb-5" style={{ color: "#f0f0f0" }}>Plantas em Destaque</h3>
 
-                <div className="d-flex justify-content-center gap-2 mb-4 flex-wrap">
-                    {TABS.map((tab) => (
-                        <TabButton
-                            key={tab.key}
-                            label={tab.label}
-                            active={activeTab === tab.key}
-                            onClick={() => setActiveTab(tab.key)}
-                        />
-                    ))}
-                </div>
+                    <div className="d-flex justify-content-center gap-2 mb-5 flex-wrap">
+                        {TABS.map((tab) => (
+                            <TabButton
+                                key={tab.key}
+                                label={tab.label}
+                                active={activeTab === tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                            />
+                        ))}
+                    </div>
 
-                <div className="row g-4">
-                    {destaque.length > 0
-                        ? destaque.map((plant) => <PlantCard key={plant._id} plant={plant} />)
-                        : <p className="text-muted text-center">Nenhuma planta encontrada para esta categoria.</p>}
+                    <div className="row g-4">
+                        {destaque.length > 0
+                            ? destaque.map((plant) => <PlantCard key={plant._id} plant={plant} />)
+                            : <p className="text-center" style={{ color: "#a0a0a0" }}>Nenhuma planta encontrada para esta categoria.</p>}
+                    </div>
                 </div>
             </div>
 
             {/* ----- Estatísticas ----- */}
-            <div className="bg-dark text-white py-5">
+            <div className="px-3" style={{ background: "#2d2d2d", paddingTop: "3rem", paddingBottom: "3rem" }}>
                 <div className="container">
-                    <h3 className="text-center mb-5">Estatísticas do Sistema</h3>
+                    <h3 className="text-center mb-5" style={{ color: "#f0f0f0" }}>Estatísticas do Sistema</h3>
                     <div className="row g-3">
                         <StatBox value={plants.length} label="Plantas Cadastradas" />
                         <StatBox value={users.length} label="Usuários Cadastrados" />
-                        {/* TODO: substituir quando houver rastreamento real de pesquisas */}
-                        <StatBox value="—" label="Pesquisas Hoje" />
+                        <StatBox value={getUniqueCategories()} label="Categorias" />
+                        <StatBox value={searchesToday} label="Pesquisas Hoje" />
                     </div>
                 </div>
             </div>

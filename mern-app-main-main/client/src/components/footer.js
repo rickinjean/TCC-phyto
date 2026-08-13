@@ -1,17 +1,21 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap/dist/js/bootstrap.bundle";
+import "./footer.css";
 
 export default function Footer() {
   return (
-    <footer className="bg-dark text-light py-4">
-      <div className="container text-center">
-        <p className="mb-1">MongoDB + Express + React + Node.js = MERN </p>
-        <p className="mb-1">Professor Matheus Lorenzato Braga</p>
-        <div className="d-flex justify-content-center gap-3">
+    <footer className="site-footer">
+      <div className="site-footer__content">
+        <p className="site-footer__text site-footer__text--strong">
+          MongoDB + Express + React + Node.js = MERN
+        </p>
+        <p className="site-footer__text">Professor Matheus Lorenzato Braga</p>
+
+        <div className="site-footer__links">
           <a
             href="mailto:matheus.braga@ifc.edu.br"
-            className="text-light"
+            className="site-footer__link"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -19,7 +23,7 @@ export default function Footer() {
           </a>
           <a
             href="https://www.instagram.com/mathlbraga"
-            className="text-light"
+            className="site-footer__link"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -27,7 +31,7 @@ export default function Footer() {
           </a>
           <a
             href="https://www.linkedin.com/in/mathlbraga"
-            className="text-light"
+            className="site-footer__link"
             target="_blank"
             rel="noopener noreferrer"
           >

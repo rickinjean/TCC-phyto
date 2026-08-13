@@ -1,127 +1,131 @@
-import React from "react";
+import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.css";
-import "bootstrap/dist/js/bootstrap.bundle";
 import { NavLink } from "react-router-dom";
 import Logo from "././logo.jpeg";
+import "./navbar.css";
 
 export default function Navbar({ token, role, onLogout }) {
-    return (
-        <nav className="navbar bg-light p-2">
-            <div className="container-fluid">
+    const [menuOpen, setMenuOpen] = useState(false);
 
-                {/* Logo / Brand */}
-                <NavLink className="navbar-brand" to="/inicio">
-                    <img style={{ width: "7%" }} src={Logo} alt="Logo do Phytografia" />
+    const toggleMenu = () => setMenuOpen((prev) => !prev);
+    const closeMenu = () => setMenuOpen(false);
+
+    return (
+        <nav className="custom-navbar">
+            <div className="custom-navbar__inner">
+                <NavLink className="custom-navbar__brand" to="/inicio" aria-label="Ir para início">
+                    <img className="custom-navbar__logo" src={Logo} alt="Logo do Phytografia" />
+                    <span className="custom-navbar__brand-text">Phytografia</span>
                 </NavLink>
 
-                {/* Links principais — sempre visíveis */}
-                <ul className="navbar-nav flex-row gap-2 ms-auto me-2">
-                        <li className="nav-item">
-                        <NavLink className="nav-link" to="/inicio">Início</NavLink>
+                <ul className="custom-navbar__menu">
+                    <li className="nav-item">
+                        <NavLink className="custom-navbar__link" to="/inicio">Início</NavLink>
                     </li>
                     <li className="nav-item">
-                        <NavLink className="nav-link" to="/plantlist">Catálogo</NavLink>
+                        <NavLink className="custom-navbar__link" to="/plantlist">Catálogo</NavLink>
                     </li>
                     <li className="nav-item">
-                        <NavLink className="nav-link" to="/Sobre">Sobre</NavLink>
+                        <NavLink className="custom-navbar__link" to="/Sobre">Sobre</NavLink>
                     </li>
                 </ul>
 
-                {/* Botão que abre o offcanvas */}
                 <button
-                    className="navbar-toggler"
+                    className="custom-navbar__toggle navbar-toggler"
                     type="button"
-                    data-bs-toggle="offcanvas"
-                    data-bs-target="#offcanvasNavbar"
                     aria-controls="offcanvasNavbar"
-                    aria-label="Abrir menu"
+                    aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+                    onClick={toggleMenu}
                 >
                     <span className="navbar-toggler-icon"></span>
                 </button>
 
-                {/* Offcanvas — opções extras */}
                 <div
-    className="offcanvas offcanvas-end"
-    tabIndex="-1"
-    id="offcanvasNavbar"
-    aria-labelledby="offcanvasNavbarLabel"
-    style={{ width: "200px" }}
->
+                    className={`custom-navbar__overlay ${menuOpen ? "is-open" : ""}`}
+                    onClick={closeMenu}
+                    aria-hidden={!menuOpen}
+                />
+
+                <div
+                    className={`custom-navbar__offcanvas ${menuOpen ? "is-open" : ""}`}
+                    tabIndex="-1"
+                    id="offcanvasNavbar"
+                    aria-labelledby="offcanvasNavbarLabel"
+                    aria-hidden={!menuOpen}
+                >
                     <div className="offcanvas-header">
-                        <h5 className="offcanvas-title" id="offcanvasNavbarLabel">
-                            Menu
-                        </h5>
+                        <h5 className="offcanvas-title" id="offcanvasNavbarLabel">Menu</h5>
                         <button
                             type="button"
                             className="btn-close"
-                            data-bs-dismiss="offcanvas"
                             aria-label="Fechar"
+                            onClick={closeMenu}
                         ></button>
                     </div>
 
                     <div className="offcanvas-body">
                         <ul className="navbar-nav flex-column gap-1">
-
-                            {/* Opções ADM */}
                             {token && role === "ADM" && (
                                 <>
                                     <li className="nav-item">
-                                        <NavLink className="nav-link" to="/create">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/create" onClick={closeMenu}>
                                             C. Usuários
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
-                                        <NavLink className="nav-link" to="/userlist">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/userlist" onClick={closeMenu}>
                                             L. Usuários
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
-                                        <NavLink className="nav-link" to="/dashboardplant">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/dashboardplant" onClick={closeMenu}>
                                             Dashboard P.
                                         </NavLink>
                                     </li>
-                                    <hr />
+                                    <hr className="custom-navbar__separator" />
                                 </>
                             )}
 
-                            {/* Login / Sair */}
                             {token ? (
-                                <li className="nav-item">
+                                <>
                                     <li className="nav-item">
-                                        <NavLink className="nav-link" to="/favoritos">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/favoritos" onClick={closeMenu}>
                                             Favoritos
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
-                                        <NavLink className="nav-link" to="/configuracoes">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/configuracoes" onClick={closeMenu}>
                                             Configurações
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
-                                        <NavLink className="nav-link" to="/perfil">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/perfil" onClick={closeMenu}>
                                             Perfil
                                         </NavLink>
                                     </li>
-                                    <button
-                                        className="nav-link btn btn-link"
-                                        onClick={onLogout}
-                                        style={{ textDecoration: "none" }}
-                                    >
-                                        Sair
-                                    </button>
-                                </li>
+                                    <li className="nav-item">
+                                        <button
+                                            className="custom-navbar__offcanvas-button"
+                                            onClick={() => {
+                                                closeMenu();
+                                                onLogout();
+                                            }}
+                                            type="button"
+                                        >
+                                            Sair
+                                        </button>
+                                    </li>
+                                </>
                             ) : (
                                 <li className="nav-item">
-                                    <NavLink className="nav-link" to="/login">
+                                    <NavLink className="custom-navbar__offcanvas-link" to="/login" onClick={closeMenu}>
                                         Login
                                     </NavLink>
                                 </li>
                             )}
-
                         </ul>
                     </div>
                 </div>
-
             </div>
         </nav>
     );
