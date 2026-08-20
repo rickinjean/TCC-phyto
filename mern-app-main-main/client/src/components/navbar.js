@@ -1,13 +1,35 @@
-import React, { useState } from "react";
-import "bootstrap/dist/css/bootstrap.css";
+import React, { useEffect, useState } from "react";
+
 import { NavLink } from "react-router-dom";
 import Logo from "././logo.jpeg";
-import "./navbar.css";
+
+const getInitialTheme = () => {
+    try {
+        const savedTheme = window.localStorage.getItem("phyto-theme");
+        if (savedTheme === "dark" || savedTheme === "light") return savedTheme;
+    } catch {
+        // O tema padrão continua funcionando mesmo se o armazenamento estiver indisponível.
+    }
+
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+};
 
 export default function Navbar({ token, role, onLogout }) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [theme, setTheme] = useState(getInitialTheme);
+
+    useEffect(() => {
+        document.documentElement.dataset.theme = theme;
+        try {
+            window.localStorage.setItem("phyto-theme", theme);
+        } catch {
+            // A aplicação segue funcionando mesmo sem persistência local.
+        }
+    }, [theme]);
 
     const toggleMenu = () => setMenuOpen((prev) => !prev);
+    const toggleTheme = () => setTheme((currentTheme) => currentTheme === "dark" ? "light" : "dark");
+
     const closeMenu = () => setMenuOpen(false);
 
     return (
@@ -30,8 +52,24 @@ export default function Navbar({ token, role, onLogout }) {
                     </li>
                 </ul>
 
+                                <button
+                    className="custom-navbar__theme-toggle"
+                    type="button"
+                    aria-pressed={theme === "dark"}
+                    aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+                    onClick={toggleTheme}
+                >
+                    <span className="custom-navbar__theme-icon" aria-hidden="true">
+                        {theme === "dark" ? "☀" : "☾"}
+                    </span>
+                    <span className="custom-navbar__theme-label">
+                        {theme === "dark" ? "Claro" : "Escuro"}
+                    </span>
+                </button>
+
                 <button
                     className="custom-navbar__toggle navbar-toggler"
+
                     type="button"
                     aria-controls="offcanvasNavbar"
                     aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}

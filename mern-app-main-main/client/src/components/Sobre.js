@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
 
 const REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050';
-const verde = '#2d5a27';
-const verdeClaro = '#eaf3de';
-const marrom = '#6B3F22';
-const marromClaro = '#f5f0e8';
-
-const iconStyle = { color: verde };
-const badgeVerde = { backgroundColor: verdeClaro, color: verde, borderRadius: 8, padding: '0.15rem 0.6rem', fontSize: '0.75rem', fontWeight: 500 };
-
 export default function About() {
     const [formData, setFormData] = useState({ nome: '', email: '', assunto: '', mensagem: '' });
     const [enviado, setEnviado] = useState(false);
@@ -53,14 +45,14 @@ export default function About() {
     return (
         <>
             {/* ── HERO ── */}
-            <section className="py-5" style={{ background: marromClaro }}>
+            <section className="about-section about-hero py-5">
                 <div className="container">
                     <div className="row align-items-center g-5">
                         <div className="col-md-6">
-                            <span style={{ ...badgeVerde, marginBottom: 12, display: 'inline-block' }}>
+                            <span className="about-badge">
                                 <i className="fas fa-leaf me-1"></i> Pesquisa Botânica
                             </span>
-                            <h1 className="display-5 fw-normal mb-3" style={{ color: marrom }}>Sobre o Phytografia</h1>
+                            <h1 className="about-hero__title display-5 fw-normal mb-3">Sobre o Phytografia</h1>
                             <p className="lead text-muted mb-4">
                                 Sistema completo de pesquisa botânica que combina ciência, 
                                 <br />tecnologia e educação para aproximar as pessoas do mundo das plantas.
@@ -71,8 +63,8 @@ export default function About() {
                                     { numero: stats.usuarios.toLocaleString('pt-BR'), label: 'Usuários Ativos' },
                                 ].map((stat, i) => (
                                     <div className="col-6" key={i}>
-                                        <div className="p-3 rounded" style={{ background: verdeClaro }}>
-                                            <div className="fs-4 fw-bold" style={{ color: verde }}>{stat.numero}</div>
+                                        <div className="about-stat p-3 rounded">
+                                            <div className="about-stat__number fs-4 fw-bold">{stat.numero}</div>
                                             <small className="text-muted">{stat.label}</small>
                                         </div>
                                     </div>
@@ -83,8 +75,7 @@ export default function About() {
                             <img
                                 src="https://via.placeholder.com/500x350"
                                 alt="Phytografia"
-                                className="img-fluid rounded shadow"
-                                style={{ border: `3px solid ${verdeClaro}` }}
+                                className="about-hero__image img-fluid rounded shadow"
                             />
                         </div>
                     </div>
@@ -92,10 +83,10 @@ export default function About() {
             </section>
 
             {/* ── MISSÃO ── */}
-            <section className="py-5 bg-white">
+            <section className="about-section about-section--surface py-5">
                 <div className="container">
                     <div className="text-center mb-5">
-                        <h2 className="fw-normal" style={{ color: marrom }}>Nossa Missão</h2>
+                        <h2 className="about-section__title fw-normal">Nossa Missão</h2>
                         <p className="text-muted">Democratizar o conhecimento botânico através da tecnologia</p>
                     </div>
                     <div className="row g-4">
@@ -105,13 +96,12 @@ export default function About() {
                             { icon: 'fa-users',     titulo: 'Comunidade',         texto: 'Conectar entusiastas, jardineiros e botânicos em uma rede colaborativa.' },
                         ].map((card, i) => (
                             <div className="col-md-6 col-lg-4" key={i}>
-                                <div className="card h-100 border-0 shadow-sm text-center p-3">
+                                <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
                                     <div className="card-body">
-                                        <div className="mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle"
-                                            style={{ width: 56, height: 56, background: verdeClaro }}>
-                                            <i className={`fas ${card.icon} fs-5`} style={iconStyle}></i>
+                                        <div className="about-icon about-icon--circle mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle">
+                                            <i className={`fas ${card.icon} fs-5 about-icon__glyph`}></i>
                                         </div>
-                                        <h5 className="card-title" style={{ color: marrom }}>{card.titulo}</h5>
+                                        <h5 className="about-card__title card-title">{card.titulo}</h5>
                                         <p className="card-text text-muted small">{card.texto}</p>
                                     </div>
                                 </div>
@@ -122,11 +112,11 @@ export default function About() {
             </section>
 
             {/* ── HISTÓRIA ── */}
-            <section className="py-5" style={{ background: marromClaro }}>
+            <section className="about-section about-section--tinted py-5">
                 <div className="container">
                     <div className="row align-items-center g-5">
                         <div className="col-md-7">
-                            <h2 className="fw-normal mb-4" style={{ color: marrom }}>Nossa História</h2>
+                            <h2 className="about-section__title fw-normal mb-4">Nossa História</h2>
                             <p className="text-muted">
                                 O Phytografia nasceu da ideia, cujo foi dita por uma professorea e da necessidade de espalhar 
                                 o conhecimento sobre plantas. Fundada em 2025 por uma equipe(duas pessoas) desenvolvedores e 
@@ -145,8 +135,8 @@ export default function About() {
                                     { icon: 'fa-globe-americas', texto: 'Foco na flora brasileira' },
                                     { icon: 'fa-microscope',     texto: 'Base científica sólida' },
                                 ].map((item, i) => (
-                                    <div className="d-flex align-items-center gap-3 p-3 bg-white rounded shadow-sm" key={i}>
-                                        <i className={`fas ${item.icon}`} style={iconStyle}></i>
+                                    <div className="about-info-item d-flex align-items-center gap-3 p-3 rounded shadow-sm" key={i}>
+                                        <i className={`fas ${item.icon} about-icon__glyph`}></i>
                                         <span className="fw-medium">{item.texto}</span>
                                     </div>
                                 ))}
@@ -156,8 +146,7 @@ export default function About() {
                             <img
                                 src="https://via.placeholder.com/400x500"
                                 alt="Nossa História"
-                                className="img-fluid rounded shadow"
-                                style={{ border: `3px solid ${verdeClaro}` }}
+                                className="about-history__image img-fluid rounded shadow"
                             />
                         </div>
                     </div>
@@ -165,10 +154,10 @@ export default function About() {
             </section>
 
             {/* ── RECURSOS ── */}
-            <section className="py-5 bg-white">
+            <section className="about-section about-section--surface py-5">
                 <div className="container">
                     <div className="text-center mb-5">
-                        <h2 className="fw-normal" style={{ color: marrom }}>Recursos do Sistema</h2>
+                        <h2 className="about-section__title fw-normal">Recursos do Sistema</h2>
                         <p className="text-muted">Ferramentas avançadas para explorar o mundo das plantas</p>
                     </div>
                     <div className="row g-4">
@@ -206,18 +195,17 @@ export default function About() {
                             },
                         ].map((card, i) => (
                             <div className="col-md-4" key={i}>
-                                <div className="card h-100 border-0 shadow-sm p-2">
+                                <div className="about-card card h-100 border-0 shadow-sm p-2">
                                     <div className="card-body">
-                                        <div className="mb-3 d-flex align-items-center justify-content-center rounded"
-                                            style={{ width: 52, height: 52, background: verdeClaro }}>
-                                            <i className={`fas ${card.icon} fs-5`} style={iconStyle}></i>
+                                        <div className="about-icon about-icon--square mb-3 d-flex align-items-center justify-content-center rounded">
+                                            <i className={`fas ${card.icon} fs-5 about-icon__glyph`}></i>
                                         </div>
-                                        <h5 className="card-title" style={{ color: marrom }}>{card.titulo}</h5>
+                                        <h5 className="about-card__title card-title">{card.titulo}</h5>
                                         <p className="card-text text-muted small mb-3">{card.texto}</p>
                                         <ul className="list-unstyled small text-muted">
                                             {card.itens.map((item, j) => (
                                                 <li key={j} className="mb-1">
-                                                    <i className="fas fa-check me-2" style={iconStyle}></i>{item}
+                                                    <i className="fas fa-check me-2 about-icon__glyph"></i>{item}
                                                 </li>
                                             ))}
                                         </ul>
@@ -230,10 +218,10 @@ export default function About() {
             </section>
 
             {/* ── EQUIPE ── */}
-            <section className="py-5" style={{ background: marromClaro }}>
+            <section className="about-section about-section--tinted py-5">
                 <div className="container">
                     <div className="text-center mb-5">
-                        <h2 className="fw-normal" style={{ color: marrom }}>Nossa Equipe</h2>
+                        <h2 className="about-section__title fw-normal">Nossa Equipe</h2>
                         <p className="text-muted">Profissionais dedicados à excelência em botânica e tecnologia</p>
                     </div>
                     <div className="row g-4 justify-content-center">
@@ -243,17 +231,16 @@ export default function About() {
                             { nome: 'Renato',         cargo: 'Fonte de informações',             bio: 'Professor na Unesc, com mestrado(pelo que eu lembre).' },
                         ].map((membro, i) => (
                             <div className="col-md-4" key={i}>
-                                <div className="card h-100 border-0 shadow-sm text-center p-3">
+                                <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
                                     <div className="card-body">
                                         <img
                                             src="https://via.placeholder.com/100x100"
                                             alt={membro.nome}
-                                            className="rounded-circle mb-3"
+                                            className="about-team__image rounded-circle mb-3"
                                             width={100} height={100}
-                                            style={{ border: `3px solid ${verde}` }}
                                         />
-                                        <h5 className="card-title mb-1" style={{ color: marrom }}>{membro.nome}</h5>
-                                        <p className="small fw-medium mb-2" style={{ color: verde }}>{membro.cargo}</p>
+                                        <h5 className="about-card__title card-title mb-1">{membro.nome}</h5>
+                                        <p className="about-team__role small fw-medium mb-2">{membro.cargo}</p>
                                         <p className="card-text text-muted small mb-3">{membro.bio}</p>
                                     </div>
                                 </div>
@@ -264,10 +251,10 @@ export default function About() {
             </section>
 
             {/* ── VALORES ── */}
-            <section className="py-5 bg-white">
+            <section className="about-section about-section--surface py-5">
                 <div className="container">
                     <div className="text-center mb-5">
-                        <h2 className="fw-normal" style={{ color: marrom }}>Nossos Valores</h2>
+                        <h2 className="about-section__title fw-normal">Nossos Valores</h2>
                         <p className="text-muted">Os princípios que guiam o Phytografia</p>
                     </div>
                     <div className="row g-4">
@@ -280,13 +267,12 @@ export default function About() {
                             { icon: 'fa-globe',     titulo: 'Paixão',           texto: 'Nossa paixão pela natureza e pelas plantas é o que nos motiva a melhorar constantemente.' },
                         ].map((valor, i) => (
                             <div className="col-md-6 col-lg-4" key={i}>
-                                <div className="card h-100 border-0 shadow-sm text-center p-3">
+                                <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
                                     <div className="card-body">
-                                        <div className="mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle"
-                                            style={{ width: 52, height: 52, background: verdeClaro }}>
-                                            <i className={`fas ${valor.icon} fs-5`} style={iconStyle}></i>
+                                        <div className="about-icon about-icon--circle mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle">
+                                            <i className={`fas ${valor.icon} fs-5 about-icon__glyph`}></i>
                                         </div>
-                                        <h5 className="card-title" style={{ color: marrom }}>{valor.titulo}</h5>
+                                        <h5 className="about-card__title card-title">{valor.titulo}</h5>
                                         <p className="card-text text-muted small">{valor.texto}</p>
                                     </div>
                                 </div>
@@ -297,12 +283,12 @@ export default function About() {
             </section>
 
             {/* ── CONTATO ── */}
-            <section className="py-5" style={{ background: marromClaro }}>
+            <section className="about-section about-section--tinted py-5">
                 <div className="container">
                     <div className="row g-5">
 
                         <div className="col-md-5">
-                            <h2 className="fw-normal mb-2" style={{ color: marrom }}>Entre em Contato</h2>
+                            <h2 className="about-section__title fw-normal mb-2">Entre em Contato</h2>
                             <p className="text-muted mb-4">Tem dúvidas, sugestões ou quer colaborar conosco?</p>
                             <div className="d-flex flex-column gap-3">
                                 {[
@@ -310,13 +296,12 @@ export default function About() {
                                     { icon: 'fa-phone',          titulo: 'Telefone',    detalhe: '(11) 9999-9999' },
                                     { icon: 'fa-map-marker-alt', titulo: 'Localização', detalhe: 'Balneario Gaivota, SC — Brasil' },
                                 ].map((m, i) => (
-                                    <div className="d-flex align-items-center gap-3 p-3 bg-white rounded shadow-sm" key={i}>
-                                        <div className="d-flex align-items-center justify-content-center rounded-circle"
-                                            style={{ width: 40, height: 40, background: verdeClaro, flexShrink: 0 }}>
-                                            <i className={`fas ${m.icon}`} style={iconStyle}></i>
+                                    <div className="about-info-item d-flex align-items-center gap-3 p-3 rounded shadow-sm" key={i}>
+                                        <div className="about-contact-icon d-flex align-items-center justify-content-center rounded-circle">
+                                            <i className={`fas ${m.icon} about-icon__glyph`}></i>
                                         </div>
                                         <div>
-                                            <div className="fw-medium small" style={{ color: marrom }}>{m.titulo}</div>
+                                            <div className="about-contact-item__title fw-medium small">{m.titulo}</div>
                                             <div className="text-muted small">{m.detalhe}</div>
                                         </div>
                                     </div>
@@ -325,7 +310,7 @@ export default function About() {
                         </div>
 
                         <div className="col-md-7">
-                            <div className="card border-0 shadow-sm p-4">
+                            <div className="about-contact-form card border-0 shadow-sm p-4">
                                 {enviado && (
                                     <div className="alert alert-success small py-2">
                                         Mensagem enviada com sucesso! Entraremos em contato em breve.
@@ -368,8 +353,7 @@ export default function About() {
                                                 required />
                                         </div>
                                         <div className="col-12">
-                                            <button type="submit" className="btn w-100 py-2 text-white fw-medium"
-                                                style={{ backgroundColor: verde }}>
+                                            <button type="submit" className="about-submit btn w-100 py-2 text-white fw-medium">
                                                 <i className="fas fa-paper-plane me-2"></i>
                                                 Enviar Mensagem
                                             </button>

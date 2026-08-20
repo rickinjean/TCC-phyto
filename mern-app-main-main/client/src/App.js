@@ -47,7 +47,7 @@ const App = () => {
     return (
         <div className="d-flex flex-column min-vh-100">
             <Navbar token={token} role={role} onLogout={handleLogout} />
-            <main className="flex-fill container my-4">
+            <main className="app-main flex-fill">
                 <Routes>
                     <Route path="/login" element={<Login onLogin={handleLogin} />} />
                     <Route path="/register" element={<Register />} />

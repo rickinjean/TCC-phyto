@@ -9,22 +9,22 @@ const PlantCard = (props) => {
     const imageUrl = images.length > 0 ? `${REACT_APP_YOUR_HOSTNAME}${images[0]}` : "https://via.placeholder.com/400x250/4a4a4a/7db3dd?text=🌿"
 
     return (
-        <div className="col-sm-6 col-md-3">
-            <div className="card h-100 shadow-sm" style={{ background: "#4a4a4a", borderColor: "#555555", color: "#f0f0f0", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-                <div style={{ width: "100%", height: "200px", overflow: "hidden", background: "#555555" }}>
+<div className="col-sm-6 col-md-3">
+            <div className="plant-feature-card card h-100">
+                <div className="plant-feature-card__image">
                     <img
                         src={imageUrl}
                         alt={props.plant.name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        className="plant-feature-card__img"
                     />
                 </div>
-                <div className="card-body d-flex flex-column">
-                    <h5 className="card-title">{props.plant.name}</h5>
-                    <p className="card-subtitle fst-italic mb-3" style={{ color: "#b0b0b0", fontSize: "0.9rem" }}>
+<div className="card-body d-flex flex-column">
+                    <h5 className="card-title plant-feature-card__title">{props.plant.name}</h5>
+                    <p className="card-subtitle plant-feature-card__scientific fst-italic mb-3">
                         {props.plant.scientificName}
                     </p>
                     <Link
-                        className="mt-auto btn btn-primary rounded-pill btn-sm"
+                        className="plant-feature-card__button mt-auto btn btn-primary rounded-pill btn-sm"
                         to={`/plantdetails/${props.plant._id}`}
                     >
                         Ver Detalhes
@@ -52,9 +52,9 @@ const TabButton = (props) => {
 const StatBox = (props) => {
     return (
         <div className="col-6 col-md-3">
-            <div className="card text-center py-5 h-100" style={{ background: "#3d3d3d", borderColor: "#4a4a4a", color: "#f0f0f0", minHeight: "200px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                <div className="fs-1 fw-bold" style={{ color: "#7db3dd" }}>{props.value}</div>
-                <div className="text-uppercase small mt-3" style={{ color: "#a0a0a0" }}>
+<div className="stat-card card text-center py-5 h-100">
+                <div className="stat-card__value fs-1 fw-bold">{props.value}</div>
+                <div className="stat-card__label text-uppercase small mt-3">
                     {props.label}
                 </div>
             </div>
@@ -219,22 +219,22 @@ export default function Home() {
     const destaque = plantasEmDestaque()
 
     return (
-        <div style={{ background: "#3d3d3d", minHeight: "100vh", color: "#f0f0f0" }}>
+        <div className="home-page">
             {/* ----- Hero + Busca ----- */}
-            <div className="text-center px-3 py-5" style={{ background: "#444444", marginBottom: "2rem" }}>
+            <section className="home-hero text-center px-3 py-5">
                 <div className="container">
-                    <h1 className="fw-bold" style={{ color: "#f0f0f0" }}>Phytografia</h1>
-                    <h5 className="mb-4" style={{ color: "#c0c0c0" }}>Sistema de Pesquisa Botânica</h5>
+                    <h1 className="home-hero__title fw-bold">Phytografia</h1>
+                    <h5 className="home-hero__subtitle mb-4">Sistema de Pesquisa Botânica</h5>
 
                     <form onSubmit={handleSearch} className="d-flex justify-content-center">
-                        <div className="input-group" style={{ maxWidth: 500 }}>
+                        <div className="home-search input-group">
                             <input
                                 type="text"
-                                className="form-control"
+className="home-search__input form-control"
                                 placeholder="Pesquise por plantas, cores ou características..."
                                 value={searchTerm}
                                 onChange={(event) => setSearchTerm(event.target.value)}
-                                style={{ background: "#555555", color: "#f0f0f0", borderColor: "#666666" }}
+                                
                             />
                             <button type="submit" className="btn btn-primary">
                                 Buscar
@@ -242,20 +242,20 @@ export default function Home() {
                         </div>
                     </form>
                 </div>
-            </div>
+            </section>
 
             {/* ----- Cards de Acesso rápido ----- */}
-            <div className="px-3" style={{ background: "#3d3d3d", paddingTop: "3rem", paddingBottom: "3rem", marginBottom: "2rem" }}>
+            <section className="home-section home-section--quick px-3">
                 <div className="container">
-                    <h3 className="text-center mb-5" style={{ color: "#f0f0f0" }}>Acesso Rápido</h3>
+                    <h3 className="home-section__title text-center mb-5">Acesso Rápido</h3>
                     <div className="row g-4">
                         {QUICK_ACCESS_CARDS.map((card, index) => (
                             <div key={index} className="col-12 col-md-4">
-                                <div className="card h-100 shadow-sm" style={{ background: "#4a4a4a", borderColor: "#555555", color: "#f0f0f0", minHeight: "300px", display: "flex", flexDirection: "column" }}>
+                                <div className="quick-card card h-100 shadow-sm">
                                     <div className="card-body d-flex flex-column">
-                                        <h5 className="card-title">{card.title}</h5>
-                                        <p className="card-text mb-4" style={{ color: "#c0c0c0" }}>{card.text}</p>
-                                        <a href={card.href} className="btn btn-primary mt-auto">
+<h5 className="quick-card__title card-title">{card.title}</h5>
+                                        <p className="quick-card__text card-text mb-4">{card.text}</p>
+                                        <a href={card.href} className="quick-card__button btn btn-primary mt-auto">
                                             Explorar
                                         </a>
                                     </div>
@@ -264,12 +264,12 @@ export default function Home() {
                         ))}
                     </div>
                 </div>
-            </div>
+            </section>
 
             {/* ----- Plantas em Destaque ----- */}
-            <div className="px-3" style={{ background: "#3d3d3d", paddingTop: "3rem", paddingBottom: "3rem", marginBottom: "2rem" }}>
+            <section className="home-section home-section--featured px-3">
                 <div className="container">
-                    <h3 className="text-center mb-5" style={{ color: "#f0f0f0" }}>Plantas em Destaque</h3>
+                    <h3 className="home-section__title text-center mb-5">Plantas em Destaque</h3>
 
                     <div className="d-flex justify-content-center gap-2 mb-5 flex-wrap">
                         {TABS.map((tab) => (
@@ -285,15 +285,15 @@ export default function Home() {
                     <div className="row g-4">
                         {destaque.length > 0
                             ? destaque.map((plant) => <PlantCard key={plant._id} plant={plant} />)
-                            : <p className="text-center" style={{ color: "#a0a0a0" }}>Nenhuma planta encontrada para esta categoria.</p>}
+                            : <p className="home-empty text-center">Nenhuma planta encontrada para esta categoria.</p>}
                     </div>
                 </div>
-            </div>
+            </section>
 
             {/* ----- Estatísticas ----- */}
-            <div className="px-3" style={{ background: "#2d2d2d", paddingTop: "3rem", paddingBottom: "3rem" }}>
+            <section className="home-section home-section--stats px-3">
                 <div className="container">
-                    <h3 className="text-center mb-5" style={{ color: "#f0f0f0" }}>Estatísticas do Sistema</h3>
+                    <h3 className="home-section__title text-center mb-5">Estatísticas do Sistema</h3>
                     <div className="row g-3">
                         <StatBox value={plants.length} label="Plantas Cadastradas" />
                         <StatBox value={users.length} label="Usuários Cadastrados" />
@@ -301,7 +301,7 @@ export default function Home() {
                         <StatBox value={searchesToday} label="Pesquisas Hoje" />
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     )
 }

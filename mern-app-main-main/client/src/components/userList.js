@@ -79,9 +79,10 @@ export default function UserList() {
     }
 
     return (
-        <div>
-            <h3 className="ps-2">Lista de Usuários</h3>
-            <table className="table table-striped" style={{ marginTop: 20 }}>
+        <div className="admin-page admin-page--users">
+            <h3 className="admin-page__title ps-2">Lista de Usuários</h3>
+            <div className="admin-table-wrap">
+            <table className="admin-table table table-striped">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -93,6 +94,7 @@ export default function UserList() {
                 </thead>
                 <tbody>{recordList()}</tbody>
             </table>
+            </div>
         </div>
     )
 }

@@ -71,9 +71,9 @@ export default function Edit() {
     }
 
     return (
-        <div>
-            <h3>Alteração de dados</h3>
-            <form onSubmit={onSubmit}>
+        <div className="admin-page admin-page--form">
+            <h3 className="admin-page__title">Alteração de dados</h3>
+            <form className="admin-form" onSubmit={onSubmit}>
                 <div className="form-group">
                     <label htmlFor="name">Nome</label>
                     <input

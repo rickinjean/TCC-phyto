@@ -268,10 +268,10 @@ export default function Edit() {
     }
 
     return (
-        <div className="container mt-4">
-            <h3 className="mb-4">Atualizar Planta</h3>
+        <div className="admin-page admin-page--plant-form container mt-4">
+            <h3 className="admin-page__title mb-4">Atualizar Planta</h3>
 
-            <form onSubmit={onSubmit}>
+            <form className="plant-admin-form" onSubmit={onSubmit}>
                 <ul className="nav nav-tabs mb-4" id="plantFormTabs" role="tablist">
                     <li className="nav-item" role="presentation"><button className="nav-link active" id="dados-basicos-tab" data-bs-toggle="tab" data-bs-target="#dados-basicos" type="button" role="tab">Dados Básicos</button></li>
                     <li className="nav-item" role="presentation"><button className="nav-link" id="info-botanicas-tab" data-bs-toggle="tab" data-bs-target="#info-botanicas" type="button" role="tab">Informações Botânicas</button></li>
@@ -303,7 +303,7 @@ export default function Edit() {
                                                 key={index}
                                                 src={`${REACT_APP_YOUR_HOSTNAME}${path}`} 
                                                 alt={`Foto ${index + 1}`} 
-                                                style={{ width: "120px", height: "120px", borderRadius: "6px", objectFit: "cover", border: "1px solid #ddd" }} 
+                                                className="plant-image-preview" 
                                             />
                                         ))}
                                     </div>
