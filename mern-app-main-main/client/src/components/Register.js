@@ -207,12 +207,12 @@ export default function Register() {
 
                     {/* Social login */}
                     <div className="d-flex gap-2">
-    <button className="btn btn-outline-secondary w-50 d-flex align-items-center justify-content-center gap-2">
+    <button type="button" className="btn btn-outline-secondary w-50 d-flex align-items-center justify-content-center gap-2" onClick={() => window.location.href = `${API_URL}/auth/google`}>
         <FontAwesomeIcon icon={faGoogle} />
         <span className="small">Google</span>
     </button>
 
-    <button className="btn btn-outline-secondary w-50 d-flex align-items-center justify-content-center gap-2">
+    <button type="button" className="btn btn-outline-secondary w-50 d-flex align-items-center justify-content-center gap-2" onClick={() => window.location.href = `${API_URL}/auth/github`}>
         <FontAwesomeIcon icon={faGithub} />
         <span className="small">GitHub</span>
     </button>

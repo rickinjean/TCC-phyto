@@ -37,6 +37,7 @@ const loginLimiter = rateLimit({
 app.use("/user/login", loginLimiter)
 app.use("/user/register", loginLimiter)
 
+app.use(require("./routes/auth"))
 app.use(require("./routes/user"))
 app.use(require("./routes/plant"))
 app.use(require("./routes/favorites"))
