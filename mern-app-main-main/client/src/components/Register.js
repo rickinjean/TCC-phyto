@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
-
-const REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'; // IP do Servidor
+import API_URL from "../config";
 
 export default function Register() {
     const [nome, setNome] = useState('');
@@ -14,6 +13,7 @@ export default function Register() {
     const [showConfirmar, setShowConfirmar] = useState(false);
     const [mensagem, setMensagem] = useState('');
     const [sucesso, setSucesso] = useState(false);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleRegister = async (e) => {
@@ -26,11 +26,12 @@ export default function Register() {
             return;
         }
 
+        setLoading(true);
         try {
-            const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/register`, {
+            const response = await fetch(`${API_URL}/user/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nome, email, senha, function: 'Usuario' }),
+                body: JSON.stringify({ nome, email, senha }),
             });
 
             const data = await response.json();
@@ -47,6 +48,8 @@ export default function Register() {
             setConfirmarSenha('');
         } catch (error) {
             setMensagem('Erro ao conectar com o servidor');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -187,8 +190,10 @@ export default function Register() {
                         </div>
 
                         {/* Botão registrar */}
-                        <button type="submit" className="btn btn-primary w-100 py-2">
-                            Criar conta
+                        <button type="submit" className="btn btn-primary w-100 py-2" disabled={loading}>
+                            {loading ? (
+                                <><span className="spinner-border spinner-border-sm me-2" role="status" />Criando conta...</>
+                            ) : "Criar conta"}
                         </button>
 
                     </form>

@@ -1,12 +1,13 @@
 const { MongoClient } = require("mongodb")
 
-//const Db = 'mongodb+srv://rickzin:phyto@cluster0.6pqsfbl.mongodb.net/?appName=Cluster0'
-const Db = "mongodb://rickzin:phyto@ac-wsibqzi-shard-00-00.6pqsfbl.mongodb.net:27017,ac-wsibqzi-shard-00-01.6pqsfbl.mongodb.net:27017,ac-wsibqzi-shard-00-02.6pqsfbl.mongodb.net:27017/?ssl=true&replicaSet=atlas-a8v6i8-shard-0&authSource=admin&appName=Cluster0"
+const Db = process.env.MONGODB_URI
 
-const client = new MongoClient(Db, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+if (!Db) {
+    console.error("ERRO: MONGODB_URI não está definida. Crie um arquivo .env na pasta server/ com essa variável.")
+    process.exit(1)
+}
+
+const client = new MongoClient(Db)
 
 var _db
 

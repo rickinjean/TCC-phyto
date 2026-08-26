@@ -1,0 +1,32 @@
+const mapeamentoColecoes = {
+    fruit: { colecao: "fruit", label: "Tipo de Fruto" },
+    origin: { colecao: "origin", label: "Origem" },
+    type: { colecao: "type", label: "Função/Tipo" },
+    propagation: { colecao: "propagation", label: "Tipo de Propagação" },
+    toxicity: { colecao: "toxicity", label: "Grau de Toxicidade" },
+    dificulty: { colecao: "dificulty", label: "Dificuldade de Cuidado" },
+    height: { colecao: "height", label: "Altura/Porte" },
+    flowercolor: { colecao: "flowercolor", label: "Cor da Flor" },
+    foliage: { colecao: "foliage", label: "Tipo de Folhagem" },
+    flowering: { colecao: "flowering", label: "Época de Floração" },
+    light: { colecao: "light", label: "Necessidade de Luz" },
+    water: { colecao: "water", label: "Necessidade de Água" },
+    size: { colecao: "size", label: "Tamanho do Vaso/Local" },
+    soil: { colecao: "soil", label: "Tipo de Solo" },
+    manha: { colecao: "manha", label: "Melhor Horário de Rega" },
+    amount: { colecao: "amount", label: "Quantidade de Rega" },
+    frequency: { colecao: "frequency", label: "Frequência de Adubação" },
+    NPK: { colecao: "NPK", label: "Tipo de NPK" },
+    season: { colecao: "season", label: "Época de Poda" },
+    tools: { colecao: "tools", label: "Ferramenta de Poda" },
+    prevention: { colecao: "prevention", label: "Nível de Prevenção" },
+    monitoring: { colecao: "monitoring", label: "Nível de Monitoramento" },
+    station: { colecao: "station", label: "Estação de Plantio" },
+    spacing: { colecao: "spacing", label: "Espaçamento Mínimo" },
+    iluminosity: { colecao: "iluminosity", label: "Horas de Sol Diário" },
+    protection: { colecao: "protection", label: "Proteção Climática" },
+    idealTemperature: { colecao: "idealTemperature", label: "Temperatura Ideal" },
+    tolerance: { colecao: "tolerance", label: "Tolerância" }
+}
+
+export default mapeamentoColecoes

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-
-const REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'; // IP do Servidor
+import API_URL from "../config"
 
 const Record = (props) => {
     return (
@@ -32,7 +31,7 @@ export default function UserList() {
         async function getUsers() {
             const token = localStorage.getItem('token')
             const headers = token ? { Authorization: `Bearer ${token}` } : {}
-            const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/`, { headers })
+            const response = await fetch(`${API_URL}/user/`, { headers })
 
             if (!response.ok) {
                 const message = `Um erro ocorreu: ${response.statusText}`
@@ -47,7 +46,7 @@ export default function UserList() {
         getUsers()
 
         return
-    }, [users.length])
+    }, [])
 
     async function deleteRecord(id) {
         const result = window.confirm("Deseja remover desta lista?")
@@ -57,7 +56,7 @@ export default function UserList() {
 
         const token = localStorage.getItem('token')
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
-        await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/${id}`, {
+        await fetch(`${API_URL}/user/${id}`, {
             method: "DELETE",
             headers
         })

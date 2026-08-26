@@ -8,11 +8,14 @@ const multer = require("multer")
 const path = require("path")
 const { authenticateToken, authorizeRoles } = require("../middleware/auth")
 
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
 // Configurar o armazenamento dos ficheiros localmente
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // Certifique-se de criar a pasta "uploads" na raiz do seu back-end
-        cb(null, "uploads/") 
+        cb(null, path.join(__dirname, "..", "uploads"))
     },
     filename: function (req, file, cb) {
         // Gera um nome único para o ficheiro usando timestamp + random para evitar colisões
@@ -21,15 +24,44 @@ const storage = multer.diskStorage({
     }
 })
 
-const upload = multer({ storage: storage })
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: function (req, file, cb) {
+        const allowedMimes = ["image/jpeg", "image/pjpeg", "image/png", "image/webp", "image/gif"]
+        if (allowedMimes.includes(file.mimetype)) {
+            cb(null, true)
+        } else {
+            cb(new Error("Tipo de arquivo não permitido. Envie apenas imagens (JPG, PNG, WebP, GIF)."))
+        }
+    }
+})
 
 /* ==================================================
-   LISTAR TODAS AS PLANTAS
+   LISTAR PLANTAS (com filtros opcionais)
 ================================================== */
 plantRoutes.route("/plant").get(async function (req, res) {
     const db_connect = dbo.getDb()
     try {
-        const result = await db_connect.collection("plants").find({}).toArray()
+        const { origin, flowercolor, light, water, soil, toxicity, dificulty, type, search } = req.query
+        const filter = {}
+        if (origin) filter.origin = origin
+        if (flowercolor) filter.flowercolor = flowercolor
+        if (light) filter.light = light
+        if (water) filter.water = water
+        if (soil) filter.soil = soil
+        if (toxicity) filter.toxicity = toxicity
+        if (dificulty) filter.dificulty = dificulty
+        if (type) filter.type = type
+        if (search) {
+            const safeRegex = new RegExp(escapeRegex(search), "i")
+            filter.$or = [
+                { name: safeRegex },
+                { scientificName: safeRegex }
+            ]
+        }
+
+        const result = await db_connect.collection("plants").find(filter).toArray()
         res.status(200).json(result)
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -227,6 +259,31 @@ plantRoutes.route("/plant/:id").delete(authenticateToken, authorizeRoles("ADM"),
    ROTAS DINÂMICAS PARA TRATAR TODAS AS SELEÇÕES
 ================================================== */
 
+// LISTAR TODAS AS COLEÇÕES DE UMA VEZ (evita N+1 no frontend)
+plantRoutes.route("/collections/all").get(async function (req, res) {
+    const db_connect = dbo.getDb()
+    const COLLECTIONS = [
+        "fruit", "origin", "type", "propagation", "toxicity", "dificulty",
+        "height", "flowercolor", "foliage", "flowering", "light", "water",
+        "size", "soil", "manha", "amount", "frequency", "NPK", "season",
+        "tools", "prevention", "monitoring", "station", "spacing",
+        "iluminosity", "protection", "idealTemperature", "tolerance",
+        "Filo", "Classe", "Ordem", "Family", "Genero", "Especie"
+    ]
+    try {
+        const results = await Promise.all(
+            COLLECTIONS.map(name =>
+                db_connect.collection(name).find({}).toArray().catch(() => [])
+            )
+        )
+        const all = {}
+        COLLECTIONS.forEach((name, i) => { all[name] = results[i] })
+        res.status(200).json(all)
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao buscar coleções: " + error.message })
+    }
+})
+
 // LISTAR ELEMENTOS DE UMA COLEÇÃO DINAMICAMENTE
 plantRoutes.route("/collections/:name").get(async function (req, res) {
     const db_connect = dbo.getDb()
@@ -240,7 +297,7 @@ plantRoutes.route("/collections/:name").get(async function (req, res) {
 })
 
 // ADICIONAR ELEMENTO EM UMA COLEÇÃO DINAMICAMENTE
-plantRoutes.route("/collections/:name/add").post(async function (req, res) {
+plantRoutes.route("/collections/:name/add").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
     const colecaoAlvo = req.params.name
     const novoItem = { name: req.body.name }
@@ -253,7 +310,7 @@ plantRoutes.route("/collections/:name/add").post(async function (req, res) {
 })
 
 // DELETAR ELEMENTO DE UMA COLEÇÃO DINAMICAMENTE
-plantRoutes.route("/collections/:name/:id").delete(async function (req, res) {
+plantRoutes.route("/collections/:name/:id").delete(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
     const colecaoAlvo = req.params.name
     const id = req.params.id

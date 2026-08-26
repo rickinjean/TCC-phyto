@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken")
 
-const JWT_SECRET = "secret-key"
+const JWT_SECRET = process.env.JWT_SECRET || "change-this-in-production"
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"]

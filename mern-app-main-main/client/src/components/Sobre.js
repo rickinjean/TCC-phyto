@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import API_URL from "../config";
 
-const REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050';
 export default function About() {
     const [formData, setFormData] = useState({ nome: '', email: '', assunto: '', mensagem: '' });
     const [enviado, setEnviado] = useState(false);
+    const [enviando, setEnviando] = useState(false);
+    const [erroEnvio, setErroEnvio] = useState('');
     const [stats, setStats] = useState({ plantas: 0, usuarios: 0 });
 
     useEffect(() => {
@@ -13,8 +15,8 @@ export default function About() {
                 const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
                 const [plantsRes, usersRes] = await Promise.all([
-                    fetch(`${REACT_APP_YOUR_HOSTNAME}/plant/`),
-                    fetch(`${REACT_APP_YOUR_HOSTNAME}/user/`, { headers }),
+                    fetch(`${API_URL}/plant/`),
+                    fetch(`${API_URL}/user/`, { headers }),
                 ]);
 
                 if (!plantsRes.ok) return;
@@ -36,10 +38,30 @@ export default function About() {
         fetchStats();
     }, []);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setEnviado(true);
-        setFormData({ nome: '', email: '', assunto: '', mensagem: '' });
+        setErroEnvio('');
+        setEnviando(true);
+        try {
+            const response = await fetch(`${API_URL}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                setErroEnvio(data.message || 'Erro ao enviar mensagem.');
+                return;
+            }
+
+            setEnviado(true);
+            setFormData({ nome: '', email: '', assunto: '', mensagem: '' });
+        } catch {
+            setErroEnvio('Erro na conexão com o servidor.');
+        } finally {
+            setEnviando(false);
+        }
     };
 
     return (
@@ -316,6 +338,11 @@ export default function About() {
                                         Mensagem enviada com sucesso! Entraremos em contato em breve.
                                     </div>
                                 )}
+                                {erroEnvio && (
+                                    <div className="alert alert-danger small py-2">
+                                        {erroEnvio}
+                                    </div>
+                                )}
                                 <form onSubmit={handleSubmit}>
                                     <div className="row g-3">
                                         <div className="col-md-6">
@@ -353,9 +380,12 @@ export default function About() {
                                                 required />
                                         </div>
                                         <div className="col-12">
-                                            <button type="submit" className="about-submit btn w-100 py-2 text-white fw-medium">
-                                                <i className="fas fa-paper-plane me-2"></i>
-                                                Enviar Mensagem
+                                            <button type="submit" className="about-submit btn w-100 py-2 text-white fw-medium" disabled={enviando}>
+                                                {enviando ? (
+                                                    <><span className="spinner-border spinner-border-sm me-2" role="status" />Enviando...</>
+                                                ) : (
+                                                    <><i className="fas fa-paper-plane me-2"></i>Enviar Mensagem</>
+                                                )}
                                             </button>
                                         </div>
                                     </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { NavLink } from "react-router-dom";
-import Logo from "././logo.jpeg";
+import Logo from "./logo.jpeg";
 
 const getInitialTheme = () => {
     try {
@@ -47,9 +47,28 @@ export default function Navbar({ token, role, onLogout }) {
                     <li className="nav-item">
                         <NavLink className="custom-navbar__link" to="/plantlist">Catálogo</NavLink>
                     </li>
+                    {token && (
+                        <li className="nav-item">
+                            <NavLink className="custom-navbar__link" to="/favoritos">Favoritos</NavLink>
+                        </li>
+                    )}
                     <li className="nav-item">
                         <NavLink className="custom-navbar__link" to="/Sobre">Sobre</NavLink>
                     </li>
+                    {token && role === "ADM" && (
+                        <>
+                            <li className="nav-item dropdown">
+                                <span className="custom-navbar__link custom-navbar__link--dropdown" style={{cursor: "default"}}>
+                                    ADM
+                                </span>
+                                <ul className="custom-navbar__dropdown">
+                                    <li><NavLink className="custom-navbar__dropdown-link" to="/create">C. Usuários</NavLink></li>
+                                    <li><NavLink className="custom-navbar__dropdown-link" to="/userlist">L. Usuários</NavLink></li>
+                                    <li><NavLink className="custom-navbar__dropdown-link" to="/createplant">C. Plantas</NavLink></li>
+                                </ul>
+                            </li>
+                        </>
+                    )}
                 </ul>
 
                                 <button
@@ -116,8 +135,8 @@ export default function Navbar({ token, role, onLogout }) {
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/dashboardplant" onClick={closeMenu}>
-                                            Dashboard P.
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/createplant" onClick={closeMenu}>
+                                            C. Plantas
                                         </NavLink>
                                     </li>
                                     <hr className="custom-navbar__separator" />
@@ -127,18 +146,23 @@ export default function Navbar({ token, role, onLogout }) {
                             {token ? (
                                 <>
                                     <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/inicio" onClick={closeMenu}>
+                                            Início
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/plantlist" onClick={closeMenu}>
+                                            Catálogo
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/Sobre" onClick={closeMenu}>
+                                            Sobre
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
                                         <NavLink className="custom-navbar__offcanvas-link" to="/favoritos" onClick={closeMenu}>
                                             Favoritos
-                                        </NavLink>
-                                    </li>
-                                    <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/configuracoes" onClick={closeMenu}>
-                                            Configurações
-                                        </NavLink>
-                                    </li>
-                                    <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/perfil" onClick={closeMenu}>
-                                            Perfil
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">

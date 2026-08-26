@@ -2,14 +2,14 @@ import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
-
-const REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'; // IP do Servidor
+import API_URL from "../config";
 
 export default function Login({ onLogin }) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
 
     const goToRegister = () => {
@@ -18,8 +18,10 @@ export default function Login({ onLogin }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        setError("")
+        setLoading(true)
         try {
-            const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/login`, {
+            const response = await fetch(`${API_URL}/user/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: email, senha: password }),
@@ -37,6 +39,8 @@ export default function Login({ onLogin }) {
             navigate('/');
         } catch (error) {
             setError('Erro na conexão com o servidor');
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -142,8 +146,10 @@ export default function Login({ onLogin }) {
                         </div>
 
                         {/* Botão entrar */}
-                        <button type="submit" className="btn btn-primary w-100 py-2">
-                            Entrar
+                        <button type="submit" className="btn btn-primary w-100 py-2" disabled={loading}>
+                            {loading ? (
+                                <><span className="spinner-border spinner-border-sm me-2" role="status" />Entrando...</>
+                            ) : "Entrar"}
                         </button>
 
                     </form>

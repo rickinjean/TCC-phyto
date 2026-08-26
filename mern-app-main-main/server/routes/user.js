@@ -36,10 +36,18 @@ userRoutes.route('/user/login').post(async function (req, res) {
 userRoutes.route('/user/register').post(async function (req, res) {
     const db_connect = dbo.getDb()
 
-    const { nome, email, senha, function: tipo } = req.body;
-    const tipoUsuario = tipo || "User"
+    const { nome, email, senha } = req.body;
+    const tipoUsuario = "User"
 
     try {
+        if (!nome || !email || !senha) {
+            return res.status(400).json({ mensagem: 'Nome, email e senha são obrigatórios' });
+        }
+
+        if (senha.length < 6) {
+            return res.status(400).json({ mensagem: 'A senha deve ter pelo menos 6 caracteres' });
+        }
+
         const userExistente = await db_connect.collection("users").findOne({ email })
 
         if (userExistente) {
@@ -52,7 +60,7 @@ userRoutes.route('/user/register').post(async function (req, res) {
             name: nome,
             email,
             senha: senhaHash,
-            function: tipoUsuario, // Tipo de perfil do usuário (ADM ou User)
+            function: tipoUsuario,
         };
 
         const result = await db_connect.collection("users").insertOne(novoUsuario);
@@ -95,13 +103,22 @@ userRoutes.route("/user/:id").get(authenticateToken, authorizeRoles("ADM"), asyn
 // This section will help you create a new user.
 userRoutes.route("/user/add").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
-    const myobj = {
-        name: req.body.name,
-        user: req.body.user,
-        email: req.body.email,
-        function: req.body.function
+    const { name, user, email, function: tipo, senha } = req.body
+
+    if (!name || !email || !senha) {
+        return res.status(400).json({ message: "Nome, email e senha são obrigatórios" })
     }
+
     try {
+        const salt = await bcrypt.genSalt(10)
+        const senhaHash = await bcrypt.hash(senha, salt)
+        const myobj = {
+            name,
+            user,
+            email,
+            senha: senhaHash,
+            function: tipo || "User"
+        }
         const result = await db_connect.collection("users").insertOne(myobj)
         console.log("1 document created")
         res.status(201).json(result)
@@ -111,7 +128,7 @@ userRoutes.route("/user/add").post(authenticateToken, authorizeRoles("ADM"), asy
 })
 
 // This section will help you update a user by id.
-userRoutes.route("/update/:id").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
+userRoutes.route("/update/:id").put(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
     const myquery = { _id: new ObjectId(req.params.id) }
     const newvalues = {
@@ -139,8 +156,8 @@ userRoutes.route("/user/:id").delete(authenticateToken, authorizeRoles("ADM"), a
         const result = await db_connect.collection("users").deleteOne(myquery)
         console.log("1 document deleted")
         res.status(200).json(result)
-    } catch {
-        res.status(204).json({ message: "It is gone!" })
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao deletar usuário" })
     }
 })
 

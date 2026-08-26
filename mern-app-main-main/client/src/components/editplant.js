@@ -1,38 +1,8 @@
 import React, { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-
-const REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'
-
-const mapeamentoColecoes = {
-    fruit: { colecao: "fruit", label: "Tipo de Fruto" },
-    origin: { colecao: "origin", label: "Origem" },
-    type: { colecao: "type", label: "Função/Tipo" },
-    propagation: { colecao: "propagation", label: "Tipo de Propagação" },
-    toxicity: { colecao: "toxicity", label: "Grau de Toxicidade" },
-    dificulty: { colecao: "dificulty", label: "Dificuldade de Cuidado" },
-    height: { colecao: "height", label: "Altura/Porte" },
-    flowercolor: { colecao: "flowercolor", label: "Cor da Flor" },
-    foliage: { colecao: "foliage", label: "Tipo de Folhagem" },
-    flowering: { colecao: "flowering", label: "Época de Floração" },
-    light: { colecao: "light", label: "Necessidade de Luz" },
-    water: { colecao: "water", label: "Necessidade de Água" },
-    size: { colecao: "size", label: "Tamanho do Vaso/Local" },
-    soil: { colecao: "soil", label: "Tipo de Solo" },
-    manha: { colecao: "manha", label: "Melhor Horário de Rega" },
-    amount: { colecao: "amount", label: "Quantidade de Rega" },
-    frequency: { colecao: "frequency", label: "Frequência de Adubação" },
-    NPK: { colecao: "NPK", label: "Tipo de NPK" },
-    season: { colecao: "season", label: "Época de Poda" },
-    tools: { colecao: "tools", label: "Ferramenta de Poda" },
-    prevention: { colecao: "prevention", label: "Nível de Prevenção" },
-    monitoring: { colecao: "monitoring", label: "Nível de Monitoramento" },
-    station: { colecao: "station", label: "Estação de Plantio" },
-    spacing: { colecao: "spacing", label: "Espaçamento Mínimo" },
-    iluminosity: { colecao: "iluminosity", label: "Horas de Sol Diário" },
-    protection: { colecao: "protection", label: "Proteção Climática" },
-    idealTemperature: { colecao: "idealTemperature", label: "Temperatura Ideal" },
-    tolerance: { colecao: "tolerance", label: "Tolerância" }
-}
+import API_URL from "../config"
+import authFetch from "../authFetch"
+import mapeamentoColecoes from "../mapeamentoColecoes"
 
 export default function Edit() {
     const [form, setForm] = useState({
@@ -94,7 +64,7 @@ export default function Edit() {
     useEffect(() => {
         async function fetchData() {
             const id = params.id.toString()
-            const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/plant/${id}`)
+            const response = await fetch(`${API_URL}/plant/${id}`)
 
             if (!response.ok) {
                 const message = `An error has occurred: ${response.statusText}`
@@ -119,9 +89,9 @@ export default function Edit() {
             for (const chave of chaves) {
                 try {
                     const nomeColecao = mapeamentoColecoes[chave].colecao
-                    const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/collections/${nomeColecao}`)
-                    if (response.ok) {
-                        dadosCarregados[chave] = await response.json()
+                    const res = await authFetch(`${API_URL}/collections/${nomeColecao}`)
+                    if (res && res.ok) {
+                        dadosCarregados[chave] = await res.json()
                     }
                 } catch (err) {
                     console.error(`Erro ao buscar dados para o campo ${chave}:`, err)
@@ -150,15 +120,15 @@ export default function Edit() {
         }
 
         try {
-            const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/collections/${modalConfig.colecaoMongo}/add`, {
+            const response = await authFetch(`${API_URL}/collections/${modalConfig.colecaoMongo}/add`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: novoValorInput })
             })
 
-            if (!response.ok) {
-                const erroServidor = await response.json()
-                alert(`Erro do Servidor: ${erroServidor.message || response.statusText}`)
+            if (!response || !response.ok) {
+                const erroServidor = response ? await response.json().catch(() => ({})) : {}
+                alert(`Erro do Servidor: ${erroServidor.message || response?.statusText || "Sem resposta"}`)
                 return
             }
 
@@ -184,7 +154,7 @@ export default function Edit() {
         if (!window.confirm("Tem certeza que deseja remover este item permanentemente do banco?")) return
 
         try {
-            const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/collections/${modalConfig.colecaoMongo}/${idItem}`, {
+            const response = await authFetch(`${API_URL}/collections/${modalConfig.colecaoMongo}/${idItem}`, {
                 method: "DELETE"
             })
 
@@ -225,7 +195,7 @@ export default function Edit() {
         const headers = {}
         if (token) headers.Authorization = `Bearer ${token}`
 
-        const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/plant/${params.id}`, {
+        const response = await fetch(`${API_URL}/plant/${params.id}`, {
             method: "PUT",
             headers,
             body: formData
@@ -301,7 +271,7 @@ export default function Edit() {
                                         {form.imagesPath.map((path, index) => (
                                             <img 
                                                 key={index}
-                                                src={`${REACT_APP_YOUR_HOSTNAME}${path}`} 
+                                                src={`${API_URL}${path}`} 
                                                 alt={`Foto ${index + 1}`} 
                                                 className="plant-image-preview" 
                                             />

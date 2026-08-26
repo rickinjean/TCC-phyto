@@ -1,14 +1,14 @@
 import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
-
-const REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'; // IP do Servidor
+import API_URL from "../config"
 
 export default function Create() {
     const [form, setForm] = useState({
         name: "",
         user: "",
         email: "",
-        function: ""
+        function: "",
+        senha: ""
     })
     const navigate = useNavigate()
 
@@ -30,7 +30,7 @@ export default function Create() {
             headers.Authorization = `Bearer ${token}`
         }
 
-        const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/add`, {
+        const response = await fetch(`${API_URL}/user/add`, {
             method: "POST",
             headers,
             body: JSON.stringify(newPerson)
@@ -42,7 +42,7 @@ export default function Create() {
             return
         }
 
-        setForm({ name: "", user: "", email: "", function: "" })
+        setForm({ name: "", user: "", email: "", function: "", senha: "" })
         navigate("/")
     }
 
@@ -78,6 +78,16 @@ export default function Create() {
                         id="email"
                         value={form.email}
                         onChange={(e) => updateForm({ email: e.target.value })}
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="senha">Senha</label>
+                    <input
+                        type="password"
+                        className="form-control"
+                        id="senha"
+                        value={form.senha}
+                        onChange={(e) => updateForm({ senha: e.target.value })}
                     />
                 </div>
                 <div className="form-group">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Route, Routes, Navigate } from "react-router-dom"
 import Navbar from "./components/navbar"
 import Footer from "./components/footer"
@@ -13,6 +13,7 @@ import Register from "./components/Register"
 import PlantDetails from './components/PlantDetails';
 import Inicio from './components/inicio'
 import Sobre from './components/Sobre'
+import Favorites from './components/Favorites'
 
 function parseJwt(token) {
     if (!token) return null
@@ -25,12 +26,42 @@ function parseJwt(token) {
     }
 }
 
+function isTokenExpired(token) {
+    const payload = parseJwt(token)
+    if (!payload || !payload.exp) return true
+    return Date.now() >= payload.exp * 1000
+}
+
 const App = () => {
-    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [token, setToken] = useState(() => {
+        const stored = localStorage.getItem('token')
+        if (stored && isTokenExpired(stored)) {
+            localStorage.removeItem('token')
+            return null
+        }
+        return stored
+    });
     const [role, setRole] = useState(() => {
         const storedToken = localStorage.getItem('token')
         return parseJwt(storedToken)?.tipo || null
     });
+    const [favTick, setFavTick] = useState(0);
+
+    const notifyFavChange = () => setFavTick(t => t + 1);
+
+    useEffect(() => {
+        if (token && isTokenExpired(token)) {
+            handleLogout()
+        }
+    }, [token])
+
+    useEffect(() => {
+        const handleAuthLogout = () => {
+            handleLogout();
+        };
+        window.addEventListener("auth:logout", handleAuthLogout);
+        return () => window.removeEventListener("auth:logout", handleAuthLogout);
+    }, [])
 
     const handleLogin = (tokenValue) => {
         localStorage.setItem('token', tokenValue)
@@ -52,16 +83,17 @@ const App = () => {
                     <Route path="/login" element={<Login onLogin={handleLogin} />} />
                     <Route path="/register" element={<Register />} />
                     <Route exact path="/" element={token ? (role === "ADM" ? <UserList /> : <Navigate to="/plantlist" replace />) : <Navigate to="/login" replace />} />
-                    <Route path="/plantlist" element={token ? <PlantList role={role} /> : <Navigate to="/login" replace />} />
+                    <Route path="/plantlist" element={token ? <PlantList role={role} favTick={favTick} /> : <Navigate to="/login" replace />} />
                     <Route path="/userlist" element={token && role === "ADM" ? <UserList /> : <Navigate to={token ? "/" : "/login"} replace />} />
                     <Route path="/edit/:id" element={token && role === "ADM" ? <Edit /> : <Navigate to={token ? "/" : "/login"} replace />} />
                     <Route path="/editplant/:id" element={token && role === "ADM" ? <Editplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
                     <Route path="/create" element={token && role === "ADM" ? <Create /> : <Navigate to={token ? "/" : "/login"} replace />} />
                     <Route path="/createplant" element={token && role === "ADM" ? <Createplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
-                    <Route path="/plantdetails/:id" element={token ? <PlantDetails /> : <Navigate to="/login" replace />} />
+                    <Route path="/plantdetails/:id" element={token ? <PlantDetails onFavChange={notifyFavChange} /> : <Navigate to="/login" replace />} />
                     <Route path="/home" element={<Navigate to="/" replace />} />
                     <Route path="/inicio" element={<Inicio />} />
-                    <Route path="/Sobre" element={token ? <Sobre /> : <Navigate to="/login" replace />} />
+                    <Route path="/Sobre" element={<Sobre />} />
+                    <Route path="/favoritos" element={token ? <Favorites key={favTick} /> : <Navigate to="/login" replace />} />
                     <Route path="*" element={<Navigate to={token ? (role === "ADM" ? "/" : "/plantlist") : "/login"} replace />} />
                 </Routes>
             </main>

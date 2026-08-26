@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-
-const REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'; // IP do Servidor
+import API_URL from "../config"
 
 export default function Edit() {
     const [form, setForm] = useState({
@@ -18,7 +17,7 @@ export default function Edit() {
             const id = params.id
             const token = localStorage.getItem('token')
             const headers = token ? { Authorization: `Bearer ${token}` } : {}
-            const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/user/${id}`, { headers })
+            const response = await fetch(`${API_URL}/user/${id}`, { headers })
             if (!response.ok) {
                 const message = `An error occurred: ${response.statusText}`
                 window.alert(message)
@@ -55,8 +54,8 @@ export default function Edit() {
             "Content-Type": "application/json"
         }
         if (token) headers.Authorization = `Bearer ${token}`
-        const response = await fetch(`${REACT_APP_YOUR_HOSTNAME}/update/${params.id}`, {
-            method: "POST",
+        const response = await fetch(`${API_URL}/update/${params.id}`, {
+            method: "PUT",
             headers,
             body: JSON.stringify(editedPerson)
         })
@@ -127,7 +126,7 @@ export default function Edit() {
                             checked={form.function === "ADM"}
                             onChange={(e) => updateForm({ function: e.target.value })}
                         />
-                        <label htmlFor="positionADM" className="form-check-label">ADM</label>
+                        <label htmlFor="positionDocente" className="form-check-label">ADM</label>
                     </div>
                 </div>
                 <div className="form-group">
