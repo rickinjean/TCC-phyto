@@ -45,21 +45,21 @@ app.use(require("./routes/stats"))
 
 const dbo = require("./db/conn")
 
-app.get("/", function(req, res) {
-    res.send("App is running")
-})
-
-app.get("/health", function(req, res) {
-    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() })
-})
-
 if (process.env.NODE_ENV === "production" || process.env.RENDER) {
     const clientBuildPath = path.join(__dirname, "..", "client", "build")
     app.use(express.static(clientBuildPath))
     app.get("*", function(req, res) {
         res.sendFile(path.join(clientBuildPath, "index.html"))
     })
+} else {
+    app.get("/", function(req, res) {
+        res.send("App is running")
+    })
 }
+
+app.get("/health", function(req, res) {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() })
+})
 
 dbo.connectToMongoDB(function (error) {
     if (error) throw error
