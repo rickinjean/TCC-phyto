@@ -1,87 +1,193 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
 
-export default function Create() {
-    const [form, setForm] = useState({
-        name: "", scientificName: "", description: "", simpleDescription: "",
-        fruit: "", origin: "", type: "", propagation: "", toxicity: "", dificulty: "",
-        Filo: "", Classe: "", Ordem: "", Family: "", Genero: "", Especie: "",
-        height: "", flowercolor: "", foliage: "", flowering: "",
-        light: "", water: "", size: "", soil: "",
-        watering: "", fertilizing: "", pruning: "", pests: "",
-        manha: "", amount: "", frequency: "", NPK: "", season: "", tools: "", prevention: "", monitoring: "",
-        planting: "", exhibition: "", maintenance: "",
-        station: "", spacing: "", iluminosity: "", protection: "", idealTemperature: "", tolerance: "",
-    })
+const STEPS = [
+    { key: "basicos", label: "Dados Básicos", icon: "🌱" },
+    { key: "botanica", label: "Botânica", icon: "🌿" },
+    { key: "fisicas", label: "Física", icon: "🍂" },
+    { key: "ambiente", label: "Ambiente", icon: "☀️" },
+    { key: "cuidados", label: "Cuidados", icon: "🤲" },
+    { key: "cultivo", label: "Cultivo", icon: "🌾" },
+]
 
-    // NOVO ESTADO: Guarda os arquivos de imagem selecionados pelo usuário
-    const [imageFiles, setImageFiles] = useState([])
+const INITIAL_FORM = {
+    name: "", scientificName: "", description: "", simpleDescription: "",
+    fruit: "", origin: "", type: "", propagation: "", toxicity: "", dificulty: "",
+    Filo: "", Classe: "", Ordem: "", Family: "", Genero: "", Especie: "",
+    height: "", flowercolor: "", foliage: "", flowering: "",
+    light: "", water: "", size: "", soil: "",
+    watering: "", fertilizing: "", pruning: "", pests: "",
+    manha: "", amount: "", frequency: "", NPK: "", season: "", tools: "", prevention: "", monitoring: "",
+    planting: "", exhibition: "", maintenance: "",
+    station: "", spacing: "", iluminosity: "", protection: "", idealTemperature: "", tolerance: "",
+}
 
-    const [opcoesBanco, setOpcoesBanco] = useState({
-        fruit: [], origin: [], type: [], propagation: [], toxicity: [], dificulty: [],
-        height: [], flowercolor: [], foliage: [], flowering: [], light: [], water: [],
-        size: [], soil: [], manha: [], amount: [], frequency: [], NPK: [], season: [],
-        tools: [], prevention: [], monitoring: [], station: [], spacing: [],
-        iluminosity: [], protection: [], idealTemperature: [], tolerance: []
-    })
+const AUTOSAVE_KEY = "phyto-plant-draft"
+const AUTOSAVE_DELAY = 3000
 
-    const [modalConfig, setModalConfig] = useState({ campoForm: "", colecaoMongo: "", labelAmigavel: "" })
-    const [novoValorInput, setNovoValorInput] = useState("")
+function ImageDropZone({ imageFiles, setImageFiles }) {
+    const [dragging, setDragging] = useState(false)
+    const inputRef = useRef()
 
-    const navigate = useNavigate()
-
-    function updateForm(value) {
-        setForm((prev) => ({ ...prev, ...value }))
+    function handleDrop(e) {
+        e.preventDefault()
+        setDragging(false)
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"))
+        addFiles(files)
     }
 
-    // CAPTURA OS ARQUIVOS DE IMAGEM
-    function handleImageChange(e) {
-        if (e.target.files && e.target.files.length > 0) {
-            const selectedFiles = Array.from(e.target.files)
-            setImageFiles((prevFiles) => {
-                const mergedFiles = [...prevFiles]
-                for (const file of selectedFiles) {
-                    const alreadyAdded = mergedFiles.some(
-                        (existing) =>
-                            existing.name === file.name &&
-                            existing.size === file.size &&
-                            existing.type === file.type
-                    )
-                    if (!alreadyAdded) {
-                        mergedFiles.push(file)
-                    }
-                    if (mergedFiles.length >= 5) break
-                }
-                return mergedFiles.slice(0, 5)
-            })
-            // Reset para permitir re-seleção do mesmo arquivo se necessário
-            e.target.value = null
-        }
-    }
-
-    useEffect(() => {
-        async function carregarTodosDados() {
-            const chaves = Object.keys(mapeamentoColecoes)
-            const dadosCarregados = {}
-
-            for (const chave of chaves) {
-                try {
-                    const nomeColecao = mapeamentoColecoes[chave].colecao
-                    const res = await authFetch(`${API_URL}/collections/${nomeColecao}`)
-                    if (res && res.ok) {
-                        dadosCarregados[chave] = await res.json()
-                    }
-                } catch (err) {
-                    console.error(`Erro ao buscar dados para o campo ${chave}:`, err)
+    function addFiles(newFiles) {
+        setImageFiles(prev => {
+            const merged = [...prev]
+            for (const file of newFiles) {
+                if (merged.length >= 5) break
+                if (!merged.some(f => f.name === file.name && f.size === file.size)) {
+                    merged.push(file)
                 }
             }
-            setOpcoesBanco(prev => ({ ...prev, ...dadosCarregados }))
+            return merged
+        })
+    }
+
+    function removeFile(index) {
+        setImageFiles(prev => prev.filter((_, i) => i !== index))
+    }
+
+    function handleInput(e) {
+        addFiles(Array.from(e.target.files))
+        e.target.value = null
+    }
+
+    return (
+        <div className="wizard-dropzone-wrapper">
+            <div
+                className={`wizard-dropzone ${dragging ? "wizard-dropzone--active" : ""}`}
+                onDragOver={e => { e.preventDefault(); setDragging(true) }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={handleDrop}
+                onClick={() => inputRef.current?.click()}
+                role="button"
+                tabIndex={0}
+            >
+                <span className="wizard-dropzone__icon">📷</span>
+                <span className="wizard-dropzone__text">
+                    Arraste imagens aqui ou <strong>clique para selecionar</strong>
+                </span>
+                <span className="wizard-dropzone__hint">Até 5 imagens (JPG, PNG)</span>
+                <input
+                    ref={inputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleInput}
+                    className="d-none"
+                />
+            </div>
+            {imageFiles.length > 0 && (
+                <div className="wizard-dropzone__previews">
+                    {imageFiles.map((file, i) => (
+                        <div key={i} className="wizard-dropzone__thumb">
+                            <img src={URL.createObjectURL(file)} alt={file.name} />
+                            <button
+                                type="button"
+                                className="wizard-dropzone__remove"
+                                onClick={(e) => { e.stopPropagation(); removeFile(i) }}
+                                aria-label="Remover imagem"
+                            >
+                                ×
+                            </button>
+                            <span className="wizard-dropzone__order">{i + 1}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+export default function Create() {
+    const [form, setForm] = useState(INITIAL_FORM)
+    const [imageFiles, setImageFiles] = useState([])
+    const [currentStep, setCurrentStep] = useState(0)
+    const [opcoesBanco, setOpcoesBanco] = useState({})
+    const [loading, setLoading] = useState(true)
+    const [submitting, setSubmitting] = useState(false)
+    const [modalConfig, setModalConfig] = useState({ campoForm: "", colecaoMongo: "", labelAmigavel: "" })
+    const [novoValorInput, setNovoValorInput] = useState("")
+    const [modalSearch, setModalSearch] = useState("")
+    const [toast, setToast] = useState(null)
+    const [hasDraft, setHasDraft] = useState(false)
+    const navigate = useNavigate()
+    const autoSaveTimer = useRef(null)
+
+    // Load collections in one request
+    useEffect(() => {
+        async function load() {
+            setLoading(true)
+            try {
+                const res = await fetch(`${API_URL}/collections/all`)
+                if (res.ok) {
+                    const all = await res.json()
+                    const mapped = {}
+                    for (const [key, meta] of Object.entries(mapeamentoColecoes)) {
+                        mapped[key] = all[meta.colecao] || []
+                    }
+                    setOpcoesBanco(mapped)
+                }
+            } catch (err) {
+                console.error("Erro ao carregar coleções:", err)
+            }
+            setLoading(false)
         }
-        carregarTodosDados()
+        load()
     }, [])
+
+    // Auto-save to localStorage
+    useEffect(() => {
+        if (loading) return
+        clearTimeout(autoSaveTimer.current)
+        autoSaveTimer.current = setTimeout(() => {
+            const draft = { form, imageNames: imageFiles.map(f => f.name), currentStep }
+            localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(draft))
+        }, AUTOSAVE_DELAY)
+        return () => clearTimeout(autoSaveTimer.current)
+    }, [form, imageFiles, currentStep, loading])
+
+    // Restore draft on mount
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(AUTOSAVE_KEY)
+            if (saved) {
+                const draft = JSON.parse(saved)
+                if (draft?.form?.name) {
+                    setForm(draft.form)
+                    setCurrentStep(draft.currentStep || 0)
+                    setHasDraft(true)
+                }
+            }
+        } catch { /* ignore */ }
+    }, [])
+
+    function clearDraft() {
+        localStorage.removeItem(AUTOSAVE_KEY)
+        setForm(INITIAL_FORM)
+        setImageFiles([])
+        setCurrentStep(0)
+        setHasDraft(false)
+        showToast("Rascunho limpo!")
+    }
+
+    function showToast(message, type = "success") {
+        setToast({ message, type })
+        setTimeout(() => setToast(null), 3000)
+    }
+
+    function updateForm(value) {
+        setForm(prev => ({ ...prev, ...value }))
+    }
 
     function abrirModalPara(campo) {
         setModalConfig({
@@ -90,140 +196,113 @@ export default function Create() {
             labelAmigavel: mapeamentoColecoes[campo].label
         })
         setNovoValorInput("")
+        setModalSearch("")
     }
 
     async function salvarNovoItem() {
-        if (!novoValorInput.trim()) {
-            alert("Preencha um valor válido.")
-            return
-        }
-
+        if (!novoValorInput.trim()) return
         try {
             const response = await authFetch(`${API_URL}/collections/${modalConfig.colecaoMongo}/add`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: novoValorInput })
             })
-
             if (!response || !response.ok) {
-                const erroServidor = response ? await response.json().catch(() => ({})) : {}
-                alert(`Erro do Servidor: ${erroServidor.message || response?.statusText || "Sem resposta"}`)
+                const err = response ? await response.json().catch(() => ({})) : {}
+                showToast(err.message || "Erro ao salvar", "error")
                 return
             }
-
-            const itemCriado = await response.json()
-
+            const item = await response.json()
             setOpcoesBanco(prev => ({
                 ...prev,
-                [modalConfig.campoForm]: [...prev[modalConfig.campoForm], itemCriado]
+                [modalConfig.campoForm]: [...(prev[modalConfig.campoForm] || []), item]
             }))
-
-            updateForm({ [modalConfig.campoForm]: itemCriado._id })
-
-            const botaoFechar = document.querySelector('#modalDinamico [data-bs-dismiss="modal"]')
-            if (botaoFechar) botaoFechar.click()
-
-        } catch (error) {
-            console.error("Erro na requisição:", error)
-            alert("Não foi possível conectar ao servidor para salvar.")
+            updateForm({ [modalConfig.campoForm]: item._id })
+            setNovoValorInput("")
+            showToast(`"${item.name}" adicionado!`)
+            const btn = document.querySelector('#modalDinamico [data-bs-dismiss="modal"]')
+            if (btn) btn.click()
+        } catch {
+            showToast("Erro ao conectar ao servidor", "error")
         }
     }
 
     async function deletarItem(idItem) {
-        if (!window.confirm("Tem certeza que deseja remover este item permanentemente do banco?")) return
-
         try {
-            const response = await authFetch(`${API_URL}/collections/${modalConfig.colecaoMongo}/${idItem}`, {
-                method: "DELETE"
-            })
-
-            if (response.ok) {
+            const response = await authFetch(`${API_URL}/collections/${modalConfig.colecaoMongo}/${idItem}`, { method: "DELETE" })
+            if (response?.ok) {
                 setOpcoesBanco(prev => ({
                     ...prev,
-                    [modalConfig.campoForm]: prev[modalConfig.campoForm].filter(item => item._id !== idItem)
+                    [modalConfig.campoForm]: (prev[modalConfig.campoForm] || []).filter(item => item._id !== idItem)
                 }))
-
-                if (form[modalConfig.campoForm] === idItem || opcoesBanco[modalConfig.campoForm].find(i => i._id === idItem)?.name === form[modalConfig.campoForm]) {
+                if (form[modalConfig.campoForm] === idItem) {
                     updateForm({ [modalConfig.campoForm]: "" })
                 }
-            } else {
-                const erro = await response.json()
-                alert(`Erro ao deletar: ${erro.message}`)
+                showToast("Item removido!")
             }
-        } catch (error) {
-            console.error("Erro ao deletar item:", error)
-            alert("Não foi possível conectar ao servidor para deletar.")
+        } catch {
+            showToast("Erro ao deletar", "error")
         }
     }
 
-    // ALTERADO: Envio dos dados adaptado para FormData (Multipart/Form-Data)
-    async function onSubmit(e) {
+    const onSubmit = useCallback(async (e) => {
         e.preventDefault()
-
+        setSubmitting(true)
         const formData = new FormData()
+        Object.keys(form).forEach(key => formData.append(key, form[key]))
+        imageFiles.forEach(file => formData.append("images", file))
 
-        // 1. Vincula todos os textos estruturados do seu form original
-        Object.keys(form).forEach((key) => {
-            formData.append(key, form[key])
-        })
+        try {
+            const token = localStorage.getItem("token")
+            const headers = {}
+            if (token) headers.Authorization = `Bearer ${token}`
 
-        // 2. Vincula os arquivos binários de imagem com o nome de chave 'images'
-        imageFiles.forEach((file) => {
-            formData.append("images", file)
-        })
+            const response = await fetch(`${API_URL}/plant/add`, {
+                method: "POST",
+                headers,
+                body: formData
+            })
 
-        const token = localStorage.getItem('token')
-        const headers = {}
-        if (token) headers.Authorization = `Bearer ${token}`
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}))
+                showToast(err.message || "Erro ao cadastrar", "error")
+                return
+            }
 
-        const response = await fetch(`${API_URL}/plant/add`, {
-            method: "POST",
-            headers,
-            // ATENÇÃO: Deixe o navegador definir os headers do FormData automaticamente!
-            body: formData
-        })
-
-        if (!response.ok) {
-            window.alert(`An error occurred: ${response.statusText}`)
-            return
+            localStorage.removeItem(AUTOSAVE_KEY)
+            showToast("Planta cadastrada com sucesso!")
+            setTimeout(() => navigate("/plantlist"), 1200)
+        } catch {
+            showToast("Erro ao conectar ao servidor", "error")
+        } finally {
+            setSubmitting(false)
         }
+    }, [form, imageFiles, navigate])
 
-        setForm({
-            name: "", scientificName: "", description: "", simpleDescription: "",
-            fruit: "", origin: "", type: "", propagation: "", toxicity: "", dificulty: "",
-            Filo: "", Classe: "", Ordem: "", Family: "", Genero: "", Especie: "",
-            height: "", flowercolor: "", foliage: "", flowering: "",
-            light: "", water: "", size: "", soil: "",
-            watering: "", fertilizing: "", pruning: "", pests: "",
-            manha: "", amount: "", frequency: "", NPK: "", season: "", tools: "", prevention: "", monitoring: "",
-            planting: "", exhibition: "", maintenance: "",
-            station: "", spacing: "", iluminosity: "", protection: "", idealTemperature: "", tolerance: "",
-        })
-        setImageFiles([])
-        
-        navigate("/plantlist")
-    }
+    function SelectField({ campo, placeholder }) {
+        const filtered = modalSearch && modalConfig.campoForm === campo
+            ? (opcoesBanco[campo] || []).filter(i => i.name.toLowerCase().includes(modalSearch.toLowerCase()))
+            : (opcoesBanco[campo] || [])
 
-    const RenderSelectComBotaoPlus = ({ campo, placeholder, filhosPadrao = [] }) => {
         return (
-            <div className="input-group">
+            <div className="wizard-select-group">
                 <select
                     className="form-control"
                     value={form[campo]}
-                    onChange={(e) => updateForm({ [campo]: e.target.value })}
+                    onChange={e => updateForm({ [campo]: e.target.value })}
                 >
                     <option value="">{placeholder}</option>
-                    {filhosPadrao}
-                    {opcoesBanco[campo] && opcoesBanco[campo].map((item) => (
+                    {filtered.map(item => (
                         <option key={item._id} value={item._id}>{item.name}</option>
                     ))}
                 </select>
                 <button
-                    className="btn btn-outline-primary"
                     type="button"
+                    className="wizard-select-plus"
                     data-bs-toggle="modal"
                     data-bs-target="#modalDinamico"
                     onClick={() => abrirModalPara(campo)}
+                    title="Gerenciar valores"
                 >
                     +
                 </button>
@@ -231,274 +310,400 @@ export default function Create() {
         )
     }
 
+    const canAdvance = currentStep < STEPS.length - 1
+    const canGoBack = currentStep > 0
+    const isLastStep = currentStep === STEPS.length - 1
+
+    if (loading) {
+        return (
+            <div className="admin-page admin-page--plant-form container mt-4">
+                <div className="wizard-loading">
+                    <div className="spinner-border" role="status" />
+                    <p>Carregando opções...</p>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="admin-page admin-page--plant-form container mt-4">
-            <h3 className="admin-page__title mb-4">Cadastrar Nova Planta</h3>
-
-            <form className="plant-admin-form" onSubmit={onSubmit}>
-                <ul className="nav nav-tabs mb-4" id="plantFormTabs" role="tablist">
-                    <li className="nav-item" role="presentation"><button className="nav-link active" id="dados-basicos-tab" data-bs-toggle="tab" data-bs-target="#dados-basicos" type="button" role="tab">Dados Básicos</button></li>
-                    <li className="nav-item" role="presentation"><button className="nav-link" id="info-botanicas-tab" data-bs-toggle="tab" data-bs-target="#info-botanicas" type="button" role="tab">Informações Botânicas</button></li>
-                    <li className="nav-item" role="presentation"><button className="nav-link" id="carac-fisicas-tab" data-bs-toggle="tab" data-bs-target="#carac-fisicas" type="button" role="tab">Características Físicas</button></li>
-                    <li className="nav-item" role="presentation"><button className="nav-link" id="neces-ambientais-tab" data-bs-toggle="tab" data-bs-target="#neces-ambientais" type="button" role="tab">Necessidades Ambientais</button></li>
-                    <li className="nav-item" role="presentation"><button className="nav-link" id="cuidados-tab" data-bs-toggle="tab" data-bs-target="#cuidados" type="button" role="tab">Cuidados da Planta</button></li>
-                    <li className="nav-item" role="presentation"><button className="nav-link" id="cultivo-tab" data-bs-toggle="tab" data-bs-target="#cultivo" type="button" role="tab">Cultivo da Planta</button></li>
-                </ul>
-
-                <div className="tab-content" id="plantFormTabsContent">
-                    {/* Dados Básicos */}
-                    <div className="tab-pane fade show active" id="dados-basicos" role="tabpanel">
-                        <div className="row">
-                            <div className="col-md-6 mb-3">
-                                <label>Nome</label>
-                                <input type="text" placeholder="Digite o nome popular da planta." className="form-control" value={form.name} onChange={(e) => updateForm({ name: e.target.value })} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Nome Científico</label>
-                                <input type="text" placeholder="Digite o nome científico." className="form-control" value={form.scientificName} onChange={(e) => updateForm({ scientificName: e.target.value })} />
-                            </div>
-
-                            {/* NOVO CAMPO: Input do tipo arquivo para a imagem */}
-                            <div className="col-md-12 mb-3">
-                                <label className="form-label font-weight-bold">Imagem da Planta</label>
-                                <input 
-                                    type="file" 
-                                    name="images"
-                                    className="form-control" 
-                                    accept="image/*" 
-                                    multiple
-                                    onChange={handleImageChange} 
-                                />
-                                {imageFiles.length > 0 && (
-                                    <div className="mt-1 text-muted small">
-                                        {imageFiles.length} arquivo(s) selecionado(s): {imageFiles.map((file) => file.name).join(', ')}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="col-md-12 mb-3">
-                                <label>Descrição Simples</label>
-                                <textarea className="form-control" placeholder="Breve descrição..." rows="3" value={form.simpleDescription} onChange={(e) => updateForm({ simpleDescription: e.target.value })} />
-                            </div>
-                            <div className="col-md-12 mb-3">
-                                <label>Descrição</label>
-                                <textarea className="form-control" placeholder="Descrição detalhada..." rows="4" value={form.description} onChange={(e) => updateForm({ description: e.target.value })} />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Os demais blocos de abas (Botânicas, Físicas, etc.) permanecem idênticos ao seu arquivo original */}
-                    <div className="tab-pane fade" id="info-botanicas" role="tabpanel">
-                        <div className="row">
-                            <div className="col-md-4 mb-3">
-                                <label>Fruto</label>
-                                <RenderSelectComBotaoPlus campo="fruit" placeholder="Qual o tipo de fruto?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <label>Origem</label>
-                                <RenderSelectComBotaoPlus campo="origin" placeholder="Qual a origem?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <label>Tipo</label>
-                                <RenderSelectComBotaoPlus campo="type" placeholder="Qual a função?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <label>Propagação</label>
-                                <RenderSelectComBotaoPlus campo="propagation" placeholder="Qual a propagação?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <label>Toxicidade</label>
-                                <RenderSelectComBotaoPlus campo="toxicity" placeholder="Qual a toxicidade?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <label>Dificuldade</label>
-                                <RenderSelectComBotaoPlus campo="dificulty" placeholder="Qual a dificuldade?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-4 mb-3"><label>Filo</label><input type="text" className="form-control" value={form.Filo} onChange={(e) => updateForm({ Filo: e.target.value })} /></div>
-                            <div className="col-md-4 mb-3"><label>Classe</label><input type="text" className="form-control" value={form.Classe} onChange={(e) => updateForm({ Classe: e.target.value })} /></div>
-                            <div className="col-md-4 mb-3"><label>Ordem</label><input type="text" className="form-control" value={form.Ordem} onChange={(e) => updateForm({ Ordem: e.target.value })} /></div>
-                            <div className="col-md-4 mb-3"><label>Família</label><input type="text" className="form-control" value={form.Family} onChange={(e) => updateForm({ Family: e.target.value })} /></div>
-                            <div className="col-md-4 mb-3"><label>Gênero</label><input type="text" className="form-control" value={form.Genero} onChange={(e) => updateForm({ Genero: e.target.value })} /></div>
-                            <div className="col-md-4 mb-3"><label>Espécie</label><input type="text" className="form-control" value={form.Especie} onChange={(e) => updateForm({ Especie: e.target.value })} /></div>
-                        </div>
-                    </div>
-
-                    <div className="tab-pane fade" id="carac-fisicas" role="tabpanel">
-                        <div className="row">
-                            <div className="col-md-6 mb-3">
-                                <label>Altura</label>
-                                <RenderSelectComBotaoPlus campo="height" placeholder="Qual o tamanho?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Cor da Flor</label>
-                                <RenderSelectComBotaoPlus campo="flowercolor" placeholder="Qual a cor?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Folhagem</label>
-                                <RenderSelectComBotaoPlus campo="foliage" placeholder="Qual a folhagem?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Floração</label>
-                                <RenderSelectComBotaoPlus campo="flowering" placeholder="Qual a floração?" filhosPadrao={[
-                                ]} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="tab-pane fade" id="neces-ambientais" role="tabpanel">
-                        <div className="row">
-                            <div className="col-md-6 mb-3">
-                                <label>Luminosidade</label>
-                                <RenderSelectComBotaoPlus campo="light" placeholder="Qual a luminosidade?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Água</label>
-                                <RenderSelectComBotaoPlus campo="water" placeholder="Qual a necessidade de água?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Tamanho</label>
-                                <RenderSelectComBotaoPlus campo="size" placeholder="Qual o tamanho?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Solo</label>
-                                <RenderSelectComBotaoPlus campo="soil" placeholder="Qual o tipo de solo?" filhosPadrao={[
-                                ]} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="tab-pane fade" id="cuidados" role="tabpanel">
-                        <div className="row">
-                            <div className="col-md-12 mb-3">
-                                <h5 className="border-bottom pb-2">Rega</h5>
-                                <textarea className="form-control" placeholder="Descrição detalhada sobre a rega..." rows="3" value={form.watering} onChange={(e) => updateForm({ watering: e.target.value })} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Melhor horário</label>
-                                <RenderSelectComBotaoPlus campo="manha" placeholder="Qual o melhor horário?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Quantidade</label>
-                                <RenderSelectComBotaoPlus campo="amount" placeholder="Qual a quantidade?" filhosPadrao={[
-                                ]} />
-                            </div>
-
-                            <div className="col-md-12 mb-3 mt-3">
-                                <h5 className="border-bottom pb-2">Fertilização</h5>
-                                <textarea className="form-control" placeholder="Descrição detalhada sobre fertilização..." rows="3" value={form.fertilizing} onChange={(e) => updateForm({ fertilizing: e.target.value })} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Frequência</label>
-                                <RenderSelectComBotaoPlus campo="frequency" placeholder="Qual a frequência?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>NPK recomendado</label>
-                                <RenderSelectComBotaoPlus campo="NPK" placeholder="Qual o NPK?" filhosPadrao={[
-                                ]} />
-                            </div>
-
-                            <div className="col-md-12 mb-3 mt-3">
-                                <h5 className="border-bottom pb-2">Poda</h5>
-                                <textarea className="form-control" placeholder="Descrição detalhada sobre a poda..." rows="3" value={form.pruning} onChange={(e) => updateForm({ pruning: e.target.value })} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Época</label>
-                                <RenderSelectComBotaoPlus campo="season" placeholder="Qual a época?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Ferramentas</label>
-                                <RenderSelectComBotaoPlus campo="tools" placeholder="Qual a ferramenta?" filhosPadrao={[
-                                ]} />
-                            </div>
-
-                            <div className="col-md-12 mb-3 mt-3">
-                                <h5 className="border-bottom pb-2">Pragas e Doenças</h5>
-                                <textarea className="form-control" placeholder="Descrição detalhada sobre pragas..." rows="3" value={form.pests} onChange={(e) => updateForm({ pests: e.target.value })} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Prevenção</label>
-                                <RenderSelectComBotaoPlus campo="prevention" placeholder="Qual o nível?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Monitoramento</label>
-                                <RenderSelectComBotaoPlus campo="monitoring" placeholder="Qual o monitoramento?" filhosPadrao={[
-                                ]} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="tab-pane fade" id="cultivo" role="tabpanel">
-                        <div className="row">
-                            <div className="col-md-12 mb-3">
-                                <h5 className="border-bottom pb-2">Plantio</h5>
-                                <textarea className="form-control" placeholder="Descrição detalhada sobre plantio..." rows="3" value={form.planting} onChange={(e) => updateForm({ planting: e.target.value })} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Estação</label>
-                                <RenderSelectComBotaoPlus campo="station" placeholder="Qual a estação?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Espaçamento entre mudas</label>
-                                <RenderSelectComBotaoPlus campo="spacing" placeholder="Qual o espaçamento?" filhosPadrao={[
-                                ]} />
-                            </div>
-
-                            <div className="col-md-12 mb-3 mt-3">
-                                <h5 className="border-bottom pb-2">Exposição Solar e Condições</h5>
-                                <textarea className="form-control" placeholder="Descreva a exposição solar..." rows="3" value={form.exhibition} onChange={(e) => updateForm({ exhibition: e.target.value })} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Sol diário</label>
-                                <RenderSelectComBotaoPlus campo="iluminosity" placeholder="Qual a exposição solar?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Proteção</label>
-                                <RenderSelectComBotaoPlus campo="protection" placeholder="Qual a proteção?" filhosPadrao={[
-                                ]} />
-                            </div>
-
-                            <div className="col-md-12 mb-3 mt-3">
-                                <h5 className="border-bottom pb-2">Manutenção</h5>
-                                <textarea className="form-control" placeholder="Práticas recomendadas..." rows="3" value={form.maintenance} onChange={(e) => updateForm({ maintenance: e.target.value })} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Temperatura ideal</label>
-                                <RenderSelectComBotaoPlus campo="idealTemperature" placeholder="Qual a temperatura?" filhosPadrao={[
-                                ]} />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <label>Tolerância</label>
-                                <RenderSelectComBotaoPlus campo="tolerance" placeholder="Qual a tolerância?" filhosPadrao={[
-                                ]} />
-                            </div>
-                        </div>
-                    </div>
+            {toast && (
+                <div className={`wizard-toast wizard-toast--${toast.type}`}>
+                    {toast.type === "success" ? "✓" : "✕"} {toast.message}
                 </div>
+            )}
 
-                <div className="mt-4 text-end">
-                    <input type="submit" value="Cadastrar Planta" className="btn btn-primary btn-lg px-5" />
+            <div className="wizard-header">
+                <h3 className="admin-page__title">Cadastrar Nova Planta</h3>
+                {hasDraft && (
+                    <button type="button" className="btn btn-sm btn-outline-secondary" onClick={clearDraft}>
+                        Limpar rascunho
+                    </button>
+                )}
+            </div>
+
+            {/* ── STEPPER ── */}
+            <div className="wizard-stepper">
+                {STEPS.map((step, i) => (
+                    <button
+                        key={step.key}
+                        type="button"
+                        className={`wizard-stepper__step ${i === currentStep ? "wizard-stepper__step--active" : ""} ${i < currentStep ? "wizard-stepper__step--done" : ""}`}
+                        onClick={() => setCurrentStep(i)}
+                    >
+                        <span className="wizard-stepper__number">
+                            {i < currentStep ? "✓" : step.icon}
+                        </span>
+                        <span className="wizard-stepper__label">{step.label}</span>
+                    </button>
+                ))}
+                <div className="wizard-stepper__track">
+                    <div
+                        className="wizard-stepper__progress"
+                        style={{ width: `${(currentStep / (STEPS.length - 1)) * 100}%` }}
+                    />
+                </div>
+            </div>
+
+            <form className="plant-admin-form wizard-form" onSubmit={onSubmit}>
+                {/* ── STEP 0: DADOS BÁSICOS ── */}
+                {currentStep === 0 && (
+                    <div className="wizard-step-content">
+                        <div className="wizard-step-header">
+                            <h4>🌱 Dados Básicos</h4>
+                            <p>Nome, imagem e descrição da planta</p>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-6 mb-3">
+                                <label className="wizard-label">Nome Popular <span className="text-danger">*</span></label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Ex: Espada-de-São-Jorge"
+                                    value={form.name}
+                                    onChange={e => updateForm({ name: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                                <label className="wizard-label">Nome Científico <span className="text-danger">*</span></label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Ex: Acorus calamus"
+                                    value={form.scientificName}
+                                    onChange={e => updateForm({ scientificName: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="col-12 mb-3">
+                                <label className="wizard-label">Imagens</label>
+                                <ImageDropZone imageFiles={imageFiles} setImageFiles={setImageFiles} />
+                            </div>
+                            <div className="col-12 mb-3">
+                                <label className="wizard-label">Resumo Rápido</label>
+                                <textarea
+                                    className="form-control"
+                                    rows="2"
+                                    placeholder="Uma frase curta sobre a planta..."
+                                    value={form.simpleDescription}
+                                    onChange={e => updateForm({ simpleDescription: e.target.value })}
+                                />
+                            </div>
+                            <div className="col-12 mb-3">
+                                <label className="wizard-label">Descrição Detalhada</label>
+                                <textarea
+                                    className="form-control"
+                                    rows="4"
+                                    placeholder="Descrição completa da planta, suas características, usos..."
+                                    value={form.description}
+                                    onChange={e => updateForm({ description: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── STEP 1: BOTÂNICA ── */}
+                {currentStep === 1 && (
+                    <div className="wizard-step-content">
+                        <div className="wizard-step-header">
+                            <h4>🌿 Informações Botânicas</h4>
+                            <p>Classificação, origem e características gerais</p>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Fruto</label>
+                                <SelectField campo="fruit" placeholder="Tipo de fruto..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Origem</label>
+                                <SelectField campo="origin" placeholder="Origem geográfica..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Função / Tipo</label>
+                                <SelectField campo="type" placeholder="Função da planta..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Propagação</label>
+                                <SelectField campo="propagation" placeholder="Como se propaga..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Toxicidade</label>
+                                <SelectField campo="toxicity" placeholder="Grau de toxicidade..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Dificuldade</label>
+                                <SelectField campo="dificulty" placeholder="Nível de cuidado..." />
+                            </div>
+                        </div>
+                        <h5 className="wizard-subtitle">Classificação Taxonômica</h5>
+                        <div className="row">
+                            <div className="col-md-2 col-4 mb-3">
+                                <label className="wizard-label">Filo</label>
+                                <input type="text" className="form-control" value={form.Filo} onChange={e => updateForm({ Filo: e.target.value })} />
+                            </div>
+                            <div className="col-md-2 col-4 mb-3">
+                                <label className="wizard-label">Classe</label>
+                                <input type="text" className="form-control" value={form.Classe} onChange={e => updateForm({ Classe: e.target.value })} />
+                            </div>
+                            <div className="col-md-2 col-4 mb-3">
+                                <label className="wizard-label">Ordem</label>
+                                <input type="text" className="form-control" value={form.Ordem} onChange={e => updateForm({ Ordem: e.target.value })} />
+                            </div>
+                            <div className="col-md-2 col-4 mb-3">
+                                <label className="wizard-label">Família</label>
+                                <input type="text" className="form-control" value={form.Family} onChange={e => updateForm({ Family: e.target.value })} />
+                            </div>
+                            <div className="col-md-2 col-4 mb-3">
+                                <label className="wizard-label">Gênero</label>
+                                <input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} />
+                            </div>
+                            <div className="col-md-2 col-4 mb-3">
+                                <label className="wizard-label">Espécie</label>
+                                <input type="text" className="form-control" value={form.Especie} onChange={e => updateForm({ Especie: e.target.value })} />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── STEP 2: CARACTERÍSTICAS FÍSICAS ── */}
+                {currentStep === 2 && (
+                    <div className="wizard-step-content">
+                        <div className="wizard-step-header">
+                            <h4>🍂 Características Físicas</h4>
+                            <p>Aparência visual da planta</p>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-6 mb-3">
+                                <label className="wizard-label">Altura / Porte</label>
+                                <SelectField campo="height" placeholder="Porte da planta..." />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                                <label className="wizard-label">Cor da Flor</label>
+                                <SelectField campo="flowercolor" placeholder="Cores das flores..." />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                                <label className="wizard-label">Folhagem</label>
+                                <SelectField campo="foliage" placeholder="Tipo de folhagem..." />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                                <label className="wizard-label">Época de Floração</label>
+                                <SelectField campo="flowering" placeholder="Quando floresce..." />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── STEP 3: NECESSIDADES AMBIENTAIS ── */}
+                {currentStep === 3 && (
+                    <div className="wizard-step-content">
+                        <div className="wizard-step-header">
+                            <h4>☀️ Necessidades Ambientais</h4>
+                            <p>Condições ideais de cultivo</p>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-6 mb-3">
+                                <label className="wizard-label">Luminosidade</label>
+                                <SelectField campo="light" placeholder="Necessidade de luz..." />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                                <label className="wizard-label">Água</label>
+                                <SelectField campo="water" placeholder="Necessidade de água..." />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                                <label className="wizard-label">Solo</label>
+                                <SelectField campo="soil" placeholder="Tipo de solo..." />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                                <label className="wizard-label">Tamanho</label>
+                                <SelectField campo="size" placeholder="Tamanho recomendado..." />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── STEP 4: CUIDADOS ── */}
+                {currentStep === 4 && (
+                    <div className="wizard-step-content">
+                        <div className="wizard-step-header">
+                            <h4>🤲 Cuidados da Planta</h4>
+                            <p>Rega, adubação, poda e pragas</p>
+                        </div>
+
+                        <h5 className="wizard-subtitle">💧 Rega</h5>
+                        <div className="row">
+                            <div className="col-12 mb-3">
+                                <textarea className="form-control" rows="2" placeholder="Como regar esta planta..." value={form.watering} onChange={e => updateForm({ watering: e.target.value })} />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Melhor Horário</label>
+                                <SelectField campo="manha" placeholder="Horário ideal..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Quantidade</label>
+                                <SelectField campo="amount" placeholder="Quantidade..." />
+                            </div>
+                        </div>
+
+                        <h5 className="wizard-subtitle">🧪 Fertilização</h5>
+                        <div className="row">
+                            <div className="col-12 mb-3">
+                                <textarea className="form-control" rows="2" placeholder="Como adubar..." value={form.fertilizing} onChange={e => updateForm({ fertilizing: e.target.value })} />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Frequência</label>
+                                <SelectField campo="frequency" placeholder="Frequência..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">NPK</label>
+                                <SelectField campo="NPK" placeholder="Tipo de NPK..." />
+                            </div>
+                        </div>
+
+                        <h5 className="wizard-subtitle">✂️ Poda</h5>
+                        <div className="row">
+                            <div className="col-12 mb-3">
+                                <textarea className="form-control" rows="2" placeholder="Como podar..." value={form.pruning} onChange={e => updateForm({ pruning: e.target.value })} />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Época</label>
+                                <SelectField campo="season" placeholder="Época da poda..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Ferramentas</label>
+                                <SelectField campo="tools" placeholder="Ferramentas..." />
+                            </div>
+                        </div>
+
+                        <h5 className="wizard-subtitle">🐛 Pragas e Doenças</h5>
+                        <div className="row">
+                            <div className="col-12 mb-3">
+                                <textarea className="form-control" rows="2" placeholder="Pragas comuns e tratamento..." value={form.pests} onChange={e => updateForm({ pests: e.target.value })} />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Prevenção</label>
+                                <SelectField campo="prevention" placeholder="Nível de prevenção..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Monitoramento</label>
+                                <SelectField campo="monitoring" placeholder="Monitoramento..." />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── STEP 5: CULTIVO ── */}
+                {currentStep === 5 && (
+                    <div className="wizard-step-content">
+                        <div className="wizard-step-header">
+                            <h4>🌾 Cultivo da Planta</h4>
+                            <p>Plantio, exposição e manutenção</p>
+                        </div>
+
+                        <h5 className="wizard-subtitle">🌱 Plantio</h5>
+                        <div className="row">
+                            <div className="col-12 mb-3">
+                                <textarea className="form-control" rows="2" placeholder="Como plantar..." value={form.planting} onChange={e => updateForm({ planting: e.target.value })} />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Estação</label>
+                                <SelectField campo="station" placeholder="Estação de plantio..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Espaçamento</label>
+                                <SelectField campo="spacing" placeholder="Espaçamento entre mudas..." />
+                            </div>
+                        </div>
+
+                        <h5 className="wizard-subtitle">☀️ Exposição Solar</h5>
+                        <div className="row">
+                            <div className="col-12 mb-3">
+                                <textarea className="form-control" rows="2" placeholder="Condições de exposição solar..." value={form.exhibition} onChange={e => updateForm({ exhibition: e.target.value })} />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Horas de Sol</label>
+                                <SelectField campo="iluminosity" placeholder="Horas diárias..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Proteção</label>
+                                <SelectField campo="protection" placeholder="Proteção climática..." />
+                            </div>
+                        </div>
+
+                        <h5 className="wizard-subtitle">🔧 Manutenção</h5>
+                        <div className="row">
+                            <div className="col-12 mb-3">
+                                <textarea className="form-control" rows="2" placeholder="Práticas de manutenção..." value={form.maintenance} onChange={e => updateForm({ maintenance: e.target.value })} />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Temperatura Ideal</label>
+                                <SelectField campo="idealTemperature" placeholder="Temperatura..." />
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <label className="wizard-label">Tolerância</label>
+                                <SelectField campo="tolerance" placeholder="Tolerância..." />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── NAVIGATION ── */}
+                <div className="wizard-nav">
+                    {canGoBack && (
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary wizard-nav__btn"
+                            onClick={() => setCurrentStep(s => s - 1)}
+                        >
+                            ← Anterior
+                        </button>
+                    )}
+                    <div className="wizard-nav__spacer" />
+                    {canAdvance && (
+                        <button
+                            type="button"
+                            className="btn btn-primary wizard-nav__btn"
+                            onClick={() => setCurrentStep(s => s + 1)}
+                        >
+                            Próximo →
+                        </button>
+                    )}
+                    {isLastStep && (
+                        <button
+                            type="submit"
+                            className="btn btn-primary btn-lg wizard-nav__submit"
+                            disabled={submitting}
+                        >
+                            {submitting ? (
+                                <><span className="spinner-border spinner-border-sm me-2" />Cadastrando...</>
+                            ) : "Cadastrar Planta"}
+                        </button>
+                    )}
                 </div>
             </form>
 
-            {/* MODAL GERENCIÁVEL DINÂMICO */}
+            {/* ── MODAL DE COLEÇÕES ── */}
             <div className="modal fade" id="modalDinamico" tabIndex="-1" aria-hidden="true">
                 <div className="modal-dialog modal-dialog-scrollable">
                     <div className="modal-content">
@@ -507,35 +712,52 @@ export default function Create() {
                             <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div className="modal-body">
-                            <div className="mb-4 pb-3 border-bottom">
-                                <label className="form-label font-weight-bold">Adicionar Novo Valor</label>
+                            <div className="mb-3">
                                 <div className="input-group">
                                     <input
                                         type="text"
                                         className="form-control"
-                                        placeholder="Ex: Novo valor..."
+                                        placeholder="Novo valor..."
                                         value={novoValorInput}
-                                        onChange={(e) => setNovoValorInput(e.target.value)}
+                                        onChange={e => setNovoValorInput(e.target.value)}
+                                        onKeyDown={e => e.key === "Enter" && salvarNovoItem()}
                                     />
-                                    <button className="btn btn-success" type="button" onClick={salvarNovoItem}>Salvar</button>
+                                    <button className="btn btn-success" type="button" onClick={salvarNovoItem}>Adicionar</button>
                                 </div>
                             </div>
-
-                            <div>
-                                <label className="form-label font-weight-bold">Valores Cadastrados no Banco</label>
-                                <ul className="list-group">
-                                    {opcoesBanco[modalConfig.campoForm] && opcoesBanco[modalConfig.campoForm].length === 0 ? (
-                                        <li className="list-group-item text-muted text-center small">Nenhum valor customizado criado ainda.</li>
-                                    ) : (
-                                        opcoesBanco[modalConfig.campoForm] && opcoesBanco[modalConfig.campoForm].map((item) => (
-                                            <li key={item._id} className="list-group-item d-flex justify-content-between align-items-center py-2">
+                            <div className="mb-2">
+                                <input
+                                    type="text"
+                                    className="form-control form-control-sm"
+                                    placeholder="🔍 Buscar valor..."
+                                    value={modalSearch}
+                                    onChange={e => setModalSearch(e.target.value)}
+                                />
+                            </div>
+                            <div className="text-muted small mb-2">
+                                {(opcoesBanco[modalConfig.campoForm] || []).length} valor(es) cadastrado(s)
+                            </div>
+                            <ul className="wizard-modal-list">
+                                {(opcoesBanco[modalConfig.campoForm] || []).length === 0 ? (
+                                    <li className="wizard-modal-list__empty">Nenhum valor cadastrado ainda.</li>
+                                ) : (
+                                    (opcoesBanco[modalConfig.campoForm] || [])
+                                        .filter(item => !modalSearch || item.name.toLowerCase().includes(modalSearch.toLowerCase()))
+                                        .map(item => (
+                                            <li key={item._id} className="wizard-modal-list__item">
                                                 <span>{item.name}</span>
-                                                <button className="btn btn-sm btn-outline-danger border-0" type="button" onClick={() => deletarItem(item._id)}>&times;</button>
+                                                <button
+                                                    className="wizard-modal-list__delete"
+                                                    type="button"
+                                                    onClick={() => deletarItem(item._id)}
+                                                    title="Remover"
+                                                >
+                                                    ×
+                                                </button>
                                             </li>
                                         ))
-                                    )}
-                                </ul>
-                            </div>
+                                )}
+                            </ul>
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>

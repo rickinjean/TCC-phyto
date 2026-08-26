@@ -1533,6 +1533,412 @@ textarea:focus {
   padding: 0.55rem 0.75rem;
 }
 
+/* =====================================================
+   PLANT FORM – WIZARD HEADER + STEPPER
+   ===================================================== */
+
+.wizard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.wizard-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 1rem;
+  color: var(--phyto-ink-soft, #71827a);
+}
+
+.wizard-stepper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+.wizard-stepper__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  z-index: 2;
+  min-width: 70px;
+  transition: all 200ms ease;
+}
+
+.wizard-stepper__number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 2px solid var(--phyto-border, #e2e8f0);
+  background: var(--phyto-surface, #fff);
+  font-size: 1.1rem;
+  transition: all 250ms ease;
+}
+
+.wizard-stepper__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--phyto-ink-soft, #71827a);
+  white-space: nowrap;
+  transition: color 200ms ease;
+}
+
+.wizard-stepper__step--active .wizard-stepper__number {
+  border-color: var(--phyto-green-600, #2d7a4f);
+  background: var(--phyto-green-600, #2d7a4f);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(45, 122, 79, 0.15);
+  transform: scale(1.1);
+}
+
+.wizard-stepper__step--active .wizard-stepper__label {
+  color: var(--phyto-green-700, #1f6b49);
+}
+
+.wizard-stepper__step--done .wizard-stepper__number {
+  border-color: var(--phyto-green-600, #2d7a4f);
+  background: var(--phyto-green-100, #e6f3eb);
+  color: var(--phyto-green-700, #1f6b49);
+}
+
+.wizard-stepper__step--done .wizard-stepper__label {
+  color: var(--phyto-green-600, #2d7a4f);
+}
+
+.wizard-stepper__track {
+  position: absolute;
+  top: calc(1rem + 1.25rem);
+  left: 70px;
+  right: 70px;
+  height: 2px;
+  background: var(--phyto-border, #e2e8f0);
+  z-index: 1;
+}
+
+.wizard-stepper__progress {
+  height: 100%;
+  background: var(--phyto-green-600, #2d7a4f);
+  border-radius: 2px;
+  transition: width 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =====================================================
+   PLANT FORM – STEP CONTENT
+   ===================================================== */
+
+.wizard-step-content {
+  animation: wizard-fade-in 300ms ease;
+}
+
+@keyframes wizard-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.wizard-step-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--phyto-border, #e2e8f0);
+}
+
+.wizard-step-header h4 {
+  margin: 0 0 0.25rem;
+  color: var(--phyto-green-700, #1f6b49);
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
+.wizard-step-header p {
+  margin: 0;
+  color: var(--phyto-ink-soft, #71827a);
+  font-size: 0.9rem;
+}
+
+.wizard-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--phyto-ink, #1a2e23);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.wizard-subtitle {
+  margin: 1.25rem 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed rgba(31, 107, 73, 0.15);
+  color: var(--phyto-green-700, #1f6b49);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* =====================================================
+   PLANT FORM – NAVIGATION
+   ===================================================== */
+
+.wizard-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--phyto-border, #e2e8f0);
+}
+
+.wizard-nav__spacer {
+  flex: 1;
+}
+
+.wizard-nav__btn {
+  min-width: 130px;
+}
+
+.wizard-nav__submit {
+  min-width: 180px;
+}
+
+/* =====================================================
+   PLANT FORM – IMAGE DROPZONE
+   ===================================================== */
+
+.wizard-dropzone-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.wizard-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2rem 1.5rem;
+  border: 2px dashed var(--phyto-border, #e2e8f0);
+  border-radius: var(--phyto-radius-md, 12px);
+  background: rgba(230, 243, 235, 0.25);
+  cursor: pointer;
+  transition: all 200ms ease;
+  text-align: center;
+}
+
+.wizard-dropzone:hover,
+.wizard-dropzone--active {
+  border-color: var(--phyto-green-600, #2d7a4f);
+  background: rgba(230, 243, 235, 0.5);
+}
+
+.wizard-dropzone__icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.wizard-dropzone__text {
+  color: var(--phyto-ink, #1a2e23);
+  font-size: 0.9rem;
+}
+
+.wizard-dropzone__hint {
+  color: var(--phyto-ink-soft, #71827a);
+  font-size: 0.78rem;
+}
+
+.wizard-dropzone__previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.wizard-dropzone__thumb {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: var(--phyto-radius-sm, 8px);
+  overflow: hidden;
+  border: 2px solid var(--phyto-border, #e2e8f0);
+  box-shadow: 0 2px 8px rgba(18, 60, 43, 0.08);
+}
+
+.wizard-dropzone__thumb--new {
+  border-color: var(--phyto-green-600, #2d7a4f);
+}
+
+.wizard-dropzone__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wizard-dropzone__remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 150ms ease;
+}
+
+.wizard-dropzone__remove:hover {
+  background: rgba(220, 53, 69, 0.9);
+}
+
+.wizard-dropzone__order {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+/* =====================================================
+   PLANT FORM – SELECT + BUTTON GROUP
+   ===================================================== */
+
+.wizard-select-group {
+  display: flex;
+  gap: 0;
+}
+
+.wizard-select-group select {
+  flex: 1;
+  min-width: 0;
+}
+
+.wizard-select-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  flex-shrink: 0;
+  border: 1px solid var(--phyto-green-600, #2d7a4f);
+  border-left: 0;
+  border-radius: 0 var(--phyto-radius-sm, 8px) var(--phyto-radius-sm, 8px) 0;
+  background: var(--phyto-green-100, #e6f3eb);
+  color: var(--phyto-green-700, #1f6b49);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.wizard-select-plus:hover {
+  background: var(--phyto-green-600, #2d7a4f);
+  color: #fff;
+}
+
+/* =====================================================
+   PLANT FORM – TOAST
+   ===================================================== */
+
+.wizard-toast {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  padding: 0.85rem 1.25rem;
+  border-radius: var(--phyto-radius-md, 12px);
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  animation: wizard-toast-in 300ms ease;
+}
+
+.wizard-toast--success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.wizard-toast--error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+@keyframes wizard-toast-in {
+  from { opacity: 0; transform: translateX(1rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* =====================================================
+   PLANT FORM – MODAL LIST
+   ===================================================== */
+
+.wizard-modal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.wizard-modal-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(31, 107, 73, 0.08);
+  font-size: 0.9rem;
+  transition: background 100ms ease;
+}
+
+.wizard-modal-list__item:hover {
+  background: rgba(230, 243, 235, 0.4);
+}
+
+.wizard-modal-list__delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #dc3545;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.wizard-modal-list__delete:hover {
+  background: rgba(220, 53, 69, 0.1);
+}
+
+.wizard-modal-list__empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--phyto-ink-soft, #71827a);
+  font-size: 0.85rem;
+}
+
 .plant-image-preview {
   width: 120px;
   height: 120px;
@@ -1720,6 +2126,104 @@ html[data-theme="dark"] .plant-admin-form h5 {
 
 html[data-theme="dark"] .plant-image-preview {
   border-color: rgba(133, 214, 158, 0.28);
+}
+
+html[data-theme="dark"] .wizard-step-header {
+  border-bottom-color: rgba(133, 214, 158, 0.18);
+}
+
+html[data-theme="dark"] .wizard-step-header h4 {
+  color: #9be2b2;
+}
+
+html[data-theme="dark"] .wizard-step-header p {
+  color: #9bb6a5;
+}
+
+html[data-theme="dark"] .wizard-subtitle {
+  border-bottom-color: rgba(133, 214, 158, 0.18);
+  color: #9be2b2;
+}
+
+html[data-theme="dark"] .wizard-label {
+  color: #e8f3ec;
+}
+
+html[data-theme="dark"] .wizard-stepper__number {
+  border-color: rgba(133, 214, 158, 0.28);
+  background: #1a3a2a;
+  color: #9bb6a5;
+}
+
+html[data-theme="dark"] .wizard-stepper__label {
+  color: #9bb6a5;
+}
+
+html[data-theme="dark"] .wizard-stepper__step--active .wizard-stepper__number {
+  background: var(--phyto-green-600);
+  color: #fff;
+  border-color: var(--phyto-green-600);
+}
+
+html[data-theme="dark"] .wizard-stepper__step--active .wizard-stepper__label {
+  color: #9be2b2;
+}
+
+html[data-theme="dark"] .wizard-stepper__step--done .wizard-stepper__number {
+  background: rgba(77, 187, 120, 0.18);
+  color: #72d095;
+  border-color: #72d095;
+}
+
+html[data-theme="dark"] .wizard-stepper__track {
+  background: rgba(133, 214, 158, 0.18);
+}
+
+html[data-theme="dark"] .wizard-stepper__progress {
+  background: #72d095;
+}
+
+html[data-theme="dark"] .wizard-nav {
+  border-top-color: rgba(133, 214, 158, 0.18);
+}
+
+html[data-theme="dark"] .wizard-dropzone {
+  border-color: rgba(133, 214, 158, 0.24);
+  background: rgba(26, 58, 42, 0.4);
+}
+
+html[data-theme="dark"] .wizard-dropzone:hover,
+html[data-theme="dark"] .wizard-dropzone--active {
+  border-color: #72d095;
+  background: rgba(26, 58, 42, 0.7);
+}
+
+html[data-theme="dark"] .wizard-dropzone__text {
+  color: #e8f3ec;
+}
+
+html[data-theme="dark"] .wizard-dropzone__thumb {
+  border-color: rgba(133, 214, 158, 0.28);
+}
+
+html[data-theme="dark"] .wizard-select-plus {
+  background: rgba(77, 187, 120, 0.14);
+  border-color: rgba(133, 214, 158, 0.32);
+  color: #72d095;
+}
+
+html[data-theme="dark"] .wizard-select-plus:hover {
+  background: rgba(77, 187, 120, 0.28);
+  color: #b8ebc9;
+}
+
+html[data-theme="dark"] .wizard-modal-list__item {
+  border-bottom-color: rgba(133, 214, 158, 0.12);
+  color: #e8f3ec;
+}
+
+html[data-theme="dark"] .wizard-modal-list__item:hover {
+  background: rgba(77, 187, 120, 0.08);
 }
 
 html[data-theme="dark"] .form-control,
@@ -2605,5 +3109,62 @@ html[data-theme="dark"] .custom-navbar__link--dropdown {
 @media (max-width: 991.98px) {
   .custom-navbar__menu {
     display: none;
+  }
+}
+
+/* =====================================================
+   WIZARD – RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 767.98px) {
+  .wizard-stepper {
+    flex-wrap: nowrap;
+    gap: 0;
+    padding-bottom: 0.5rem;
+  }
+
+  .wizard-stepper__step {
+    padding: 0.35rem 0.4rem;
+    min-width: 50px;
+  }
+
+  .wizard-stepper__number {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.9rem;
+  }
+
+  .wizard-stepper__label {
+    font-size: 0.6rem;
+  }
+
+  .wizard-stepper__track {
+    top: calc(1rem + 1rem);
+    left: 40px;
+    right: 40px;
+  }
+
+  .wizard-nav {
+    flex-wrap: wrap;
+  }
+
+  .wizard-nav__btn {
+    min-width: 110px;
+    font-size: 0.85rem;
+  }
+
+  .wizard-dropzone {
+    padding: 1.5rem 1rem;
+  }
+
+  .wizard-dropzone__thumb {
+    width: 70px;
+    height: 70px;
+  }
+
+  .wizard-toast {
+    left: 1rem;
+    right: 1rem;
+    text-align: center;
   }
 }
