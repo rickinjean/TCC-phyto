@@ -12,8 +12,17 @@ if (!process.env.JWT_SECRET) {
 
 const port = process.env.PORT || 5050
 
-const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000"
-app.use(cors({ origin: corsOrigin, credentials: true }))
+const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000").split(",")
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || corsOrigins.includes(origin)) {
+            callback(null, true)
+        } else {
+            callback(null, true)
+        }
+    },
+    credentials: true
+}))
 app.use(express.json())
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
@@ -43,6 +52,14 @@ app.get("/", function(req, res) {
 app.get("/health", function(req, res) {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() })
 })
+
+if (process.env.NODE_ENV === "production" || process.env.RENDER) {
+    const clientBuildPath = path.join(__dirname, "..", "client", "build")
+    app.use(express.static(clientBuildPath))
+    app.get("*", function(req, res) {
+        res.sendFile(path.join(clientBuildPath, "index.html"))
+    })
+}
 
 dbo.connectToMongoDB(function (error) {
     if (error) throw error
