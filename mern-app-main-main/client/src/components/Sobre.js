@@ -245,7 +245,7 @@ export default function About() {
                         {[
                             { nome: 'Dr. Jean Lucas', cargo: 'Estudante(Chefe)',                 bio: 'PhD em tomar café, especialista em videojogos com mais de 15 anos de experiência.' },
                             { nome: 'Henrique P',     cargo: 'Desenvolvedor Full-Stack(confia)', bio: 'Engenheiro de Software especializada em aplicações web, responsável pela arquitetura e desenvolvimento do sistema.' },
-                            { nome: 'Renato Bettin',  cargo: 'Orientador',                      bio: 'Professor na UNESC, orientador do Trabalho de Conclusão de Curso. Especialista em desenvolvimento de software e engenharia de sistemas.' },
+                            { nome: 'Renato Bettin',  cargo: 'Orientador',                      bio: 'Professor na IFC Campus Sombrio, orientador do Trabalho de Conclusão de Curso. Especialista em desenvolvimento de software e engenharia de sistemas.' },
                         ].map((membro, i) => (
                             <div className="col-md-4" key={i}>
                                 <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
@@ -308,7 +308,7 @@ export default function About() {
                             <div className="d-flex flex-column gap-3">
                                 {[
                                     { icon: 'fa-envelope',       titulo: 'Email',       detalhe: 'Entre em contato pelo formulário ao lado' },
-                                    { icon: 'fa-university',     titulo: 'Instituição', detalhe: 'UNESC — Universidade do Extremo Oeste Catarinense' },
+                                    { icon: 'fa-university',     titulo: 'Instituição', detalhe: 'IFC — Instituto Federal Catarinense, Campus Sombrio' },
                                     { icon: 'fa-map-marker-alt', titulo: 'Localização', detalhe: 'Criciúma, SC — Brasil' },
                                 ].map((m, i) => (
                                     <div className="about-info-item d-flex align-items-center gap-3 p-3 rounded shadow-sm" key={i}>
