@@ -11,7 +11,6 @@ if (!process.env.JWT_SECRET) {
 }
 
 const port = process.env.PORT || 5050
-console.log("FRONTEND_URL:", process.env.FRONTEND_URL || "(não definida - usando localhost)")
 
 app.set('trust proxy', true)
 

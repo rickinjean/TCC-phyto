@@ -43,8 +43,6 @@ async function findOrCreateUser(profile, provider) {
 // ========== GOOGLE ==========
 
 authRoutes.get("/auth/google", (req, res) => {
-    const redirectUri = `${FRONTEND_URL}/auth/google/callback`
-    console.log("[OAuth Google] Iniciando login. redirect_uri:", redirectUri)
     const params = new URLSearchParams({
         client_id: process.env.GOOGLE_CLIENT_ID,
         redirect_uri: `${FRONTEND_URL}/auth/google/callback`,
@@ -58,15 +56,12 @@ authRoutes.get("/auth/google", (req, res) => {
 
 authRoutes.get("/auth/google/callback", async (req, res) => {
     const { code } = req.query
-    console.log("[OAuth Google] Callback recebido. FRONTEND_URL:", FRONTEND_URL, "code:", code ? "presente" : "ausente")
 
     if (!code) {
-        console.log("[OAuth Google] Sem code, redirecionando para erro")
         return res.redirect(`${FRONTEND_URL}/login?error=no_code`)
     }
 
     try {
-        console.log("[OAuth Google] Trocando code por token...")
         const tokenRes = await axios.post("https://oauth2.googleapis.com/token", {
             code,
             client_id: process.env.GOOGLE_CLIENT_ID,
@@ -76,14 +71,12 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
         })
 
         const { access_token } = tokenRes.data
-        console.log("[OAuth Google] Token obtido, buscando userinfo...")
 
         const userRes = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
             headers: { Authorization: `Bearer ${access_token}` },
         })
 
         const { id, email, name, picture } = userRes.data
-        console.log("[OAuth Google] Usuário:", email)
 
         const user = await findOrCreateUser(
             { id, email, name, avatar: picture },
@@ -91,12 +84,10 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
         )
 
         const token = signToken({ userId: user._id, tipo: user.function, name: user.name, avatar: user.avatar || null })
-        console.log("[OAuth Google] Redirecionando para:", `${FRONTEND_URL}/?token=...`)
 
         res.redirect(`${FRONTEND_URL}/?token=${token}`)
     } catch (error) {
-        console.error("[OAuth Google] ERRO:", error.response?.data || error.message)
-        console.error("[OAuth Google] Stack:", error.stack)
+        console.error("[OAuth Google] Erro:", error.response?.data || error.message)
         res.redirect(`${FRONTEND_URL}/login?error=google_failed`)
     }
 })
@@ -106,7 +97,7 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
 authRoutes.get("/auth/github", (req, res) => {
     const params = new URLSearchParams({
         client_id: process.env.GITHUB_CLIENT_ID,
-                redirect_uri: `${FRONTEND_URL}/auth/github/callback`,
+        redirect_uri: `${FRONTEND_URL}/auth/github/callback`,
         scope: "user:email",
     })
     res.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`)
@@ -126,7 +117,7 @@ authRoutes.get("/auth/github/callback", async (req, res) => {
                 client_id: process.env.GITHUB_CLIENT_ID,
                 client_secret: process.env.GITHUB_CLIENT_SECRET,
                 code,
-        redirect_uri: `${FRONTEND_URL}/auth/github/callback`,
+                redirect_uri: `${FRONTEND_URL}/auth/github/callback`,
             },
             { headers: { Accept: "application/json" } }
         )
