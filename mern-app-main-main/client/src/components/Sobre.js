@@ -94,11 +94,9 @@ export default function About() {
                             </div>
                         </div>
                         <div className="col-md-6">
-                            <img
-                                src="https://via.placeholder.com/500x350"
-                                alt="Phytografia"
-                                className="about-hero__image img-fluid rounded shadow"
-                            />
+                            <div className="about-hero__image img-fluid rounded shadow d-flex align-items-center justify-content-center" style={{background: "var(--surface-alt, #f0f4f0)", minHeight: 280}}>
+                                <i className="fas fa-leaf" style={{fontSize: 80, color: "var(--accent, #4a7c59)", opacity: 0.3}}></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -140,20 +138,19 @@ export default function About() {
                         <div className="col-md-7">
                             <h2 className="about-section__title fw-normal mb-4">Nossa História</h2>
                             <p className="text-muted">
-                                O Phytografia nasceu da ideia, cujo foi dita por uma professorea e da necessidade de espalhar 
-                                o conhecimento sobre plantas. Fundada em 2025 por uma equipe(duas pessoas) desenvolvedores e 
-                                designers, o projeto começou como uma simples ideia: criar uma plataforma que tornasse a 
-                                identificação e o estudo de plantas mais acessível e envolvente.
+                                O Phytografia nasceu da inquietude de estudantes de Tecnologia em Análise e Desenvolvimento 
+                                de Sistemas da UNESC em transformar o Trabalho de Conclusão de Curso em uma ferramenta 
+                                que realmente agregasse valor à comunidade acadêmica e ao público geral interessado em botânica.
                             </p>
                             <p className="text-muted">
                                 Inspirados pela rica biodiversidade brasileira e pela crescente necessidade de educação 
                                 ambiental, desenvolvemos um sistema que combina rigor científico com interface intuitiva. 
-                                Cada planta em nosso catálogo é cuidadosamente documentada por especialistas(nós mesmos), 
-                                garantindo informações precisas e confiáveis.(pelo menos eu acho que são)
+                                Cada planta em nosso catálogo é documentada com informações técnicas de fontes confiáveis, 
+                                incluindo dados de origem, habitat, características morfológicas e requisitos de cultivo.
                             </p>
                             <div className="d-flex flex-column gap-2 mt-4">
                                 {[
-                                    { icon: 'fa-calendar-alt',   texto: 'Fundado em 2025/2026' },
+                                    { icon: 'fa-calendar-alt',   texto: 'Desenvolvido em 2025/2026' },
                                     { icon: 'fa-globe-americas', texto: 'Foco na flora brasileira' },
                                     { icon: 'fa-microscope',     texto: 'Base científica sólida' },
                                 ].map((item, i) => (
@@ -165,11 +162,9 @@ export default function About() {
                             </div>
                         </div>
                         <div className="col-md-5">
-                            <img
-                                src="https://via.placeholder.com/400x500"
-                                alt="Nossa História"
-                                className="about-history__image img-fluid rounded shadow"
-                            />
+                            <div className="about-history__image img-fluid rounded shadow d-flex align-items-center justify-content-center" style={{background: "var(--surface-alt, #f0f4f0)", minHeight: 320}}>
+                                <i className="fas fa-history" style={{fontSize: 70, color: "var(--accent, #4a7c59)", opacity: 0.3}}></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -185,35 +180,34 @@ export default function About() {
                     <div className="row g-4">
                         {[
                             {
-                                icon: 'fa-database', titulo: 'Catálogo Extenso',
-                                texto: 'Mais de 1.200 espécies catalogadas com informações detalhadas.',
-                                itens: ['Fichas técnicas completas', 'Imagens de alta qualidade', 'Informações de cultivo', 'Dados científicos verificados'],
+                                icon: 'fa-database', titulo: 'Catálogo de Plantas',
+                                texto: 'Acervo de plantas catalogadas com informações detalhadas e verificadas.',
+                                itens: ['Fichas técnicas completas', 'Dados de origem e habitat', 'Informações de cultivo', 'Características morfológicas'],
                             },
                             {
                                 icon: 'fa-filter', titulo: 'Busca Inteligente',
                                 texto: 'Sistema de pesquisa avançado com múltiplos filtros.',
-                                itens: ['Filtro por família botânica', 'Busca por características', 'Pesquisa por nome científico', 'Filtros de clima e solo'],
+                                itens: ['Filtro por família botânica', 'Busca por características', 'Pesquisa por nome científico', 'Filtros de origem e luminosidade'],
                             },
                             {
                                 icon: 'fa-mobile-alt', titulo: 'Interface Responsiva',
                                 texto: 'Acesse de qualquer dispositivo com experiência otimizada.',
-                                itens: ['Design responsivo', 'Navegação intuitiva', 'Carregamento rápido', 'Compatível com todos os browsers'],
+                                itens: ['Design responsivo', 'Navegação intuitiva', 'Carregamento rápido', 'Tema claro e escuro'],
                             },
                             {
                                 icon: 'fa-graduation-cap', titulo: 'Educação Ambiental',
-                                texto: 'Recursos educacionais para promover a conscientização sobre a biodiversidade.',
-                                itens: ['Artigos científicos', 'Vídeos explicativos', 'Guias de cultivo', 'Eventos e workshops'],
-                            
+                                texto: 'Conteúdo educacional para promover a conscientização sobre a biodiversidade.',
+                                itens: ['Informações científicas acessíveis', 'Dados de conservação', 'Curiosidades sobre espécies', 'Referências bibliográficas'],
                             },
                             {
-                                icon: 'fa-users', titulo: 'Comunidade Ativa',
-                                texto: 'Conecte-se com outros entusiastas e especialistas em botânica.',
-                                itens: ['Fóruns de discussão', 'Grupos de estudo', 'Colaboração em projetos', 'Compartilhamento de descobertas'],
+                                icon: 'fa-heart', titulo: 'Sistema de Favoritos',
+                                texto: 'Salve suas plantas favoritas para consulta rápida.',
+                                itens: ['Adição e remoção rápida', 'Lista personalizada', 'Acesso direto ao catálogo', 'Sincronização com a conta'],
                             },
                             {
                                 icon: 'fa-shield-alt', titulo: 'Segurança e Privacidade',
-                                texto: 'Proteção de dados e informações pessoais com padrões de segurança avançados.',
-                                itens: ['Criptografia de ponta a ponta', 'Política de privacidade clara', 'Autenticação segura', 'Monitoramento constante de segurança'],
+                                texto: 'Proteção de dados pessoais com autenticação segura.',
+                                itens: ['Autenticação por JWT', 'Login com Google e GitHub', 'Controle de acesso por roles', 'Senhas criptografadas'],
                             },
                         ].map((card, i) => (
                             <div className="col-md-4" key={i}>
@@ -248,19 +242,19 @@ export default function About() {
                     </div>
                     <div className="row g-4 justify-content-center">
                         {[
-                            { nome: 'Dr. Jean Lucas', cargo: 'Estudante(Chefe)',                 bio: 'PhD em tomar café, especialista em videojogos com mais de 15 anos de experiência.' },
-                            { nome: 'Henrique P',     cargo: 'Desenvolvedor Full-Stack(confia)', bio: 'Engenheiro de Software especializada em aplicações web, responsável pela arquitetura e desenvolvimento do sistema.' },
-                            { nome: 'Renato',         cargo: 'Fonte de informações',             bio: 'Professor na Unesc, com mestrado(pelo que eu lembre).' },
+                            { nome: 'Jean Lucas', cargo: 'Desenvolvedor Full-Stack', bio: 'Estudante de Tecnologia em Análise e Desenvolvimento de Sistemas na UNESC. Responsável pelo desenvolvimento do frontend e backend do sistema.' },
+                            { nome: 'Henrique P', cargo: 'Desenvolvedor', bio: 'Estudante de Tecnologia em Análise e Desenvolvimento de Sistemas na UNESC. Responsável pela arquitetura e desenvolvimento do sistema.' },
+                            { nome: 'Renato Bettin', cargo: 'Orientador', bio: 'Professor na UNESC, orientador do Trabalho de Conclusão de Course. Especialista em desenvolvimento de software e engenharia de sistemas.' },
                         ].map((membro, i) => (
                             <div className="col-md-4" key={i}>
                                 <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
                                     <div className="card-body">
-                                        <img
-                                            src="https://via.placeholder.com/100x100"
-                                            alt={membro.nome}
-                                            className="about-team__image rounded-circle mb-3"
-                                            width={100} height={100}
-                                        />
+                                        <div
+                                            className="about-team__image rounded-circle mb-3 d-flex align-items-center justify-content-center mx-auto"
+                                            style={{width: 100, height: 100, background: "var(--accent, #4a7c59)", color: "#fff", fontSize: 32, fontWeight: 600}}
+                                        >
+                                            {membro.nome.charAt(0)}
+                                        </div>
                                         <h5 className="about-card__title card-title mb-1">{membro.nome}</h5>
                                         <p className="about-team__role small fw-medium mb-2">{membro.cargo}</p>
                                         <p className="card-text text-muted small mb-3">{membro.bio}</p>
@@ -281,12 +275,10 @@ export default function About() {
                     </div>
                     <div className="row g-4">
                         {[
-                            { icon: 'fa-flask',     titulo: 'Rigor Científico', texto: 'Todas as informações são baseadas em pesquisas científicas e validadas por especialistas qualificados.' },
-                            { icon: 'fa-handshake', titulo: 'Acessibilidade',   texto: 'Conhecimento botânico deve estar disponível para todos, independentemente do nível de experiência.' },
-                            { icon: 'fa-lightbulb', titulo: 'Sustentabilidade', texto: 'Promovemos práticas de cultivo sustentáveis e conscientização ambiental.' },
-                            { icon: 'fa-heart',     titulo: 'Colaboração',      texto: 'Acreditamos no poder da comunidade para expandir e enriquecer o conhecimento coletivo.' },
-                            { icon: 'fa-users',     titulo: 'Inovação',         texto: 'Utilizamos tecnologia de ponta para criar soluções inovadoras em educação botânica.' },
-                            { icon: 'fa-globe',     titulo: 'Paixão',           texto: 'Nossa paixão pela natureza e pelas plantas é o que nos motiva a melhorar constantemente.' },
+                            { icon: 'fa-flask',     titulo: 'Rigor Científico', texto: 'As informações são baseadas em fontes científicas confiáveis e referências bibliográficas verificadas.' },
+                            { icon: 'fa-handshake', titulo: 'Acessibilidade',   texto: 'Conhecimento botânico deve estar disponível para todos, com interface intuitiva e navegação simples.' },
+                            { icon: 'fa-lightbulb', titulo: 'Sustentabilidade', texto: 'Promovemos a conscientização sobre a importância das plantas para o equilíbrio ambiental.' },
+                            { icon: 'fa-heart',     titulo: 'Paixão pela Botânica', texto: 'O interesse por plantas e biodiversidade é o que nos motiva a melhorar constantemente o sistema.' },
                         ].map((valor, i) => (
                             <div className="col-md-6 col-lg-4" key={i}>
                                 <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
@@ -314,9 +306,9 @@ export default function About() {
                             <p className="text-muted mb-4">Tem dúvidas, sugestões ou quer colaborar conosco?</p>
                             <div className="d-flex flex-column gap-3">
                                 {[
-                                    { icon: 'fa-envelope',       titulo: 'Email',       detalhe: 'contato@phytografia.com' },
-                                    { icon: 'fa-phone',          titulo: 'Telefone',    detalhe: '(11) 9999-9999' },
-                                    { icon: 'fa-map-marker-alt', titulo: 'Localização', detalhe: 'Balneario Gaivota, SC — Brasil' },
+                                    { icon: 'fa-envelope',       titulo: 'Email',       detalhe: 'Entre em contato pelo formulário ao lado' },
+                                    { icon: 'fa-university',     titulo: 'Instituição', detalhe: 'UNESC — Universidade do Extremo Oeste Catarinense' },
+                                    { icon: 'fa-map-marker-alt', titulo: 'Localização', detalhe: 'Criciúma, SC — Brasil' },
                                 ].map((m, i) => (
                                     <div className="about-info-item d-flex align-items-center gap-3 p-3 rounded shadow-sm" key={i}>
                                         <div className="about-contact-icon d-flex align-items-center justify-content-center rounded-circle">
