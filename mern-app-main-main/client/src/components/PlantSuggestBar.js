@@ -92,7 +92,7 @@ export default function PlantSuggestBar({ onApply, placeholder = "Digite o nome 
 
             {error && <div className="alert alert-warning mt-2 mb-0 py-2">{error}</div>}
 
-            {loading && <div className="plant-suggest-bar__status mt-2">Consultando GBIF, Trefle, Wikipedia e banco local...</div>}
+            {loading && <div className="plant-suggest-bar__status mt-2">Consultando Gemini, GBIF, Trefle, Perenual e Wikipedia...</div>}
 
             {!loading && searched && results.length === 0 && !error && (
                 <div className="alert alert-info mt-2 mb-0 py-2">Nenhuma planta correspondente encontrada.</div>
@@ -126,11 +126,7 @@ export default function PlantSuggestBar({ onApply, placeholder = "Digite o nome 
                                     .map(([k, v]) => (
                                         <span className="plant-suggest-bar__chip" key={k}>
                                             <b>{k}:</b> {v}
-                                            {r.filledBy && r.filledBy[k] === "local" ? (
-                                                <span className="badge bg-info text-dark ms-1">banco local</span>
-                                            ) : (
-                                                <span className="badge bg-secondary ms-1">{r.filledBy?.[k] || "api"}</span>
-                                            )}
+                                            <span className="badge bg-secondary ms-1">{r.filledBy?.[k] || "api"}</span>
                                         </span>
                                     ))}
                             </div>

@@ -291,12 +291,36 @@ export default function Edit() {
         }
     }
 
+    // Normaliza texto para comparação (remove acentos, lowercase)
+    function norm(s) {
+        return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()
+    }
+
+    // Resolve o texto retornado pela API contra o ObjectId da coleção correspondente
+    function resolveCollectionField(fieldName, textValue) {
+        if (!textValue || !mapeamentoColecoes[fieldName]) return textValue
+        const options = opcoesBanco[fieldName] || []
+        const normalizedText = norm(textValue)
+        const exact = options.find(o => norm(o.name) === normalizedText)
+        if (exact) return exact._id
+        const partial = options.find(o => normalizedText.includes(norm(o.name)) || norm(o.name).includes(normalizedText))
+        if (partial) return partial._id
+        return textValue
+    }
+
     // Aplica o auto-preenchimento completo de uma planta sugerida
     function applySuggestion(fields) {
-        if (fields.name) updateForm({ name: fields.name })
-        if (fields.scientificName) updateForm({ scientificName: fields.scientificName })
-        updateForm(fields)
-        const count = Object.keys(fields).length
+        const resolved = {}
+        Object.entries(fields).forEach(([k, v]) => {
+            if (v === null || v === undefined || String(v).trim() === "") return
+            if (mapeamentoColecoes[k]) {
+                resolved[k] = resolveCollectionField(k, v)
+            } else {
+                resolved[k] = v
+            }
+        })
+        updateForm(resolved)
+        const count = Object.keys(resolved).length
         showToast(`Auto-preenchimento aplicado (${count} campos). Revise os dados antes de salvar.`)
     }
 
