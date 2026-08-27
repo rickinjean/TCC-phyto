@@ -167,6 +167,45 @@ function CharacterCounter({ value, max }) {
     )
 }
 
+const TAXONOMIC_LEVELS = [
+    { campo: "Filo", label: "Filo" },
+    { campo: "Classe", label: "Classe" },
+    { campo: "Ordem", label: "Ordem" },
+    { campo: "Family", label: "Família" },
+    { campo: "Genero", label: "Gênero" },
+    { campo: "Especie", label: "Espécie" },
+]
+
+function TaxonomyTree({ form, updateForm, onGenusBlur }) {
+    return (
+        <div className="taxonomy-tree">
+            {TAXONOMIC_LEVELS.map(({ campo, label }, index) => (
+                <div className="taxonomy-tree__node" key={campo} style={{ "--node-level": index }}>
+                    <div className="taxonomy-tree__rail" aria-hidden="true" />
+                    <label className="wizard-label taxonomy-tree__label">{label}</label>
+                    {campo === "Genero" ? (
+                        <input
+                            type="text"
+                            className="form-control taxonomy-tree__input"
+                            value={form[campo] || ""}
+                            onChange={e => updateForm({ [campo]: e.target.value })}
+                            onBlur={onGenusBlur}
+                            placeholder="Digite e saia do campo p/ buscar"
+                        />
+                    ) : (
+                        <input
+                            type="text"
+                            className="form-control taxonomy-tree__input"
+                            value={form[campo] || ""}
+                            onChange={e => updateForm({ [campo]: e.target.value })}
+                        />
+                    )}
+                </div>
+            ))}
+        </div>
+    )
+}
+
 export default function Create() {
     const [form, setForm] = useState(INITIAL_FORM)
     const [imageFiles, setImageFiles] = useState([])
@@ -616,31 +655,8 @@ export default function Create() {
                                 📋 Colar valores
                             </button>
                         </div>
-                        <div className="row mt-2">
-                            <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Filo</FieldLabel>
-                                <input type="text" className="form-control" value={form.Filo} onChange={e => updateForm({ Filo: e.target.value })} />
-                            </div>
-                            <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Classe</FieldLabel>
-                                <input type="text" className="form-control" value={form.Classe} onChange={e => updateForm({ Classe: e.target.value })} />
-                            </div>
-                            <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Ordem</FieldLabel>
-                                <input type="text" className="form-control" value={form.Ordem} onChange={e => updateForm({ Ordem: e.target.value })} />
-                            </div>
-                            <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Família</FieldLabel>
-                                <input type="text" className="form-control" value={form.Family} onChange={e => updateForm({ Family: e.target.value })} />
-                            </div>
-                            <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Gênero</FieldLabel>
-                                <input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} onBlur={handleGenusSuggest} placeholder="Digite e saia do campo" />
-                            </div>
-                            <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Espécie</FieldLabel>
-                                <input type="text" className="form-control" value={form.Especie} onChange={e => updateForm({ Especie: e.target.value })} />
-                            </div>
+                        <div className="mt-2">
+                            <TaxonomyTree form={form} updateForm={updateForm} onGenusBlur={handleGenusSuggest} />
                         </div>
                     </div>
                 )}

@@ -2946,6 +2946,76 @@ html[data-theme="dark"] .about-section .alert-success {
 }
 
 /* =====================================================
+   WIZARD – TAXONOMY TREE (formulário)
+   ===================================================== */
+
+.taxonomy-tree {
+  max-width: 34rem;
+  padding: 0.25rem 0;
+}
+
+.taxonomy-tree__node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0 0.4rem calc(2.6rem + var(--node-level) * 1.35rem);
+}
+
+.taxonomy-tree__node:hover {
+  background: rgba(230, 243, 235, 0.3);
+}
+
+.taxonomy-tree__rail {
+  position: absolute;
+  left: 0.9rem;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--node-level) * 1.35rem + 0.9rem);
+  border-left: 2px solid var(--phyto-green-200, #cfe8da);
+}
+
+.taxonomy-tree__node:first-child .taxonomy-tree__rail {
+  top: 50%;
+}
+
+.taxonomy-tree__node:last-child .taxonomy-tree__rail {
+  bottom: 50%;
+}
+
+.taxonomy-tree__rail::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: calc(50% - 5px);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--phyto-green-600, #2f8a5d);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--phyto-green-600, #2f8a5d);
+}
+
+.taxonomy-tree__label {
+  min-width: 5.2rem;
+  margin: 0;
+  text-align: right;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: #71827a;
+}
+
+.taxonomy-tree__input {
+  flex: 1 1 auto;
+}
+
+.taxonomy-tree__node:first-child .taxonomy-tree__label {
+  color: var(--phyto-green-700, #236b46);
+}
+
+/* =====================================================
    PLANT DETAILS – 4-COLUMN GRID VARIANT
    ===================================================== */
 
