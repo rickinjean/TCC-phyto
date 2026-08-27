@@ -1,0 +1,22 @@
+# Arquivos pessoais do desenvolvedor (não versionar)
+.bashrc
+.bash_profile
+.bash_logout
+.gitconfig
+.git-credentials
+.gitconfig.local
+.zshrc
+.zprofile
+.zsh_history
+.profile
+.ripgreprc
+.idea/
+.vscode/
+.mcp.json
+.gitmodules
+
+# Sensíveis
+*.env
+.env
+.env.*
+!.env.example

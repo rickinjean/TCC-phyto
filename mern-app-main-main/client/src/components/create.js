@@ -110,8 +110,8 @@ export default function Create() {
                             type="radio"
                             name="positionOptions"
                             id="positionUsuario"
-                            value="Usuario"
-                            checked={form.function === "Usuario"}
+                            value="User"
+                            checked={form.function === "User"}
                             onChange={(e) => updateForm({ function: e.target.value })}
                         />
                         <label htmlFor="positionUsuario" className="form-check-label">Usuário</label>
