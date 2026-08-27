@@ -3482,3 +3482,129 @@ html[data-theme="dark"] .wizard-label__optional {
   background: var(--phyto-border-dark, #33443b);
   color: #b6c4bb;
 }
+
+/* ── Auto-preenchimento (PlantSuggestBar) ── */
+.wizard-step-content__suggest {
+  border: 1px dashed var(--phyto-border, #cbd5e1);
+  border-radius: 12px;
+  background: var(--phyto-surface, #ffffff);
+}
+
+.plant-suggest-bar {
+  padding: 1rem 1.25rem;
+}
+
+.plant-suggest-bar__head {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.plant-suggest-bar__icon {
+  font-size: 1.5rem;
+  line-height: 1.4;
+}
+
+.plant-suggest-bar__title {
+  font-weight: 800;
+  color: var(--phyto-green-700, #1f6b49);
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.plant-suggest-bar__hint {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--phyto-ink-soft, #71827a);
+}
+
+.plant-suggest-bar__input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.plant-suggest-bar__input-row .form-control {
+  flex: 1;
+}
+
+.plant-suggest-bar__status {
+  font-size: 0.85rem;
+  color: var(--phyto-ink-soft, #71827a);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.plant-suggest-bar__status::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--phyto-border, #cbd5e1);
+  border-top-color: var(--phyto-green-600, #2f855a);
+  border-radius: 50%;
+  animation: spray-spin 0.7s linear infinite;
+}
+
+@keyframes spray-spin {
+  to { transform: rotate(360deg); }
+}
+
+.plant-suggest-bar__results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.plant-suggest-bar__result {
+  border: 1px solid var(--phyto-border, #e2e8f0);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  background: var(--phyto-surface, #fff);
+}
+
+.plant-suggest-bar__result-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.plant-suggest-bar__sci {
+  color: var(--phyto-ink-soft, #71827a);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.plant-suggest-bar__preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.plant-suggest-bar__chip {
+  font-size: 0.75rem;
+  background: var(--phyto-surface-soft, #f8fafc);
+  border: 1px solid var(--phyto-border, #e2e8f0);
+  border-radius: 20px;
+  padding: 0.2rem 0.55rem;
+  color: var(--phyto-ink-soft, #475569);
+}
+
+.plant-suggest-bar__chip b {
+  color: var(--phyto-green-700, #1f6b49);
+}
+
+html[data-theme="dark"] .plant-suggest-bar__result {
+  background: var(--phyto-surface-dark, #1f2a24);
+  border-color: var(--phyto-border-dark, #33443b);
+}
+
+html[data-theme="dark"] .plant-suggest-bar__chip {
+  background: rgba(61, 154, 104, 0.12);
+  border-color: var(--phyto-border-dark, #33443b);
+  color: #b6c4bb;
+}

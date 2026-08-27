@@ -4,6 +4,7 @@ import API_URL from "../config"
 import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
 import { decodeId } from "../idCodec"
+import PlantSuggestBar from "./PlantSuggestBar"
 
 const STEPS = [
     { key: "basicos", label: "Dados Básicos", icon: "🌱" },
@@ -285,6 +286,15 @@ export default function Edit() {
         }
     }
 
+    // Aplica o auto-preenchimento completo de uma planta sugerida
+    function applySuggestion(fields) {
+        if (fields.name) updateForm({ name: fields.name })
+        if (fields.scientificName) updateForm({ scientificName: fields.scientificName })
+        updateForm(fields)
+        const count = Object.keys(fields).length
+        showToast(`Auto-preenchimento aplicado (${count} campos). Revise os dados antes de salvar.`)
+    }
+
     async function onSubmit(e) {
         e.preventDefault()
         setSubmitting(true)
@@ -413,6 +423,9 @@ export default function Edit() {
                         <div className="wizard-step-header">
                             <h4>🌱 Dados Básicos</h4>
                             <p>Nome, imagem e descrição da planta</p>
+                        </div>
+                        <div className="wizard-step-content__suggest mb-3">
+                            <PlantSuggestBar onApply={applySuggestion} />
                         </div>
                         <div className="row">
                             <div className="col-md-6 mb-3">
