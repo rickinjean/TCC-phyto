@@ -44,7 +44,7 @@ async function findOrCreateUser(profile, provider) {
 authRoutes.get("/auth/google", (req, res) => {
     const params = new URLSearchParams({
         client_id: process.env.GOOGLE_CLIENT_ID,
-        redirect_uri: `${req.protocol}://${req.get("host")}/auth/google/callback`,
+        redirect_uri: `${FRONTEND_URL}/auth/google/callback`,
         response_type: "code",
         scope: "openid profile email",
         access_type: "offline",
@@ -65,7 +65,7 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
             code,
             client_id: process.env.GOOGLE_CLIENT_ID,
             client_secret: process.env.GOOGLE_CLIENT_SECRET,
-            redirect_uri: `${req.protocol}://${req.get("host")}/auth/google/callback`,
+            redirect_uri: `${FRONTEND_URL}/auth/google/callback`,
             grant_type: "authorization_code",
         })
 
@@ -96,7 +96,7 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
 authRoutes.get("/auth/github", (req, res) => {
     const params = new URLSearchParams({
         client_id: process.env.GITHUB_CLIENT_ID,
-        redirect_uri: `${req.protocol}://${req.get("host")}/auth/github/callback`,
+                redirect_uri: `${FRONTEND_URL}/auth/github/callback`,
         scope: "user:email",
     })
     res.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`)
@@ -116,7 +116,7 @@ authRoutes.get("/auth/github/callback", async (req, res) => {
                 client_id: process.env.GITHUB_CLIENT_ID,
                 client_secret: process.env.GITHUB_CLIENT_SECRET,
                 code,
-                redirect_uri: `${req.protocol}://${req.get("host")}/auth/github/callback`,
+        redirect_uri: `${FRONTEND_URL}/auth/github/callback`,
             },
             { headers: { Accept: "application/json" } }
         )
