@@ -14,14 +14,38 @@ const port = process.env.PORT || 5050
 
 app.set('trust proxy', true)
 
-const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000").split(",")
+const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")
+    .split(",")
+    .map(s => s.trim().replace(/\/+$/, "").toLowerCase())
+    .filter(Boolean)
+
+function normalizeOrigin(origin) {
+    if (!origin) return ""
+    return origin.trim().replace(/\/+$/, "").toLowerCase()
+}
+
+function isSameOrigin(req, origin) {
+    const { protocol, host } = req
+    if (!host) return false
+    return normalizeOrigin(`${protocol}://${host}`) === normalizeOrigin(origin)
+}
+
 app.use(cors({
     origin: function (origin, callback) {
-        if (!origin || corsOrigins.includes(origin)) {
-            callback(null, true)
-        } else {
-            callback(new Error("Origin not allowed by CORS"))
+        const norm = normalizeOrigin(origin)
+
+        // Requisições sem header Origin (server-to-server, health checks etc.) são liberadas
+        if (!origin || origin === "null" || corsOrigins.includes(norm)) {
+            return callback(null, true)
         }
+
+        // Permite a própria origem do servidor (quando o Express serve o frontend estático
+        // na mesma porta, como no deploy do Render)
+        if (isSameOrigin(req, origin)) {
+            return callback(null, true)
+        }
+
+        callback(new Error("Origin not allowed by CORS"))
     },
     credentials: true
 }))
