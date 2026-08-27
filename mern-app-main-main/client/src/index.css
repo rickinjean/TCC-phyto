@@ -190,6 +190,12 @@ button:focus-visible {
   z-index: 1060;
 }
 
+@media (min-width: 992px) {
+  .custom-navbar__toggle {
+    display: none !important;
+  }
+}
+
 .custom-navbar__toggle:hover {
   background: var(--phyto-green-100);
   transform: translateY(-1px);
@@ -360,7 +366,7 @@ button:focus-visible {
 .site-footer {
   background: var(--phyto-green-900);
   color: rgba(244, 250, 246, 0.82);
-  padding: 2.25rem 1rem 1.5rem;
+  padding: 2.75rem 1.25rem 1.5rem;
   margin-top: auto;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 -12px 32px rgba(18, 60, 43, 0.08);
@@ -369,7 +375,59 @@ button:focus-visible {
 .site-footer__content {
   max-width: 1200px;
   margin: 0 auto;
-  text-align: center;
+}
+
+.site-footer__grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.site-footer__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.site-footer__logo {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(166, 223, 186, 0.35);
+}
+
+.site-footer__brand-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f5fbf7;
+  letter-spacing: 0.02em;
+}
+
+.site-footer__tagline {
+  margin: 0.7rem 0 0;
+  font-size: 0.95rem;
+  color: rgba(226, 241, 232, 0.72);
+}
+
+.site-footer__heading {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(226, 241, 232, 0.55);
+}
+
+.site-footer__nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .site-footer__text {
@@ -386,11 +444,11 @@ button:focus-visible {
 
 .site-footer__links {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
-  margin-top: 0.9rem;
+  margin-top: 0.6rem;
 }
 
 .site-footer__link {
@@ -405,6 +463,16 @@ button:focus-visible {
   color: #d1f0da;
   text-decoration: underline;
   opacity: 1;
+}
+
+.site-footer__bottom {
+  padding-top: 1.25rem;
+  text-align: center;
+}
+
+.site-footer__text--small {
+  font-size: 0.85rem;
+  color: rgba(226, 241, 232, 0.6);
 }
 
 /* ==========================================================================
@@ -736,14 +804,22 @@ button:focus-visible {
   }
 }
 
-@media (max-width: 575.98px) {
-  .site-footer {
-    padding: 1.5rem 1rem 1.25rem;
+@media (max-width: 767.98px) {
+  .site-footer__grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
   .site-footer__links {
     flex-direction: column;
+    align-items: flex-start;
     gap: 0.5rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .site-footer {
+    padding: 1.5rem 1rem 1.25rem;
   }
 
   .plant-details-data-grid {
@@ -834,12 +910,25 @@ html[data-theme="dark"] .site-footer {
   box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.22);
 }
 
+html[data-theme="dark"] .site-footer__grid {
+  border-bottom-color: rgba(133, 214, 158, 0.14);
+}
+
 html[data-theme="dark"] .site-footer__text {
   color: rgba(217, 242, 225, 0.78);
 }
 
-html[data-theme="dark"] .site-footer__text--strong {
+html[data-theme="dark"] .site-footer__text--strong,
+html[data-theme="dark"] .site-footer__brand-name {
   color: #f0fff4;
+}
+
+html[data-theme="dark"] .site-footer__heading {
+  color: rgba(217, 242, 225, 0.5);
+}
+
+html[data-theme="dark"] .site-footer__logo {
+  border-color: rgba(143, 223, 170, 0.4);
 }
 
 html[data-theme="dark"] .site-footer__link {
@@ -3030,15 +3119,6 @@ html[data-theme="dark"] .about-section .alert-success {
 /* =====================================================
    NAVBAR – ADM DESKTOP DROPDOWN
    ===================================================== */
-
-.custom-navbar__menu {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
 
 .custom-navbar__link--dropdown {
   font-size: 0.82rem;
