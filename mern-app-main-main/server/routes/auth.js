@@ -8,6 +8,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
 
 async function findOrCreateUser(profile, provider) {
     const db_connect = dbo.getDb()
+    if (!db_connect) throw new Error("Database not connected")
     const { id, email, name, avatar } = profile
 
     let user = await db_connect.collection("users").findOne({ email })
@@ -42,6 +43,8 @@ async function findOrCreateUser(profile, provider) {
 // ========== GOOGLE ==========
 
 authRoutes.get("/auth/google", (req, res) => {
+    const redirectUri = `${FRONTEND_URL}/auth/google/callback`
+    console.log("[OAuth Google] Iniciando login. redirect_uri:", redirectUri)
     const params = new URLSearchParams({
         client_id: process.env.GOOGLE_CLIENT_ID,
         redirect_uri: `${FRONTEND_URL}/auth/google/callback`,
@@ -55,12 +58,15 @@ authRoutes.get("/auth/google", (req, res) => {
 
 authRoutes.get("/auth/google/callback", async (req, res) => {
     const { code } = req.query
+    console.log("[OAuth Google] Callback recebido. FRONTEND_URL:", FRONTEND_URL, "code:", code ? "presente" : "ausente")
 
     if (!code) {
+        console.log("[OAuth Google] Sem code, redirecionando para erro")
         return res.redirect(`${FRONTEND_URL}/login?error=no_code`)
     }
 
     try {
+        console.log("[OAuth Google] Trocando code por token...")
         const tokenRes = await axios.post("https://oauth2.googleapis.com/token", {
             code,
             client_id: process.env.GOOGLE_CLIENT_ID,
@@ -70,12 +76,14 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
         })
 
         const { access_token } = tokenRes.data
+        console.log("[OAuth Google] Token obtido, buscando userinfo...")
 
         const userRes = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
             headers: { Authorization: `Bearer ${access_token}` },
         })
 
         const { id, email, name, picture } = userRes.data
+        console.log("[OAuth Google] Usuário:", email)
 
         const user = await findOrCreateUser(
             { id, email, name, avatar: picture },
@@ -83,10 +91,12 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
         )
 
         const token = signToken({ userId: user._id, tipo: user.function, name: user.name, avatar: user.avatar || null })
+        console.log("[OAuth Google] Redirecionando para:", `${FRONTEND_URL}/?token=...`)
 
         res.redirect(`${FRONTEND_URL}/?token=${token}`)
     } catch (error) {
-        console.error("Erro no OAuth Google:", error.response?.data || error.message)
+        console.error("[OAuth Google] ERRO:", error.response?.data || error.message)
+        console.error("[OAuth Google] Stack:", error.stack)
         res.redirect(`${FRONTEND_URL}/login?error=google_failed`)
     }
 })
