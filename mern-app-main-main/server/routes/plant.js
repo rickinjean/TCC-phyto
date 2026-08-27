@@ -2,6 +2,7 @@ const express = require("express")
 const plantRoutes = express.Router()
 const dbo = require("../db/conn")
 const ObjectId = require("mongodb").ObjectId
+const axios = require("axios")
 
 // Importar o multer e o path para gerir o upload de ficheiros
 const multer = require("multer")
@@ -65,6 +66,61 @@ plantRoutes.route("/plant").get(async function (req, res) {
         res.status(200).json(result)
     } catch (error) {
         res.status(500).json({ message: error.message })
+    }
+})
+
+/* ==================================================
+   SUGESTÃO TAXONÔMICA VIA GBIF (API gratuita)
+   Preenche a classificação a partir de nome científico
+   ou comum (ex.: "aipim", "Manihot esculenta")
+================================================== */
+plantRoutes.route("/plant/taxonomy-suggest").get(async function (req, res) {
+    const q = (req.query.q || "").trim()
+    if (!q) {
+        return res.status(400).json({ message: "Informe um termo de busca (q)." })
+    }
+    try {
+        const gbif = axios.create({ timeout: 20000 })
+        let taxonomy = null
+
+        // 1) Tenta match direto (nome científico)
+        const matchRes = await gbif.get("https://api.gbif.org/v1/species/match", { params: { name: q } }).catch(() => null)
+        const m = matchRes?.data
+        if (m && m.phylum && m.rank && ["SPECIES", "SUBSPECIES", "VARIETY", "GENUS"].includes(m.rank)) {
+            taxonomy = {
+                Filo: m.phylum || "",
+                Classe: m.class || "",
+                Ordem: m.order || "",
+                Family: m.family || "",
+                Genero: m.genus || "",
+                Especie: m.species || m.canonicalName || ""
+            }
+        }
+
+        // 2) Fallback: busca ampla (aceita nomes comuns como "aipim")
+        if (!taxonomy || !taxonomy.Filo) {
+            const searchRes = await gbif.get("https://api.gbif.org/v1/species/search", { params: { q, limit: 1 } }).catch(() => null)
+            const s = searchRes?.data?.results?.[0]
+            if (s && s.phylum) {
+                taxonomy = {
+                    Filo: s.phylum || "",
+                    Classe: s.class || "",
+                    Ordem: s.order || "",
+                    Family: s.family || "",
+                    Genero: s.genus || "",
+                    Especie: s.species || s.canonicalName || ""
+                }
+            }
+        }
+
+        if (!taxonomy || !taxonomy.Filo) {
+            return res.status(404).json({ message: "Não foi possível identificar a classificação da planta." })
+        }
+
+        res.status(200).json(taxonomy)
+    } catch (error) {
+        console.error("[taxonomy-suggest] erro:", error.message)
+        res.status(500).json({ message: "Erro ao consultar a base taxonômica." })
     }
 })
 

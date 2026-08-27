@@ -319,36 +319,32 @@ export default function Create() {
         if (btn) btn.click()
     }
 
-    // Autocomplete da classificação taxonômica a partir do gênero
-    async function handleGenusSuggest() {
-        const genero = (form.Genero || "").trim()
-        if (!genero) return
+    // Preenchimento automático da classificação taxonômica via GBIF (API gratuita)
+    async function handleTaxonomySuggest() {
+        const query = [form.Especie, form.Genero].map(s => (s || "").trim()).filter(Boolean).join(" ")
+        if (!query) {
+            showToast("Preencha o Gênero ou a Espécie para buscar.", "error")
+            return
+        }
         try {
-            const search = new URLSearchParams({ search: genero })
-            const res = await fetch(`${API_URL}/plant/?${search.toString()}`)
-            if (!res.ok) return
-            const plants = await res.json()
-            const match = plants.find(p =>
-                p.Genero && p.Genero.trim().toLowerCase() === genero.toLowerCase()
-            )
-            if (!match) {
-                showToast("Nenhuma planta com esse gênero foi encontrada.", "error")
+            const res = await fetch(`${API_URL}/plant/taxonomy-suggest?${new URLSearchParams({ q: query })}`)
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}))
+                showToast(err.message || "Não foi possível identificar a classificação.", "error")
                 return
             }
-            const update = {}
-            if (!form.Filo) update.Filo = match.Filo || ""
-            if (!form.Classe) update.Classe = match.Classe || ""
-            if (!form.Ordem) update.Ordem = match.Ordem || ""
-            if (!form.Family) update.Family = match.Family || ""
-            if (!form.Especie) update.Especie = match.Especie || ""
-            if (Object.keys(update).length > 0) {
-                updateForm(update)
-                showToast(`Dados taxonômicos de "${match.name}" preenchidos.`)
-            } else {
-                showToast("Gênero já tem dados preenchidos.")
-            }
+            const data = await res.json()
+            updateForm({
+                Filo: data.Filo || "",
+                Classe: data.Classe || "",
+                Ordem: data.Ordem || "",
+                Family: data.Family || "",
+                Genero: data.Genero || "",
+                Especie: data.Especie || ""
+            })
+            showToast("Classificação taxonômica preenchida automaticamente.")
         } catch {
-            showToast("Erro ao buscar dados do gênero.", "error")
+            showToast("Erro ao consultar a base taxonômica.", "error")
         }
     }
 
@@ -605,16 +601,25 @@ export default function Create() {
                                 <SelectField campo="dificulty" placeholder="Nível de cuidado..." />
                             </div>
                         </div>
-                        <div className="d-flex justify-content-between align-items-center">
+                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <h5 className="wizard-subtitle mb-0">Classificação Taxonômica</h5>
-                            <button
-                                type="button"
-                                className="btn btn-sm btn-outline-secondary"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalPaste"
-                            >
-                                📋 Colar valores
-                            </button>
+                            <div className="d-flex gap-2">
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-success"
+                                    onClick={handleTaxonomySuggest}
+                                >
+                                    🔍 Preencher classificação
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalPaste"
+                                >
+                                    📋 Colar valores
+                                </button>
+                            </div>
                         </div>
                         <div className="row mt-2">
                             <div className="col-md-2 col-4 mb-3">
@@ -635,7 +640,7 @@ export default function Create() {
                             </div>
                             <div className="col-md-2 col-4 mb-3">
                                 <FieldLabel optional>Gênero</FieldLabel>
-                                <input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} onBlur={handleGenusSuggest} placeholder="Digite e saia do campo" />
+                                <input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} />
                             </div>
                             <div className="col-md-2 col-4 mb-3">
                                 <FieldLabel optional>Espécie</FieldLabel>

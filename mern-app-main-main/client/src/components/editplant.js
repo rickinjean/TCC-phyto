@@ -256,34 +256,32 @@ export default function Edit() {
         }
     }
 
-    // Autocomplete da classificação taxonômica a partir do gênero
-    async function handleGenusSuggest() {
-        const genero = (form.Genero || "").trim()
-        if (!genero) return
+    // Preenchimento automático da classificação taxonômica via GBIF (API gratuita)
+    async function handleTaxonomySuggest() {
+        const query = [form.Especie, form.Genero].map(s => (s || "").trim()).filter(Boolean).join(" ")
+        if (!query) {
+            showToast("Preencha o Gênero ou a Espécie para buscar.", "error")
+            return
+        }
         try {
-            const search = new URLSearchParams({ search: genero })
-            const res = await fetch(`${API_URL}/plant/?${search.toString()}`)
-            if (!res.ok) return
-            const plants = await res.json()
-            const match = plants.find(p =>
-                p.Genero && p.Genero.trim().toLowerCase() === genero.toLowerCase()
-            )
-            if (match) {
-                const update = {}
-                if (!form.Filo) update.Filo = match.Filo || ""
-                if (!form.Classe) update.Classe = match.Classe || ""
-                if (!form.Ordem) update.Ordem = match.Ordem || ""
-                if (!form.Family) update.Family = match.Family || ""
-                if (!form.Especie) update.Especie = match.Especie || ""
-                if (Object.keys(update).length > 0) {
-                    updateForm(update)
-                    showToast(`Dados taxonômicos de "${match.name}" preenchidos.`)
-                }
-            } else {
-                showToast("Nenhuma planta com esse gênero foi encontrada.", "error")
+            const res = await fetch(`${API_URL}/plant/taxonomy-suggest?${new URLSearchParams({ q: query })}`)
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}))
+                showToast(err.message || "Não foi possível identificar a classificação.", "error")
+                return
             }
+            const data = await res.json()
+            updateForm({
+                Filo: data.Filo || "",
+                Classe: data.Classe || "",
+                Ordem: data.Ordem || "",
+                Family: data.Family || "",
+                Genero: data.Genero || "",
+                Especie: data.Especie || ""
+            })
+            showToast("Classificação taxonômica preenchida automaticamente.")
         } catch {
-            showToast("Erro ao buscar dados do gênero.", "error")
+            showToast("Erro ao consultar a base taxonômica.", "error")
         }
     }
 
@@ -461,13 +459,18 @@ export default function Edit() {
                             <div className="col-md-4 mb-3"><label className="wizard-label">Toxicidade</label><SelectField campo="toxicity" placeholder="Grau de toxicidade..." /></div>
                             <div className="col-md-4 mb-3"><label className="wizard-label">Dificuldade</label><SelectField campo="dificulty" placeholder="Nível de cuidado..." /></div>
                         </div>
-                        <h5 className="wizard-subtitle">Classificação Taxonômica</h5>
-                        <div className="row">
+                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h5 className="wizard-subtitle mb-0">Classificação Taxonômica</h5>
+                            <button type="button" className="btn btn-sm btn-success" onClick={handleTaxonomySuggest}>
+                                🔍 Preencher classificação
+                            </button>
+                        </div>
+                        <div className="row mt-2">
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Filo</label><input type="text" className="form-control" value={form.Filo} onChange={e => updateForm({ Filo: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Classe</label><input type="text" className="form-control" value={form.Classe} onChange={e => updateForm({ Classe: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Ordem</label><input type="text" className="form-control" value={form.Ordem} onChange={e => updateForm({ Ordem: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Família</label><input type="text" className="form-control" value={form.Family} onChange={e => updateForm({ Family: e.target.value })} /></div>
-                            <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Gênero</label><input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} onBlur={handleGenusSuggest} /></div>
+                            <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Gênero</label><input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Espécie</label><input type="text" className="form-control" value={form.Especie} onChange={e => updateForm({ Especie: e.target.value })} /></div>
                         </div>
                     </div>
