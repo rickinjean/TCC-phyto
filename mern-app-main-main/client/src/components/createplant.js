@@ -320,11 +320,11 @@ export default function Create() {
         if (btn) btn.click()
     }
 
-    // Preenchimento automático da classificação taxonômica via GBIF (API gratuita)
+    // Preenchimento automático da classificação taxonômica via APIs (Gemini + GBIF)
     async function handleTaxonomySuggest() {
-        const query = [form.Especie, form.Genero].map(s => (s || "").trim()).filter(Boolean).join(" ")
+        const query = [form.Especie, form.Genero, form.name].map(s => (s || "").trim()).filter(Boolean).join(" ")
         if (!query) {
-            showToast("Preencha o Gênero ou a Espécie para buscar.", "error")
+            showToast("Preencha o Nome, Gênero ou a Espécie para buscar.", "error")
             return
         }
         try {
@@ -335,15 +335,20 @@ export default function Create() {
                 return
             }
             const data = await res.json()
+            const fields = data.results && data.results[0] && data.results[0].fields
+            if (!fields) {
+                showToast("Nenhuma classificação encontrada para essa busca.", "error")
+                return
+            }
             updateForm({
-                Filo: data.Filo || "",
-                Classe: data.Classe || "",
-                Ordem: data.Ordem || "",
-                Family: data.Family || "",
-                Genero: data.Genero || "",
-                Especie: data.Especie || ""
+                Filo: fields.Filo || "",
+                Classe: fields.Classe || "",
+                Ordem: fields.Ordem || "",
+                Family: fields.Family || "",
+                Genero: fields.Genero || "",
+                Especie: fields.Especie || ""
             })
-            showToast("Classificação taxonômica preenchida automaticamente.")
+            showToast("Classificação taxonômica preenchida automaticamente via API.")
         } catch {
             showToast("Erro ao consultar a base taxonômica.", "error")
         }

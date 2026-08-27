@@ -1,12 +1,6 @@
 import React, { useRef, useState } from "react"
 import API_URL from "../config"
 
-// Campos que são EXCLUÍDOS do auto-preenchimento (possuem coleção própria com valores fixos
-// ou precisam de revisão manual pelo ADM)
-const SKIP_FIELDS = [
-    "fruit", "origin", "type", "propagation", "toxicity", "dificulty",
-]
-
 export default function PlantSuggestBar({ onApply, placeholder = "Digite o nome da planta (ex: banana, aipim, tomate)..." }) {
     const [query, setQuery] = useState("")
     const [results, setResults] = useState([])
@@ -56,7 +50,6 @@ export default function PlantSuggestBar({ onApply, placeholder = "Digite o nome 
     function applyAll(r) {
         const onlyMappable = {}
         Object.entries(r.fields || {}).forEach(([k, v]) => {
-            if (SKIP_FIELDS.includes(k)) return
             if (v === null || v === undefined) return
             onlyMappable[k] = String(v)
         })
@@ -129,7 +122,6 @@ export default function PlantSuggestBar({ onApply, placeholder = "Digite o nome 
                             </div>
                             <div className="plant-suggest-bar__preview">
                                 {Object.entries(r.fields || {})
-                                    .filter(([k]) => !SKIP_FIELDS.includes(k))
                                     .slice(0, 8)
                                     .map(([k, v]) => (
                                         <span className="plant-suggest-bar__chip" key={k}>

@@ -71,16 +71,9 @@ plantRoutes.route("/plant").get(async function (req, res) {
 
 /* ==================================================
    SUGESTÃO DE PLANTA VIA MÚLTIPLAS APIs GRATUITAS
-   Combina: banco local + GBIF + Trefle + Wikipedia + Perenual
+   Combina: Gemini (IA) + GBIF + Trefle + Perenual
    Preenche o máximo de campos possível a partir do nome
 ================================================== */
-const pathData = require("path")
-let localPlants = []
-try {
-    localPlants = require(pathData.join(__dirname, "..", "data", "plants-db.json")).plants || []
-} catch (e) {
-    console.warn("[plants-db] aviso: não foi possível carregar o banco local:", e.message)
-}
 
 // Lista de todos os campos que podem ser preenchidos
 const SUGGEST_FIELDS = [
@@ -168,37 +161,56 @@ function countFilled(fields) {
 }
 
 // --- GBIF: taxonomia (free, sem chave) ---
-async function queryGbif(q) {
+// Retorna apenas taxonomia de PLANTA (reino Plantae). Aceita o nome científico
+// (preferido, mais preciso) ou o nome comum como fallback.
+function isPlantKingdom(k) {
+    return normalizeStr(k) === "plantae"
+}
+function isPlantPhylum(p) {
+    // Filos exclusivos de plantas (evita vírus/bactérias/fungos)
+    const plantPhylums = ["magnoliophyta", "tracheophyta", "charophyta", "streptophyta", "pteridophyta", "bryophyta", "anthocerotophyta", "marchantiophyta", "gnetophyta", "pinophyta", "cycadophyta", "ginkgophyta"]
+    return plantPhylums.includes(normalizeStr(p))
+}
+function gbifToTax(data) {
+    if (!data) return null
+    // Só aceita se for uma planta (kingdom=Plantae ou filo de planta)
+    const kingdom = data.kingdom || ""
+    const phylum = data.phylum || ""
+    if (!isPlantKingdom(kingdom) && !isPlantPhylum(phylum)) return null
+    return {
+        Filo: data.phylum || "",
+        Classe: data.class || "",
+        Ordem: data.order || "",
+        Family: data.family || "",
+        Genero: data.genus || "",
+        Especie: data.species || data.canonicalName || "",
+        scientificName: data.scientificName || data.canonicalName || ""
+    }
+}
+async function queryGbif(q, scientificName) {
     const gbif = axios.create({ timeout: 20000 })
     let tax = null
-    const matchRes = await gbif.get("https://api.gbif.org/v1/species/match", { params: { name: q } }).catch(() => null)
-    const m = matchRes?.data
-    if (m && m.phylum && m.rank && ["SPECIES", "SUBSPECIES", "VARIETY", "GENUS"].includes(m.rank)) {
-        tax = {
-            Filo: m.phylum || "",
-            Classe: m.class || "",
-            Ordem: m.order || "",
-            Family: m.family || "",
-            Genero: m.genus || "",
-            Especie: m.species || m.canonicalName || "",
-            scientificName: m.scientificName || m.canonicalName || ""
+
+    // 1) Prefere validar pelo nome científico (retornado pelo Gemini) — muito mais preciso
+    if (scientificName && normalizeStr(scientificName).length >= 4) {
+        const sci = scientificName.split(",")[0].trim()
+        const matchRes = await gbif.get("https://api.gbif.org/v1/species/match", { params: { name: sci } }).catch(() => null)
+        const m = matchRes?.data
+        if (m && m.rank && ["SPECIES", "SUBSPECIES", "VARIETY", "GENUS"].includes(m.rank)) {
+            tax = gbifToTax(m)
         }
     }
-    if (!tax || !tax.Filo) {
-        const searchRes = await gbif.get("https://api.gbif.org/v1/species/search", { params: { q, limit: 1 } }).catch(() => null)
-        const s = searchRes?.data?.results?.[0]
-        if (s && s.phylum) {
-            tax = {
-                Filo: s.phylum || "",
-                Classe: s.class || "",
-                Ordem: s.order || "",
-                Family: s.family || "",
-                Genero: s.genus || "",
-                Especie: s.species || s.canonicalName || "",
-                scientificName: s.scientificName || s.canonicalName || ""
-            }
+
+    // 2) Fallback: busca por nome comum filtrando para plantas
+    if (!tax) {
+        const searchRes = await gbif.get("https://api.gbif.org/v1/species/search", { params: { q, limit: 10 } }).catch(() => null)
+        const list = searchRes?.data?.results || []
+        for (const s of list) {
+            const candidate = gbifToTax(s)
+            if (candidate) { tax = candidate; break }
         }
     }
+
     return tax
 }
 
@@ -309,6 +321,134 @@ async function queryPerenual(q) {
     }
 }
 
+// --- Gemini: geração completa de dados da planta (IA) ---
+async function queryGemini(q) {
+    const key = process.env.GEMINI_API_KEY
+    if (!key) return null
+
+    const prompt = `Você é um botânico brasileiro especializado em plantas. 
+Preencha as informações da planta "${q}". 
+Responda APENAS com um JSON válido (sem texto antes ou depois), usando as chaves EXATAS listadas abaixo.
+
+Para os campos que possuem OPÇÕES, use obrigatoriamente um dos valores sugeridos (na língua portuguesa). 
+Campos numéricos/textuais podem ter texto livre e conciso em português.
+
+Campos e opções:
+{
+  "name": "nome popular da planta",
+  "scientificName": "nome científico binomial",
+  "simpleDescription": "frase curta de até 200 caracteres descrevendo a planta",
+  "description": "descrição detalhada em português (2-4 frases)",
+  "fruit": "opções: Bagas; Drupa; Cápsula; Pomo; Legume (vagem); Noz; Infrutescência; Falso fruto; Sachara; "Precisamos rever"; ou descreva o fruto",
+  "origin": "opções: América do Sul; América Central; África; Ásia; Europa; Oceania; Mediterrâneo; Brasil; Tropical; Subtropical; Temperado; ou local de origem geográfica",
+  "type": "opções: Árvore; Arbusto; Erva; Trepadeira; Suculenta; Palmeira; Samambaia; Gramínea; Aquática; Ornamental; Frutífera",
+  "propagation": "opções: Sementes; Vegetativa (assexuada); Estacas; Mergulhia; Alporquia; Borbulhia; Divisão de touceiras; ou como se propaga",
+  "toxicity": "opções: Não é tóxica; Baixa toxicidade; Moderada; Alta toxicidade",
+  "dificulty": "opções: Baixa; Média; Alta",
+  "Filo": "filo (ex: Magnoliophyta)",
+  "Classe": "classe (ex: Magnoliopsida)",
+  "Ordem": "ordem (ex: Rosales)",
+  "Family": "família (ex: Rosaceae)",
+  "Genero": "gênero (ex: Rosa)",
+  "Especie": "espécie (ex: Rosa gallica)",
+  "height": "opções: Rasteira; Até 1 m; 1-3 metros; 3-6 metros; 6-10 metros; Acima de 10 metros; ou porte/altura",
+  "flowercolor": "opções: Vermelho; Rosa ou roxo; Branco puro; Amarelo; Azul; Laranja; Verde; Multicoloridas; ou as cores das flores",
+  "foliage": "opções: Decídua; Perene; Sempre-verde; Caduca; ou tipo de folhagem",
+  "flowering": "opções: Primavera; Verão; Outono; Primavera/Verão; Verão/Outono; Outono/Inverno; Inverno; Primavera/Verão/Outono; ou época de floração",
+  "light": "opções: Sol pleno; Meia-sombra; Sombra; Penumbra",
+  "water": "opções: Pouca; Moderada; Abundante",
+  "size": "opções: Pequeno; Médio; Grande; Pote até 1L; Vaso 2-5L; Vaso 5-10L; Vaso acima de 10L; ou tamanho de vaso/local",
+  "soil": "opções: Arenoso; Argiloso; Orgânico; Bem drenado; Ácido; Neutro; Alcalino; Rico em matéria orgânica; ou tipo de solo",
+  "manha": "opções: Início da manhã; Final da tarde; Qualquer horário; ou melhor horário de rega",
+  "amount": "opções: Pouca água; Moderada; Muita água; ou quantidade (ex: 100-200 ml)",
+  "frequency": "opções: Diária; A cada 2-3 dias; Semanal; A cada 2 semanas; Mensal; ou frequência de adubação",
+  "NPK": "opções: 04-14-08; 10-10-10; 20-05-20; 15-15-20; 30-10-10; 4-30-10; ou fórmula NPK recomendada",
+  "season": "opções: Primavera; Verão; Outono; Inverno; Muito anos; ou época de poda",
+  "tools": "opções: Tesoura de poda; Faca; Serra; Torno; Tesoura de jardinagem; ou ferramenta de poda",
+  "prevention": "opções: Baixa; Média; Alta; ou nível de prevenção de pragas",
+  "monitoring": "opções: Baixo; Médio; Alto; ou nível de monitoramento",
+  "planting": "texto conciso sobre como plantar",
+  "exhibition": "texto conciso sobre exposição/local",
+  "maintenance": "texto conciso sobre manutenção",
+  "station": "opções: Primavera; Verão; Outono; Inverno; ou estação de plantio",
+  "spacing": "opções: 0,2 m; 0,3 m; 0,5 m; 1 m; 2 m; 3 m; 5 m; ou espaçamento entre mudas",
+  "iluminosity": "opções: 4-6 horas; 6-8 horas; 8-12 horas; Direta; Indireta; ou horas de sol diário",
+  "protection": "opções: Nenhuma; Vento; Geada; Pragas; Excesso de sol; Chuvas fortes; Proteção invernal; ou proteção climática",
+  "idealTemperature": "ex: 20°C a 30°C",
+  "tolerance": "opções: Baixa; Média; Alta; ou tolerância a condições adversas",
+  "pests": "opções: Pulgões; Cochonilhas; Ácaros; Lagartas; Formigas; Fungos; Nematoides; Moscas-brancas; Sem pragas comuns; ou pragas principais",
+  "watering": "texto conciso sobre irrigação",
+  "fertilizing": "texto conciso sobre adubação",
+  "pruning": "texto conciso sobre poda"
+}
+
+Prefira valores das OPÇÕES quando disponíveis. Se não tiver certeza, preencha com valor razoável típico, ainda assim em português. Não deixe campos vazios desnecessariamente.`
+
+    try {
+        const api = axios.create({ timeout: 45000 })
+        const res = await api.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent`,
+            {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.3,
+                    responseMimeType: "application/json"
+                }
+            },
+            { headers: { "x-goog-api-key": key, "Content-Type": "application/json" } }
+        )
+
+        const text = res.data?.candidates?.[0]?.content?.parts?.[0]?.text
+        if (!text) return null
+
+        let parsed
+        try {
+            // Remove eventuais delimitadores de bloco de código
+            const cleaned = text.replace(/```json|```/g, "").trim()
+            const start = cleaned.indexOf("{")
+            const end = cleaned.lastIndexOf("}")
+            if (start === -1 || end === -1) return null
+            parsed = JSON.parse(cleaned.substring(start, end + 1))
+        } catch {
+            return null
+        }
+
+        // Normaliza alguns campos conhecidos para os valores padrão do sistema
+        if (typeof parsed.toxicity === "string") {
+            const t = normalizeStr(parsed.toxicity)
+            if (t.includes("nao") || t.includes("nenhuma") || t.includes("sem")) parsed.toxicity = "Não é tóxica"
+            else if (t.includes("baix")) parsed.toxicity = "Baixa toxicidade"
+            else if (t.includes("alt")) parsed.toxicity = "Alta toxicidade"
+            else if (t.includes("moder")) parsed.toxicity = "Moderada"
+        }
+        if (typeof parsed.light === "string") {
+            const l = normalizeStr(parsed.light)
+            if (l.includes("sol") || l.includes("pleno")) parsed.light = "Sol pleno"
+            else if (l.includes("sombra") && (l.includes("meia") || l.includes("parcial"))) parsed.light = "Meia-sombra"
+            else if (l.includes("sombra")) parsed.light = "Sombra"
+            else if (l.includes("penumbra") || l.includes("penumb")) parsed.light = "Penumbra"
+        }
+        if (typeof parsed.water === "string") {
+            const w = normalizeStr(parsed.water)
+            if (w.includes("pouc")) parsed.water = "Pouca"
+            else if (w.includes("muit") || w.includes("abund") || w.includes("alta")) parsed.water = "Abundante"
+            else parsed.water = "Moderada"
+        }
+
+        const fields = {}
+        SUGGEST_FIELDS.forEach(f => {
+            if (parsed[f] !== undefined && parsed[f] !== null && String(parsed[f]).trim() !== "") {
+                fields[f] = String(parsed[f]).trim()
+            }
+        })
+        if (Object.keys(fields).length === 0) return null
+        return fields
+    } catch (e) {
+        console.error("[gemini] erro:", e.message)
+        return null
+    }
+}
+
 plantRoutes.route("/plant/suggest").get(async function (req, res) {
     const q = (req.query.q || "").trim()
     if (!q) {
@@ -317,38 +457,40 @@ plantRoutes.route("/plant/suggest").get(async function (req, res) {
 
     const nq = normalizeStr(q)
 
-    // 1) Resultados do banco local
-    const localResults = localPlants
-        .filter(p => {
-            const n = normalizeStr(p.name)
-            const s = normalizeStr(p.scientificName)
-            return n.includes(nq) || s.includes(nq) || nq.includes(s)
-        })
-        .map(p => ({
-            name: p.name,
-            scientificName: p.scientificName,
-            fields: { ...p },
-            filledBy: Object.fromEntries(SUGGEST_FIELDS.map(f => p[f] ? [f, "local"] : null).filter(Boolean)),
-            source: "local",
-            score: calculateMatchScore(p, q),
-            filledCount: countFilled(p)
-        }))
+    // Gemini é a fonte principal: consulta primeiro para obter o nome científico
+    const gemini = await queryGemini(q).catch(() => null)
 
-    // 2) Buscas nas APIs (em paralelo)
-    const [gbif, trefle, wiki, perenual] = await Promise.all([
-        queryGbif(q).catch(() => null),
+    // Demais fontes em paralelo (GBIF valida a taxonomia usando o nome científico do Gemini)
+    const [gbif, trefle, perenual] = await Promise.all([
+        queryGbif(q, gemini ? gemini.scientificName : "").catch(() => null),
         queryTrefle(q).catch(() => null),
-        queryWikipedia(q).catch(() => null),
         queryPerenual(q).catch(() => null)
     ])
 
-    // Monta um candidato combinando todas as fontes (prioridade local > gbif > trefle > wiki > perenual)
-    const apiResults = []
-    const combined = {}
+    // Combina os campos com a seguinte prioridade:
+    //   1. Gemini (fonte principal, preenche quase tudo)
+    //   2. GBIF (sobrescreve a taxonomia com classificação validada)
+    //   3. trefle / perenual (preenchem lacunas)
+    const combined = (gemini ? { ...gemini } : {})
     const filledBy = {}
-    const sources = { local: null, gbif, trefle, wiki, perenual }
+    Object.keys(combined).forEach(f => { filledBy[f] = "gemini" })
 
-    // Preenche campos: local primeiro, depois gbif/trefle/wiki/perenual
+    // GBIF: sobrescreve apenas os campos taxonômicos (Filo, Classe, Ordem, Family, Genero, Especie)
+    const taxFields = ["Filo", "Classe", "Ordem", "Family", "Genero", "Especie"]
+    if (gbif) {
+        taxFields.forEach(f => {
+            if (gbif[f] && String(gbif[f]).trim() !== "") {
+                combined[f] = gbif[f]
+                filledBy[f] = "gbif"
+            }
+        })
+        if (gbif.scientificName && !combined.scientificName) {
+            combined.scientificName = gbif.scientificName
+            filledBy.scientificName = "gbif"
+        }
+    }
+
+    // Fontes complementares preenchem apenas o que ainda está vazio
     const sourceMerge = (src, data) => {
         if (!data) return
         SUGGEST_FIELDS.forEach(f => {
@@ -358,39 +500,29 @@ plantRoutes.route("/plant/suggest").get(async function (req, res) {
             }
         })
     }
-
-    sourceMerge("local", localResults[0] ? localResults[0].fields : null)
-    sourceMerge("gbif", gbif)
     sourceMerge("trefle", trefle)
-    sourceMerge("wiki", wiki)
     sourceMerge("perenual", perenual)
 
-    if (Object.keys(combined).length > 0) {
-        apiResults.push({
-            name: combined.name || combined.scientificName || q,
-            scientificName: combined.scientificName || "",
-            fields: combined,
-            filledBy,
-            source: Object.keys(filledBy).join("+") || "api",
-            score: 50 + (combined.Filo ? 20 : 0) + (combined.Family ? 10 : 0),
-            filledCount: countFilled(combined)
-        })
-    }
-
-    // Une resultados locais e de API, sem duplicar
-    const seen = new Set()
-    const all = [...localResults, ...apiResults].filter(r => {
-        const key = normalizeStr(r.name) + normalizeStr(r.scientificName)
-        if (seen.has(key)) return false
-        seen.add(key)
-        return true
-    }).sort((a, b) => b.score - a.score || b.filledCount - a.filledCount).slice(0, 10)
-
-    if (all.length === 0) {
+    if (Object.keys(combined).length === 0) {
         return res.status(404).json({ message: "Nenhuma planta encontrada para essa busca." })
     }
 
-    res.status(200).json({ total: all.length, results: all })
+    const name = combined.name || combined.scientificName || q
+    const scientificName = combined.scientificName || ""
+
+    const score = (combined.Filo ? 20 : 0) + (combined.Family ? 10 : 0) + (combined.name ? 20 : 0) + (Object.keys(combined).length * 1.5)
+    res.status(200).json({
+        total: 1,
+        results: [{
+            name,
+            scientificName,
+            fields: combined,
+            filledBy,
+            source: Object.keys(filledBy).join("+") || "api",
+            score,
+            filledCount: countFilled(combined)
+        }]
+    })
 })
 
 /* ==================================================
