@@ -89,7 +89,6 @@ const QUICK_ACCESS_CARDS = [
         text: "Acesse suas plantas favoritas salvas para consulta rápida",
         href: "/favoritos",
         icon: "💚",
-        authRequired: true,
     },
     {
         title: "Sobre o Projeto",
@@ -114,8 +113,6 @@ export default function Home() {
     const [loadingPlants, setLoadingPlants] = useState(true)
     const [loadingStats, setLoadingStats] = useState(true)
     const navigate = useNavigate()
-
-    const token = localStorage.getItem("token")
 
     useEffect(() => {
         async function loadData() {
@@ -231,7 +228,6 @@ export default function Home() {
                     <h3 className="home-section__title text-center mb-5">Acesso Rápido</h3>
                     <div className="row g-4">
                         {QUICK_ACCESS_CARDS.map((card, index) => {
-                            if (card.authRequired && !token) return null
                             return (
                                 <div key={index} className="col-12 col-md-4">
                                     <div className="quick-card card h-100 shadow-sm">
