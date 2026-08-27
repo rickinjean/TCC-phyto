@@ -1,17 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Route, Routes, Navigate } from "react-router-dom"
-
-// Ler token do OAuth redirect antes de qualquer render
-const urlParams = new URLSearchParams(window.location.search)
-const oauthToken = urlParams.get('token')
-const oauthError = urlParams.get('error')
-if (oauthToken) {
-    localStorage.setItem('token', oauthToken)
-    window.history.replaceState({}, '', window.location.pathname)
-}
-if (oauthError) {
-    window.history.replaceState({}, '', window.location.pathname)
-}
 import Navbar from "./components/navbar"
 import Footer from "./components/footer"
 import UserList from "./components/userList"
@@ -26,6 +14,17 @@ import PlantDetails from './components/PlantDetails';
 import Inicio from './components/inicio'
 import Sobre from './components/Sobre'
 import Favorites from './components/Favorites'
+
+const urlParams = new URLSearchParams(window.location.search)
+const oauthToken = urlParams.get('token')
+const oauthError = urlParams.get('error')
+if (oauthToken) {
+    localStorage.setItem('token', oauthToken)
+    window.history.replaceState({}, '', window.location.pathname)
+}
+if (oauthError) {
+    window.history.replaceState({}, '', window.location.pathname)
+}
 
 function parseJwt(token) {
     if (!token) return null
