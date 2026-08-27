@@ -12,6 +12,8 @@ if (!process.env.JWT_SECRET) {
 
 const port = process.env.PORT || 5050
 
+app.set('trust proxy', true)
+
 const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000").split(",")
 app.use(cors({
     origin: function (origin, callback) {
