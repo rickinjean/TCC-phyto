@@ -3,10 +3,12 @@ import { Link } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 
+const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' fill='%23dceee3'%3E%3Crect width='400' height='250'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='62%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E"
+
 const FavoriteCard = ({ favorite, onRemove }) => {
     const plant = favorite.plant
     const images = plant.imagesPath?.length > 0 ? plant.imagesPath : plant.imagePath ? [plant.imagePath] : []
-    const imageUrl = images.length > 0 ? `${API_URL}${images[0]}` : "https://via.placeholder.com/400x200/e8f0e8/6a9a6a?text=🌿"
+    const imageUrl = images.length > 0 ? `${API_URL}${images[0]}` : PLACEHOLDER_IMG
 
     return (
         <div className="col-12 col-md-6 col-lg-4 mb-4">

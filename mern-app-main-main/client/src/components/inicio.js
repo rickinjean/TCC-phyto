@@ -192,14 +192,13 @@ export default function Home() {
         }).slice(0, 4)
     }
 
-    function plantasEmDestaque() {
+    const destaque = useMemo(() => {
+        if (activeTab === "dia") return plantaDoDia()
         if (activeTab === "destaque") return emDestaque()
         if (activeTab === "recentes") return recemAdicionadas()
         if (activeTab === "estacao") return plantasDaEstacao()
         return plantaDoDia()
-    }
-
-    const destaque = plantasEmDestaque()
+    }, [activeTab, indiceDoDia, plants])
 
     return (
         <div className="home-page">
