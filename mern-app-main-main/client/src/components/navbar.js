@@ -65,6 +65,10 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     <li><NavLink className="custom-navbar__dropdown-link" to="/create">C. Usuários</NavLink></li>
                                     <li><NavLink className="custom-navbar__dropdown-link" to="/userlist">L. Usuários</NavLink></li>
                                     <li><NavLink className="custom-navbar__dropdown-link" to="/createplant">C. Plantas</NavLink></li>
+                                </ul>
+                            </li>
+                        </>
+                    )}
                 </ul>
 
                 {token && (
@@ -81,10 +85,6 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                         </span>
                     </div>
                 )}
-                            </li>
-                        </>
-                    )}
-                </ul>
 
                                 <button
                     className="custom-navbar__theme-toggle"
