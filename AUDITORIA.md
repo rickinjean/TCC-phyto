@@ -217,7 +217,24 @@ A constante `REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'` está duplicada 
 | 26 | `express-rate-limit` instalado no server | `server/` |
 
 ### Pendente (requer ação manual)
-- Limpar arquivos pessoais da raiz do repositório (.bash_profile, .zshrc, etc.)
+- ~~Limpar arquivos pessoais da raiz do repositório~~ ✅ (Fase 1 — 27/08/2026)
 - Remover `node_modules/` commitados do git (se aplicável)
 - Escrever testes de integração
 - Migrar de CRA para Vite
+
+---
+
+## Fase 1 — Concluída (27/08/2026)
+
+### Segurança / Limpeza do repositório
+| # | Correção | Detalhes |
+|---|----------|----------|
+| A | Arquivos pessoais removidos da raiz | `.bashrc`, `.bash_profile`, `.gitconfig`, `.zshrc`, `.zprofile`, `.profile`, `.ripgreprc`, `.idea/`, `.vscode/`, `.mcp.json`, `.gitmodules` — removidos do controle de versão e do disco. Backup em `%TEMP%\opencode\tcc-phyto-backup`. |
+| B | `.gitignore` criado na raiz | Impede o retorno de arquivos pessoais e `.env` ao repositório. |
+| C | Correção da role `"Usuario"` → `"User"` | Radios do painel ADM (`create.js`, `edit.js`) passam a enviar `"User"`, alinhado ao backend (`/user/add` e `/user/register`). |
+
+> Observação: usuários previamente cadastrados com `function: "Usuario"` precisam de backfill manual no MongoDB, caso existam.
+
+### Commit
+- `125e06e` — `chore: remover arquivos pessoais da raiz; corrigir role Usuario para User em create/edit`
+- Push realizado para `origin/main` em 27/08/2026.
