@@ -138,15 +138,16 @@ export default function About() {
                         <div className="col-md-7">
                             <h2 className="about-section__title fw-normal mb-4">Nossa História</h2>
                             <p className="text-muted">
-                                O Phytografia nasceu da inquietude de estudantes de Tecnologia em Análise e Desenvolvimento 
-                                de Sistemas da UNESC em transformar o Trabalho de Conclusão de Curso em uma ferramenta 
-                                que realmente agregasse valor à comunidade acadêmica e ao público geral interessado em botânica.
+                                O Phytografia nasceu da ideia, cujo foi dita por uma professorea e da necessidade de espalhar 
+                                o conhecimento sobre plantas. Fundada em 2025 por uma equipe(duas pessoas) desenvolvedores e 
+                                designers, o projeto começou como uma simples ideia: criar uma plataforma que tornasse a 
+                                identificação e o estudo de plantas mais acessível e envolvente.
                             </p>
                             <p className="text-muted">
                                 Inspirados pela rica biodiversidade brasileira e pela crescente necessidade de educação 
                                 ambiental, desenvolvemos um sistema que combina rigor científico com interface intuitiva. 
-                                Cada planta em nosso catálogo é documentada com informações técnicas de fontes confiáveis, 
-                                incluindo dados de origem, habitat, características morfológicas e requisitos de cultivo.
+                                Cada planta em nosso catálogo é cuidadosamente documentada por especialistas(nós mesmos), 
+                                garantindo informações precisas e confiáveis.(pelo menos eu acho que são)
                             </p>
                             <div className="d-flex flex-column gap-2 mt-4">
                                 {[
@@ -242,9 +243,9 @@ export default function About() {
                     </div>
                     <div className="row g-4 justify-content-center">
                         {[
-                            { nome: 'Jean Lucas', cargo: 'Desenvolvedor Full-Stack', bio: 'Estudante de Tecnologia em Análise e Desenvolvimento de Sistemas na UNESC. Responsável pelo desenvolvimento do frontend e backend do sistema.' },
-                            { nome: 'Henrique P', cargo: 'Desenvolvedor', bio: 'Estudante de Tecnologia em Análise e Desenvolvimento de Sistemas na UNESC. Responsável pela arquitetura e desenvolvimento do sistema.' },
-                            { nome: 'Renato Bettin', cargo: 'Orientador', bio: 'Professor na UNESC, orientador do Trabalho de Conclusão de Course. Especialista em desenvolvimento de software e engenharia de sistemas.' },
+                            { nome: 'Dr. Jean Lucas', cargo: 'Estudante(Chefe)',                 bio: 'PhD em tomar café, especialista em videojogos com mais de 15 anos de experiência.' },
+                            { nome: 'Henrique P',     cargo: 'Desenvolvedor Full-Stack(confia)', bio: 'Engenheiro de Software especializada em aplicações web, responsável pela arquitetura e desenvolvimento do sistema.' },
+                            { nome: 'Renato Bettin',  cargo: 'Orientador',                      bio: 'Professor na UNESC, orientador do Trabalho de Conclusão de Curso. Especialista em desenvolvimento de software e engenharia de sistemas.' },
                         ].map((membro, i) => (
                             <div className="col-md-4" key={i}>
                                 <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
