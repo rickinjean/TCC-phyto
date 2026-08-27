@@ -11,25 +11,13 @@ export default function About() {
     useEffect(() => {
         async function fetchStats() {
             try {
-                const token = localStorage.getItem('token')
-                const headers = token ? { Authorization: `Bearer ${token}` } : {}
-
-                const [plantsRes, usersRes] = await Promise.all([
-                    fetch(`${API_URL}/plant/`),
-                    fetch(`${API_URL}/user/`, { headers }),
-                ]);
-
-                if (!plantsRes.ok) return;
-
-                const plantData = await plantsRes.json();
-                let usersCount = 0;
-
-                if (usersRes.ok) {
-                    const userData = await usersRes.json();
-                    usersCount = userData.length;
-                }
-
-                setStats({ plantas: plantData.length, usuarios: usersCount });
+                const res = await fetch(`${API_URL}/stats`);
+                if (!res.ok) return;
+                const data = await res.json();
+                setStats({
+                    plantas: data.plantCount || 0,
+                    usuarios: data.userCount || 0
+                });
             } catch (error) {
                 console.error('Erro ao buscar estatísticas:', error);
             }
@@ -138,16 +126,16 @@ export default function About() {
                         <div className="col-md-7">
                             <h2 className="about-section__title fw-normal mb-4">Nossa História</h2>
                             <p className="text-muted">
-                                O Phytografia nasceu da ideia, cujo foi dita por uma professorea e da necessidade de espalhar 
-                                o conhecimento sobre plantas. Fundada em 2025 por uma equipe(duas pessoas) desenvolvedores e 
-                                designers, o projeto começou como uma simples ideia: criar uma plataforma que tornasse a 
-                                identificação e o estudo de plantas mais acessível e envolvente.
+                                O Phytografia nasceu da ideia de uma professora e da necessidade de espalhar 
+                                o conhecimento sobre plantas. Desenvolvido em 2025 por uma equipe de dois 
+                                desenvolvedores, o projeto começou como uma simples ideia: criar uma plataforma 
+                                que tornasse a identificação e o estudo de plantas mais acessível e envolvente.
                             </p>
                             <p className="text-muted">
                                 Inspirados pela rica biodiversidade brasileira e pela crescente necessidade de educação 
                                 ambiental, desenvolvemos um sistema que combina rigor científico com interface intuitiva. 
-                                Cada planta em nosso catálogo é cuidadosamente documentada por especialistas(nós mesmos), 
-                                garantindo informações precisas e confiáveis.(pelo menos eu acho que são)
+                                Cada planta em nosso catálogo é cuidadosamente documentada pela própria equipe, 
+                                garantindo informações precisas e confiáveis.
                             </p>
                             <div className="d-flex flex-column gap-2 mt-4">
                                 {[
@@ -245,7 +233,7 @@ export default function About() {
                         {[
                             { nome: 'Dr. Jean Lucas', cargo: 'Estudante(Chefe)',                 bio: 'PhD em tomar café, especialista em videojogos com mais de 15 anos de experiência.' },
                             { nome: 'Henrique P',     cargo: 'Desenvolvedor Full-Stack(confia)', bio: 'Engenheiro de Software especializada em aplicações web, responsável pela arquitetura e desenvolvimento do sistema.' },
-                            { nome: 'Renato Bettin',  cargo: 'Orientador',                      bio: 'Professor na IFC Campus Sombrio, orientador do Trabalho de Conclusão de Curso. Especialista em desenvolvimento de software e engenharia de sistemas.' },
+                            { nome: 'Renato Bettin',  cargo: 'Coorientador',                    bio: 'Professor na Unesc de Criciúma, coorientador do Trabalho de Conclusão de Curso. Especialista em desenvolvimento de software e engenharia de sistemas.' },
                         ].map((membro, i) => (
                             <div className="col-md-4" key={i}>
                                 <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
@@ -309,7 +297,7 @@ export default function About() {
                                 {[
                                     { icon: 'fa-envelope',       titulo: 'Email',       detalhe: 'Entre em contato pelo formulário ao lado' },
                                     { icon: 'fa-university',     titulo: 'Instituição', detalhe: 'IFC — Instituto Federal Catarinense, Campus Sombrio' },
-                                    { icon: 'fa-map-marker-alt', titulo: 'Localização', detalhe: 'Criciúma, SC — Brasil' },
+                                    { icon: 'fa-map-marker-alt', titulo: 'Localização', detalhe: 'Unesc — Criciúma, SC, Brasil' },
                                 ].map((m, i) => (
                                     <div className="about-info-item d-flex align-items-center gap-3 p-3 rounded shadow-sm" key={i}>
                                         <div className="about-contact-icon d-flex align-items-center justify-content-center rounded-circle">

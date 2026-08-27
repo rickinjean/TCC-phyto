@@ -187,18 +187,10 @@ className="plant-list-card__delete btn btn-sm"
     )
 }
 
-const EmptyState = ({ role }) => (
+const EmptyState = () => (
     <div className="plant-list-empty col-12 text-center py-5">
         <div className="plant-list-empty__icon">🌱</div>
         <p className="plant-list-empty__text">Nenhuma planta cadastrada ainda.</p>
-        {role === "ADM" && (
-            <Link
-                to="/createplant"
-                className="plant-list-add btn btn-sm mt-1"
-            >
-                Adicionar planta
-            </Link>
-        )}
     </div>
 )
 
@@ -431,7 +423,7 @@ export default function PlantList({ role }) {
                         />
                     ))
                 ) : (
-                    <EmptyState role={role} />
+                    <EmptyState />
                 )}
             </div>
         </div>

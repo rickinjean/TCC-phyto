@@ -64,7 +64,7 @@ export default function Login({ onLogin }) {
                 </div>
 
                 {/* Rodapé do painel */}
-                <p className="small">&copy; 2024 Phytografia</p>
+                <p className="small">&copy; {new Date().getFullYear()} Phytografia</p>
             </div>
 
             {/* Painel direito — formulário */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react"
+import React, { useState, useEffect, useMemo, useCallback } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import API_URL from "../config"
 
@@ -165,29 +165,29 @@ export default function Home() {
         return seed % plants.length
     }, [plants])
 
-    function plantaDoDia() {
+    const plantaDoDia = useCallback(() => {
         return indiceDoDia === -1 ? [] : [plants[indiceDoDia]]
-    }
+    }, [plants, indiceDoDia])
 
-    function emDestaque() {
+    const emDestaque = useCallback(() => {
         const withoutDay = plants.filter((_, i) => i !== indiceDoDia)
         const shuffled = [...withoutDay].sort(() => 0.5 - Math.random())
         return shuffled.slice(0, 4)
-    }
+    }, [plants, indiceDoDia])
 
-    function recemAdicionadas() {
+    const recemAdicionadas = useCallback(() => {
         return [...plants]
             .sort((a, b) => objectIdToTimestamp(b._id) - objectIdToTimestamp(a._id))
             .slice(0, 4)
-    }
+    }, [plants])
 
-    function plantasDaEstacao() {
+    const plantasDaEstacao = useCallback(() => {
         const estacaoAtual = getEstacaoAtual()
         return plants.filter((p) => {
             const stationName = (p.stationData?.name || p.station || "").toLowerCase()
             return stationName.includes(estacaoAtual)
         }).slice(0, 4)
-    }
+    }, [plants])
 
     const destaque = useMemo(() => {
         if (activeTab === "dia") return plantaDoDia()
@@ -195,7 +195,7 @@ export default function Home() {
         if (activeTab === "recentes") return recemAdicionadas()
         if (activeTab === "estacao") return plantasDaEstacao()
         return plantaDoDia()
-    }, [activeTab, indiceDoDia, plants])
+    }, [activeTab, plantaDoDia, emDestaque, recemAdicionadas, plantasDaEstacao])
 
     return (
         <div className="home-page">
@@ -274,6 +274,12 @@ export default function Home() {
                         ) : (
                             <p className="home-empty text-center">Nenhuma planta encontrada para esta categoria.</p>
                         )}
+                    </div>
+
+                    <div className="text-center mt-4">
+                        <Link className="home-featured__all btn btn-outline-primary rounded-pill" to="/plantlist">
+                            Ver todas as plantas
+                        </Link>
                     </div>
                 </div>
             </section>
