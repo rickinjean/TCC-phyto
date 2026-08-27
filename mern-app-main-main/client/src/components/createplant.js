@@ -328,7 +328,7 @@ export default function Create() {
             return
         }
         try {
-            const res = await fetch(`${API_URL}/plant/taxonomy-suggest?${new URLSearchParams({ q: query })}`)
+            const res = await fetch(`${API_URL}/plant/suggest?${new URLSearchParams({ q: query })}`)
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}))
                 showToast(err.message || "Não foi possível identificar a classificação.", "error")

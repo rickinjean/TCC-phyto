@@ -7,8 +7,6 @@ const SKIP_FIELDS = [
     "fruit", "origin", "type", "propagation", "toxicity", "dificulty",
 ]
 
-const FALLBACK_API_URL = "http://localhost:5050"
-
 export default function PlantSuggestBar({ onApply, placeholder = "Digite o nome da planta (ex: banana, aipim, tomate)..." }) {
     const [query, setQuery] = useState("")
     const [results, setResults] = useState([])
@@ -24,8 +22,7 @@ export default function PlantSuggestBar({ onApply, placeholder = "Digite o nome 
         setError("")
         setSearched(true)
         try {
-            const base = API_URL || FALLBACK_API_URL
-            const res = await fetch(`${base}/plant/suggest?${new URLSearchParams({ q: term })}`)
+            const res = await fetch(`${API_URL}/plant/suggest?${new URLSearchParams({ q: term })}`)
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}))
                 setResults([])
