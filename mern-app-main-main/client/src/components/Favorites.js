@@ -19,7 +19,7 @@ const FavoriteCard = ({ favorite, onRemove }) => {
                     />
                     <button
                         className="plant-list-card__favorite is-favorite"
-                        onClick={() => onRemove(plant._id)}
+                        onClick={() => onRemove(plant._id, plant.name)}
                         type="button"
                         aria-label="Remover dos favoritos"
                     >
@@ -77,7 +77,8 @@ export default function Favorites() {
         loadFavorites()
     }, [])
 
-    async function handleRemove(plantId) {
+    async function handleRemove(plantId, plantName) {
+        if (!window.confirm(`Remover "${plantName}" dos favoritos?`)) return
         try {
             await authFetch(`${API_URL}/favorites/${plantId}`, {
                 method: "DELETE"

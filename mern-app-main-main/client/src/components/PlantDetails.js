@@ -272,7 +272,11 @@ export default function PlantDetails({ onFavChange }) {
                 <ImgWithFallback src={`${API_URL}${plant.imagePath}`} alt={plant.name} className="plant-details-image plant-details-image--single" />
               </div>
             )
-          ) : null}
+          ) : (
+            <div className="plant-details-single-image mb-4">
+              <img src={PLACEHOLDER_IMG} alt="Sem imagem disponível" className="plant-details-image plant-details-image--single" />
+            </div>
+          )}
 
           {/* ── DESCRIÇÃO ── */}
           {plant.description && (

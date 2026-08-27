@@ -203,6 +203,7 @@ const EmptyState = ({ role }) => (
 export default function PlantList({ role }) {
     const [plants, setPlants] = useState([])
     const [loading, setLoading] = useState(true)
+    const [fetchError, setFetchError] = useState(null)
     const [collectionOptions, setCollectionOptions] = useState({})
     const [favoriteIds, setFavoriteIds] = useState(new Set())
     const [searchParams, setSearchParams] = useSearchParams()
@@ -258,6 +259,7 @@ export default function PlantList({ role }) {
 
     const fetchPlants = useCallback(async (activeFilters, searchQuery) => {
         setLoading(true)
+        setFetchError(null)
         try {
             const params = new URLSearchParams()
             Object.entries(activeFilters).forEach(([key, value]) => {
@@ -268,7 +270,7 @@ export default function PlantList({ role }) {
             const url = qs ? `${API_URL}/plant?${qs}` : `${API_URL}/plant/`
             const response = await fetch(url)
             if (!response.ok) {
-                window.alert(`Um erro ocorreu: ${response.statusText}`)
+                setFetchError(`Erro ao carregar plantas: ${response.statusText}`)
                 return
             }
             const data = await response.json()
@@ -401,6 +403,13 @@ export default function PlantList({ role }) {
                     ))}
                 </div>
             </div>
+
+            {fetchError && (
+                <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3" role="alert">
+                    <span>{fetchError}</span>
+                    <button type="button" className="btn-close" onClick={() => setFetchError(null)} aria-label="Fechar" />
+                </div>
+            )}
 
             <div className="row">
                 {loading ? (

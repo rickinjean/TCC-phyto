@@ -42,10 +42,7 @@ export default function Register() {
 
             setSucesso(true);
             setMensagem('Usuário registrado com sucesso!');
-            setNome('');
-            setEmail('');
-            setSenha('');
-            setConfirmarSenha('');
+            setTimeout(() => navigate('/login'), 2000);
         } catch (error) {
             setMensagem('Erro ao conectar com o servidor');
         } finally {
