@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import API_URL from "../config"
+import { encodeId } from "../idCodec"
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' fill='%23dceee3'%3E%3Crect width='400' height='250'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='62%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E"
 
@@ -36,7 +37,7 @@ const PlantCard = ({ plant }) => {
                     </p>
                     <Link
                         className="plant-feature-card__button mt-auto btn btn-primary rounded-pill btn-sm"
-                        to={`/plantdetails/${plant._id}`}
+                        to={`/plantdetails/${encodeId(plant._id)}`}
                     >
                         Ver Detalhes
                     </Link>
@@ -152,7 +153,7 @@ export default function Home() {
         )
 
         if (matches.length === 1) {
-            navigate(`/plantdetails/${matches[0]._id}`)
+            navigate(`/plantdetails/${encodeId(matches[0]._id)}`)
         } else {
             navigate(`/plantlist?search=${encodeURIComponent(searchTerm)}`)
         }

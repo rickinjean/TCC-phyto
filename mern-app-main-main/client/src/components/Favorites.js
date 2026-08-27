@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
+import { encodeId } from "../idCodec"
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' fill='%23dceee3'%3E%3Crect width='400' height='250'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='62%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E"
 
@@ -45,7 +46,7 @@ const FavoriteCard = ({ favorite, onRemove }) => {
                     <div className="d-flex gap-2 mt-3">
                         <Link
                             className="plant-list-card__details btn btn-sm flex-grow-1"
-                            to={`/plantdetails/${plant._id}`}
+                            to={`/plantdetails/${encodeId(plant._id)}`}
                         >
                             Detalhes
                         </Link>

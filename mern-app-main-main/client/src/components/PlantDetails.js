@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API_URL from "../config";
 import authFetch from "../authFetch";
+import { decodeId } from "../idCodec";
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' fill='%23dceee3'%3E%3Crect width='600' height='400'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E";
 
@@ -89,16 +90,20 @@ const COLLECTION_MAP = {
   propagation: "propagation", toxicity: "toxicity", dificulty: "dificulty",
   height: "height", flowercolor: "flowercolor", foliage: "foliage",
   flowering: "flowering", light: "light", water: "water", soil: "soil",
-  size: "size", Filo: "Filo", Classe: "Classe", Ordem: "Ordem",
-  Family: "Family", Genero: "Genero", Especie: "Especie",
-  watering: "watering", fertilizing: "fertilizing", pruning: "pruning",
-  pests: "pests", manha: "manha", amount: "amount", frequency: "frequency",
+  size: "size", manha: "manha", amount: "amount", frequency: "frequency",
   NPK: "NPK", season: "season", tools: "tools", prevention: "prevention",
-  monitoring: "monitoring", planting: "planting", exhibition: "exhibition",
-  maintenance: "maintenance", station: "station", spacing: "spacing",
+  monitoring: "monitoring", station: "station", spacing: "spacing",
   iluminosity: "iluminosity", protection: "protection",
   idealTemperature: "idealTemperature", tolerance: "tolerance",
 };
+
+// Campos de texto livre: são armazenados diretamente no documento da planta,
+// NÃO como referência de ObjectId em uma coleção.
+const TEXT_FIELDS = [
+  "watering", "fertilizing", "pruning", "pests",
+  "planting", "exhibition", "maintenance",
+  "Filo", "Classe", "Ordem", "Family", "Genero", "Especie",
+];
 
 export default function PlantDetails({ onFavChange }) {
   const [plant, setPlant] = useState(null);
@@ -107,6 +112,7 @@ export default function PlantDetails({ onFavChange }) {
   const [loading, setLoading] = useState(true);
   const { id } = useParams();
   const navigate = useNavigate();
+  const realId = decodeId(id);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +120,7 @@ export default function PlantDetails({ onFavChange }) {
     async function load() {
       setLoading(true);
       try {
-        const response = await fetch(`${API_URL}/plant/${id}`);
+        const response = await fetch(`${API_URL}/plant/${realId}`);
         if (!response.ok) { if (!cancelled) setNotFound(true); return; }
 
         const data = await response.json();
@@ -124,7 +130,7 @@ export default function PlantDetails({ onFavChange }) {
         const allCollections = collectionsRes.ok ? await collectionsRes.json() : {};
 
         const resolved = {};
-        for (const [field] of Object.entries(COLLECTION_MAP)) {
+        for (const field of Object.keys(COLLECTION_MAP)) {
           const colName = COLLECTION_MAP[field];
           const list = allCollections[colName];
           if (data[field] && list) {
@@ -143,7 +149,7 @@ export default function PlantDetails({ onFavChange }) {
           const favRes = await authFetch(`${API_URL}/favorites`);
           if (!cancelled && favRes && favRes.ok) {
             const favs = await favRes.json();
-            setIsFavorite(favs.some(f => f.plantId === id));
+            setIsFavorite(favs.some(f => f.plantId === realId));
           }
         } catch { /* ignore */ }
 
@@ -157,18 +163,18 @@ export default function PlantDetails({ onFavChange }) {
 
     load();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [realId]);
 
   async function toggleFavorite() {
     try {
       if (isFavorite) {
-        const res = await authFetch(`${API_URL}/favorites/${id}`, { method: "DELETE" });
+        const res = await authFetch(`${API_URL}/favorites/${realId}`, { method: "DELETE" });
         if (res && res.ok) { setIsFavorite(false); onFavChange?.(); }
       } else {
         const res = await authFetch(`${API_URL}/favorites`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plantId: id })
+          body: JSON.stringify({ plantId: realId })
         });
         if (res && res.ok) { setIsFavorite(true); onFavChange?.(); }
       }
@@ -202,7 +208,12 @@ export default function PlantDetails({ onFavChange }) {
     );
   }
 
-  const v = (field) => plant[`${field}Data`] || null;
+  const v = (field) => {
+    const resolved = plant[`${field}Data`];
+    if (resolved) return resolved;
+    if (TEXT_FIELDS.includes(field)) return plant[field] || null;
+    return null;
+  };
 
   const hasImages = plant.imagesPath?.length > 0;
   const hasSingleImage = !hasImages && plant.imagePath;

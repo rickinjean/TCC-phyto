@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
+import { decodeId } from "../idCodec"
 
 const STEPS = [
     { key: "basicos", label: "Dados Básicos", icon: "🌱" },
@@ -29,6 +30,15 @@ const INITIAL_FORM = {
 function ImageDropZone({ imageFiles, setImageFiles, existingImages, setExistingImages }) {
     const [dragging, setDragging] = useState(false)
     const inputRef = useRef()
+    const objectUrls = useRef([])
+
+    useEffect(() => {
+        objectUrls.current = imageFiles.map(f => URL.createObjectURL(f))
+        return () => {
+            objectUrls.current.forEach(url => URL.revokeObjectURL(url))
+            objectUrls.current = []
+        }
+    }, [imageFiles])
 
     function handleDrop(e) {
         e.preventDefault()
@@ -114,7 +124,7 @@ function ImageDropZone({ imageFiles, setImageFiles, existingImages, setExistingI
                 <div className="wizard-dropzone__previews mt-2">
                     {imageFiles.map((file, i) => (
                         <div key={`new-${i}`} className="wizard-dropzone__thumb wizard-dropzone__thumb--new">
-                            <img src={URL.createObjectURL(file)} alt={file.name} />
+                            <img src={objectUrls.current[i]} alt={file.name} />
                             <button
                                 type="button"
                                 className="wizard-dropzone__remove"
@@ -146,11 +156,12 @@ export default function Edit() {
     const [toast, setToast] = useState(null)
     const params = useParams()
     const navigate = useNavigate()
+    const realId = decodeId(params.id)
 
     useEffect(() => {
         async function loadAll() {
             setLoading(true)
-            const id = params.id.toString()
+            const id = realId
 
             const [plantRes, collectionsRes] = await Promise.all([
                 fetch(`${API_URL}/plant/${id}`),
@@ -178,7 +189,7 @@ export default function Edit() {
             setLoading(false)
         }
         loadAll()
-    }, [params.id, navigate])
+    }, [realId, navigate])
 
     function updateForm(value) {
         setForm(prev => ({ ...prev, ...value }))
@@ -264,7 +275,7 @@ export default function Edit() {
             const headers = {}
             if (token) headers.Authorization = `Bearer ${token}`
 
-            const response = await fetch(`${API_URL}/plant/${params.id}`, {
+            const response = await fetch(`${API_URL}/plant/${realId}`, {
                 method: "PUT",
                 headers,
                 body: formData
