@@ -149,7 +149,7 @@ export default function PlantDetails({ onFavChange }) {
           const favRes = await authFetch(`${API_URL}/favorites`);
           if (!cancelled && favRes && favRes.ok) {
             const favs = await favRes.json();
-            setIsFavorite(favs.some(f => f.plantId === realId));
+            setIsFavorite(favs.some(f => String(f.plantId) === realId));
           }
         } catch { /* ignore */ }
 

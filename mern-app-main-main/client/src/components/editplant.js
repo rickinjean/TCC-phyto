@@ -256,6 +256,37 @@ export default function Edit() {
         }
     }
 
+    // Autocomplete da classificação taxonômica a partir do gênero
+    async function handleGenusSuggest() {
+        const genero = (form.Genero || "").trim()
+        if (!genero) return
+        try {
+            const search = new URLSearchParams({ search: genero })
+            const res = await fetch(`${API_URL}/plant/?${search.toString()}`)
+            if (!res.ok) return
+            const plants = await res.json()
+            const match = plants.find(p =>
+                p.Genero && p.Genero.trim().toLowerCase() === genero.toLowerCase()
+            )
+            if (match) {
+                const update = {}
+                if (!form.Filo) update.Filo = match.Filo || ""
+                if (!form.Classe) update.Classe = match.Classe || ""
+                if (!form.Ordem) update.Ordem = match.Ordem || ""
+                if (!form.Family) update.Family = match.Family || ""
+                if (!form.Especie) update.Especie = match.Especie || ""
+                if (Object.keys(update).length > 0) {
+                    updateForm(update)
+                    showToast(`Dados taxonômicos de "${match.name}" preenchidos.`)
+                }
+            } else {
+                showToast("Nenhuma planta com esse gênero foi encontrada.", "error")
+            }
+        } catch {
+            showToast("Erro ao buscar dados do gênero.", "error")
+        }
+    }
+
     async function onSubmit(e) {
         e.preventDefault()
         setSubmitting(true)
@@ -436,7 +467,7 @@ export default function Edit() {
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Classe</label><input type="text" className="form-control" value={form.Classe} onChange={e => updateForm({ Classe: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Ordem</label><input type="text" className="form-control" value={form.Ordem} onChange={e => updateForm({ Ordem: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Família</label><input type="text" className="form-control" value={form.Family} onChange={e => updateForm({ Family: e.target.value })} /></div>
-                            <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Gênero</label><input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} /></div>
+                            <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Gênero</label><input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} onBlur={handleGenusSuggest} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Espécie</label><input type="text" className="form-control" value={form.Especie} onChange={e => updateForm({ Especie: e.target.value })} /></div>
                         </div>
                     </div>

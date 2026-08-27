@@ -46,7 +46,6 @@ const INITIAL_FORM = {
 }
 
 const AUTOSAVE_KEY = "phyto-plant-draft"
-const DUPLICATE_KEY = "phyto-duplicate-plant"
 const AUTOSAVE_DELAY = 3000
 
 const TEXT_LIMITS = {
@@ -205,20 +204,9 @@ export default function Create() {
         load()
     }, [])
 
-    // Restore draft on mount (com prioridade: duplicação > rascunho)
+    // Restore draft on mount
     useEffect(() => {
         try {
-            const duplicate = localStorage.getItem(DUPLICATE_KEY)
-            if (duplicate) {
-                const data = JSON.parse(duplicate)
-                if (data?.name) {
-                    setForm(data)
-                    setHasDraft(true)
-                    showToast("Dados copiados de planta existente. Ajuste e cadastre.")
-                    localStorage.removeItem(DUPLICATE_KEY)
-                }
-                return
-            }
             const saved = localStorage.getItem(AUTOSAVE_KEY)
             if (saved) {
                 const draft = JSON.parse(saved)
@@ -329,6 +317,39 @@ export default function Create() {
         showToast("Valores distribuídos!")
         const btn = document.querySelector('#modalPaste [data-bs-dismiss="modal"]')
         if (btn) btn.click()
+    }
+
+    // Autocomplete da classificação taxonômica a partir do gênero
+    async function handleGenusSuggest() {
+        const genero = (form.Genero || "").trim()
+        if (!genero) return
+        try {
+            const search = new URLSearchParams({ search: genero })
+            const res = await fetch(`${API_URL}/plant/?${search.toString()}`)
+            if (!res.ok) return
+            const plants = await res.json()
+            const match = plants.find(p =>
+                p.Genero && p.Genero.trim().toLowerCase() === genero.toLowerCase()
+            )
+            if (!match) {
+                showToast("Nenhuma planta com esse gênero foi encontrada.", "error")
+                return
+            }
+            const update = {}
+            if (!form.Filo) update.Filo = match.Filo || ""
+            if (!form.Classe) update.Classe = match.Classe || ""
+            if (!form.Ordem) update.Ordem = match.Ordem || ""
+            if (!form.Family) update.Family = match.Family || ""
+            if (!form.Especie) update.Especie = match.Especie || ""
+            if (Object.keys(update).length > 0) {
+                updateForm(update)
+                showToast(`Dados taxonômicos de "${match.name}" preenchidos.`)
+            } else {
+                showToast("Gênero já tem dados preenchidos.")
+            }
+        } catch {
+            showToast("Erro ao buscar dados do gênero.", "error")
+        }
     }
 
     const onSubmit = useCallback(async (e) => {
@@ -614,7 +635,7 @@ export default function Create() {
                             </div>
                             <div className="col-md-2 col-4 mb-3">
                                 <FieldLabel optional>Gênero</FieldLabel>
-                                <input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} />
+                                <input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} onBlur={handleGenusSuggest} placeholder="Digite e saia do campo" />
                             </div>
                             <div className="col-md-2 col-4 mb-3">
                                 <FieldLabel optional>Espécie</FieldLabel>

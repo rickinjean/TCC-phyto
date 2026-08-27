@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react"
-import { Link, useSearchParams, useNavigate } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import { encodeId } from "../idCodec"
@@ -173,13 +173,6 @@ className="plant-list-card__edit btn btn-sm flex-grow-1"
                                     Editar
                                 </Link>
                                 <button
-className="plant-list-card__edit btn btn-sm flex-grow-1"
-                                    onClick={() => props.duplicateRecord(props.record)}
-                                    title="Duplicar planta"
-                                >
-                                    Duplicar
-                                </button>
-                                <button
 className="plant-list-card__delete btn btn-sm"
                                     onClick={() => props.deleteRecord(props.record._id)}
                                     
@@ -209,7 +202,6 @@ export default function PlantList({ role }) {
     const [collectionOptions, setCollectionOptions] = useState({})
     const [favoriteIds, setFavoriteIds] = useState(new Set())
     const [searchParams, setSearchParams] = useSearchParams()
-    const navigate = useNavigate()
 
     const filtersFromURL = {}
     FILTER_FIELDS.forEach(({ key }) => {
@@ -249,7 +241,7 @@ export default function PlantList({ role }) {
                 const res = await authFetch(`${API_URL}/favorites`)
                 if (res && res.ok) {
                     const data = await res.json()
-                    setFavoriteIds(new Set(data.map(f => f.plantId)))
+                    setFavoriteIds(new Set(data.map(f => String(f.plantId))))
                 } else if (res) {
                     console.warn("Falha ao carregar favoritos:", res.status)
                 }
@@ -341,14 +333,6 @@ export default function PlantList({ role }) {
         }
     }
 
-    async function duplicateRecord(record) {
-        if (!window.confirm(`Duplicar "${record.name}" para um novo cadastro?`)) return
-        const { _id, imagesPath, imagePath, ...rest } = record
-        const payload = { ...rest, name: `${record.name} (cópia)` }
-        localStorage.setItem("phyto-duplicate-plant", JSON.stringify(payload))
-        navigate("/createplant")
-    }
-
     return (
         <div className="plant-list-page container mt-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -435,7 +419,6 @@ export default function PlantList({ role }) {
                             record={record}
                             role={role}
                             deleteRecord={deleteRecord}
-                            duplicateRecord={duplicateRecord}
                             favoriteIds={favoriteIds}
                             onFavoriteToggle={handleFavoriteToggle}
                         />
