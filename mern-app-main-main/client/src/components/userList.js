@@ -26,26 +26,31 @@ const Record = (props) => {
 
 export default function UserList() {
     const [users, setUsers] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
 
     useEffect(() => {
         async function getUsers() {
-            const token = localStorage.getItem('token')
-            const headers = token ? { Authorization: `Bearer ${token}` } : {}
-            const response = await fetch(`${API_URL}/user/`, { headers })
+            try {
+                const token = localStorage.getItem('token')
+                const headers = token ? { Authorization: `Bearer ${token}` } : {}
+                const response = await fetch(`${API_URL}/user/`, { headers })
 
-            if (!response.ok) {
-                const message = `Um erro ocorreu: ${response.statusText}`
-                window.alert(message)
-                return
+                if (!response.ok) {
+                    setError(`Erro ao carregar usuários: ${response.statusText}`)
+                    return
+                }
+
+                const users = await response.json()
+                setUsers(users)
+            } catch {
+                setError("Erro ao conectar com o servidor")
+            } finally {
+                setLoading(false)
             }
-
-            const users = await response.json()
-            setUsers(users)
         }
 
         getUsers()
-
-        return
     }, [])
 
     async function deleteRecord(id) {
@@ -80,20 +85,29 @@ export default function UserList() {
     return (
         <div className="admin-page admin-page--users">
             <h3 className="admin-page__title ps-2">Lista de Usuários</h3>
-            <div className="admin-table-wrap">
-            <table className="admin-table table table-striped">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Login</th>
-                        <th>E-mail</th>
-                        <th>Função</th>
-                        <th>Ação</th>
-                    </tr>
-                </thead>
-                <tbody>{recordList()}</tbody>
-            </table>
-            </div>
+            {loading ? (
+                <div className="text-center py-5">
+                    <div className="spinner-border spinner-border-sm me-2" role="status" />
+                    Carregando usuários...
+                </div>
+            ) : error ? (
+                <div className="alert alert-danger mx-2">{error}</div>
+            ) : (
+                <div className="admin-table-wrap">
+                <table className="admin-table table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Login</th>
+                            <th>E-mail</th>
+                            <th>Função</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>{recordList()}</tbody>
+                </table>
+                </div>
+            )}
         </div>
     )
 }

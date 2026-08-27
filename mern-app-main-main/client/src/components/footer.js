@@ -9,7 +9,12 @@ export default function Footer() {
         <p className="site-footer__text site-footer__text--strong">
           MongoDB + Express + React + Node.js = MERN
         </p>
-        <p className="site-footer__text">Professor Matheus Lorenzato Braga</p>
+        <p className="site-footer__text">
+          Professor Matheus Lorenzato Braga
+        </p>
+        <p className="site-footer__text site-footer__text--small">
+          &copy; {new Date().getFullYear()} Phytografia
+        </p>
 
         <div className="site-footer__links">
           <a

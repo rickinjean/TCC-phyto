@@ -9,35 +9,39 @@ export default function Edit() {
         email: "",
         function: ""
     })
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
     const params = useParams()
     const navigate = useNavigate()
 
     useEffect(() => {
         async function fetchData() {
-            const id = params.id
-            const token = localStorage.getItem('token')
-            const headers = token ? { Authorization: `Bearer ${token}` } : {}
-            const response = await fetch(`${API_URL}/user/${id}`, { headers })
-            if (!response.ok) {
-                const message = `An error occurred: ${response.statusText}`
-                window.alert(message)
-                return
-            }
+            try {
+                const id = params.id
+                const token = localStorage.getItem('token')
+                const headers = token ? { Authorization: `Bearer ${token}` } : {}
+                const response = await fetch(`${API_URL}/user/${id}`, { headers })
+                if (!response.ok) {
+                    setError(`Erro: ${response.statusText}`)
+                    return
+                }
 
-            const user = await response.json()
-            if (!user) {
-                window.alert(`Usuário com id ${id} não encontrado`)
-                navigate("/")
-                return
-            }
+                const user = await response.json()
+                if (!user) {
+                    setError(`Usuário com id ${id} não encontrado`)
+                    return
+                }
 
-            setForm(user)
+                setForm(user)
+            } catch {
+                setError("Erro ao conectar com o servidor")
+            } finally {
+                setLoading(false)
+            }
         }
 
         fetchData()
-
-        return
-    }, [params.id, navigate])
+    }, [params.id])
 
     function updateForm(value) {
         setForm((prev) => {
@@ -47,6 +51,7 @@ export default function Edit() {
 
     async function onSubmit(e) {
         e.preventDefault()
+        setError("")
 
         const editedPerson = { ...form }
         const token = localStorage.getItem('token')
@@ -54,24 +59,43 @@ export default function Edit() {
             "Content-Type": "application/json"
         }
         if (token) headers.Authorization = `Bearer ${token}`
-        const response = await fetch(`${API_URL}/update/${params.id}`, {
-            method: "PUT",
-            headers,
-            body: JSON.stringify(editedPerson)
-        })
 
-        if (!response.ok) {
-            const message = `An error occurred: ${response.statusText}`
-            window.alert(message)
-            return
+        try {
+            const response = await fetch(`${API_URL}/update/${params.id}`, {
+                method: "PUT",
+                headers,
+                body: JSON.stringify(editedPerson)
+            })
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}))
+                setError(data.message || `Erro: ${response.statusText}`)
+                return
+            }
+
+            navigate("/")
+        } catch {
+            setError("Erro ao conectar com o servidor")
         }
+    }
 
-        navigate("/")
+    if (loading) {
+        return (
+            <div className="admin-page admin-page--form">
+                <div className="text-center py-5">
+                    <div className="spinner-border spinner-border-sm me-2" role="status" />
+                    Carregando dados do usuário...
+                </div>
+            </div>
+        )
     }
 
     return (
         <div className="admin-page admin-page--form">
             <h3 className="admin-page__title">Alteração de dados</h3>
+            {error && (
+                <div className="alert alert-danger py-2">{error}</div>
+            )}
             <form className="admin-form" onSubmit={onSubmit}>
                 <div className="form-group">
                     <label htmlFor="name">Nome</label>
@@ -96,7 +120,7 @@ export default function Edit() {
                 <div className="form-group">
                     <label htmlFor="email">E-mail</label>
                     <input
-                        type="text"
+                        type="email"
                         className="form-control"
                         id="email"
                         value={form.email}
@@ -121,12 +145,12 @@ export default function Edit() {
                             className="form-check-input"
                             type="radio"
                             name="positionOptions"
-                            id="positionDocente"
+                            id="positionADM"
                             value="ADM"
                             checked={form.function === "ADM"}
                             onChange={(e) => updateForm({ function: e.target.value })}
                         />
-                        <label htmlFor="positionDocente" className="form-check-label">ADM</label>
+                        <label htmlFor="positionADM" className="form-check-label">ADM</label>
                     </div>
                 </div>
                 <div className="form-group">

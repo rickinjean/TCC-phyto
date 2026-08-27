@@ -10,6 +10,8 @@ export default function Create() {
         function: "",
         senha: ""
     })
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState("")
     const navigate = useNavigate()
 
     function updateForm(value) {
@@ -20,6 +22,8 @@ export default function Create() {
 
     async function onSubmit(e) {
         e.preventDefault()
+        setError("")
+        setLoading(true)
 
         const newPerson = { ...form }
         const token = localStorage.getItem('token')
@@ -30,26 +34,35 @@ export default function Create() {
             headers.Authorization = `Bearer ${token}`
         }
 
-        const response = await fetch(`${API_URL}/user/add`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify(newPerson)
-        })
+        try {
+            const response = await fetch(`${API_URL}/user/add`, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(newPerson)
+            })
 
-        if (!response.ok) {
-            const message = `An error occurred: ${response.statusText}`
-            window.alert(message)
-            return
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}))
+                setError(data.message || `Erro: ${response.statusText}`)
+                return
+            }
+
+            setForm({ name: "", user: "", email: "", function: "", senha: "" })
+            navigate("/")
+        } catch {
+            setError("Erro ao conectar com o servidor")
+        } finally {
+            setLoading(false)
         }
-
-        setForm({ name: "", user: "", email: "", function: "", senha: "" })
-        navigate("/")
     }
 
     return (
         <div className="admin-page admin-page--form">
             <h3 className="admin-page__title">Cadastrar novo usuário</h3>
             <form className="admin-form" onSubmit={onSubmit}>
+                {error && (
+                    <div className="alert alert-danger py-2">{error}</div>
+                )}
                 <div className="form-group">
                     <label htmlFor="name">Nome completo</label>
                     <input
@@ -73,7 +86,7 @@ export default function Create() {
                 <div className="form-group">
                     <label htmlFor="email">E-mail</label>
                     <input
-                        type="text"
+                        type="email"
                         className="form-control"
                         id="email"
                         value={form.email}
@@ -119,8 +132,9 @@ export default function Create() {
                 <div className="form-group">
                     <input
                         type="submit"
-                       value="Enviar dados"
+                        value={loading ? "Cadastrando..." : "Enviar dados"}
                         className="btn btn-primary"
+                        disabled={loading}
                     />
                 </div>
             </form>
