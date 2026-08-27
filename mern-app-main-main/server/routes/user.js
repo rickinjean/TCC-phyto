@@ -17,13 +17,17 @@ userRoutes.route('/user/login').post(async function (req, res) {
             return res.status(400).json({ mensagem: 'Usuário não encontrado' });
         }
 
+        if (!usuario.senha) {
+            return res.status(400).json({ mensagem: 'Esta conta usa login social. Faça login com Google ou GitHub.' });
+        }
+
         const senhaValida = await bcrypt.compare(senha, usuario.senha);
 
         if (!senhaValida) {
             return res.status(400).json({ mensagem: 'Senha incorreta' });
         }
 
-        const token = signToken({ userId: usuario._id, tipo: usuario.function })
+        const token = signToken({ userId: usuario._id, tipo: usuario.function, name: usuario.name, avatar: usuario.avatar || null })
 
         res.json({ mensagem: 'Login bem-sucedido', token });
     } catch (erro) {

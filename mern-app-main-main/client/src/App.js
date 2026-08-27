@@ -54,7 +54,16 @@ const App = () => {
     });
     const [role, setRole] = useState(() => {
         const storedToken = localStorage.getItem('token')
-        return parseJwt(storedToken)?.tipo || null
+        const payload = parseJwt(storedToken)
+        return payload?.tipo || null
+    });
+    const [userName, setUserName] = useState(() => {
+        const storedToken = localStorage.getItem('token')
+        return parseJwt(storedToken)?.name || null
+    });
+    const [userAvatar, setUserAvatar] = useState(() => {
+        const storedToken = localStorage.getItem('token')
+        return parseJwt(storedToken)?.avatar || null
     });
     const [favTick, setFavTick] = useState(0);
 
@@ -77,18 +86,23 @@ const App = () => {
     const handleLogin = (tokenValue) => {
         localStorage.setItem('token', tokenValue)
         setToken(tokenValue)
-        setRole(parseJwt(tokenValue)?.tipo || null)
+        const payload = parseJwt(tokenValue)
+        setRole(payload?.tipo || null)
+        setUserName(payload?.name || null)
+        setUserAvatar(payload?.avatar || null)
     }
 
     const handleLogout = () => {
         localStorage.removeItem('token')
         setToken(null)
         setRole(null)
+        setUserName(null)
+        setUserAvatar(null)
     }
 
     return (
         <div className="d-flex flex-column min-vh-100">
-            <Navbar token={token} role={role} onLogout={handleLogout} />
+            <Navbar token={token} role={role} userName={userName} userAvatar={userAvatar} onLogout={handleLogout} />
             <main className="app-main flex-fill">
                 <Routes>
                     <Route path="/login" element={<Login onLogin={handleLogin} />} />

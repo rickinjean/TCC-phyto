@@ -14,7 +14,7 @@ const getInitialTheme = () => {
     return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 };
 
-export default function Navbar({ token, role, onLogout }) {
+export default function Navbar({ token, role, userName, userAvatar, onLogout }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [theme, setTheme] = useState(getInitialTheme);
 
@@ -65,7 +65,22 @@ export default function Navbar({ token, role, onLogout }) {
                                     <li><NavLink className="custom-navbar__dropdown-link" to="/create">C. Usuários</NavLink></li>
                                     <li><NavLink className="custom-navbar__dropdown-link" to="/userlist">L. Usuários</NavLink></li>
                                     <li><NavLink className="custom-navbar__dropdown-link" to="/createplant">C. Plantas</NavLink></li>
-                                </ul>
+                </ul>
+
+                {token && (
+                    <div className="custom-navbar__user d-flex align-items-center gap-2 me-2">
+                        {userAvatar ? (
+                            <img src={userAvatar} alt="" style={{width: 28, height: 28, borderRadius: "50%", objectFit: "cover"}} />
+                        ) : (
+                            <span style={{width: 28, height: 28, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 600, color: "#fff"}}>
+                                {userName ? userName.charAt(0).toUpperCase() : "?"}
+                            </span>
+                        )}
+                        <span className="small fw-semibold d-none d-lg-inline" style={{maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
+                            {userName || "Usuário"}
+                        </span>
+                    </div>
+                )}
                             </li>
                         </>
                     )}
@@ -145,6 +160,18 @@ export default function Navbar({ token, role, onLogout }) {
 
                             {token ? (
                                 <>
+                                    {userName && (
+                                        <li className="nav-item d-flex align-items-center gap-2 px-3 py-2">
+                                            {userAvatar ? (
+                                                <img src={userAvatar} alt="" style={{width: 32, height: 32, borderRadius: "50%", objectFit: "cover"}} />
+                                            ) : (
+                                                <span style={{width: 32, height: 32, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 600, color: "#fff"}}>
+                                                    {userName.charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
+                                            <span className="fw-semibold">{userName}</span>
+                                        </li>
+                                    )}
                                     <li className="nav-item">
                                         <NavLink className="custom-navbar__offcanvas-link" to="/inicio" onClick={closeMenu}>
                                             Início

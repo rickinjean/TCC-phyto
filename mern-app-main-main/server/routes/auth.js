@@ -82,7 +82,7 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
             "google"
         )
 
-        const token = signToken({ userId: user._id, tipo: user.function })
+        const token = signToken({ userId: user._id, tipo: user.function, name: user.name, avatar: user.avatar || null })
 
         res.redirect(`${FRONTEND_URL}/?token=${token}`)
     } catch (error) {
@@ -142,7 +142,7 @@ authRoutes.get("/auth/github/callback", async (req, res) => {
             "github"
         )
 
-        const token = signToken({ userId: user._id, tipo: user.function })
+        const token = signToken({ userId: user._id, tipo: user.function, name: user.name, avatar: user.avatar || null })
 
         res.redirect(`${FRONTEND_URL}/?token=${token}`)
     } catch (error) {
