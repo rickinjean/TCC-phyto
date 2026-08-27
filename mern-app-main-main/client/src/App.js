@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Route, Routes, Navigate } from "react-router-dom"
+import { Route, Routes, Navigate, useLocation } from "react-router-dom"
 import Navbar from "./components/navbar"
 import Footer from "./components/footer"
 import UserList from "./components/userList"
@@ -44,6 +44,12 @@ function isTokenExpired(token) {
 }
 
 const App = () => {
+    const location = useLocation()
+
+    useEffect(() => {
+        window.scrollTo(0, 0)
+    }, [location.pathname])
+
     const [token, setToken] = useState(() => {
         const stored = localStorage.getItem('token')
         if (stored && isTokenExpired(stored)) {
