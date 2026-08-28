@@ -360,31 +360,57 @@ export default function Create() {
     }
 
     // Resolve o texto retornado pela API contra o ObjectId da coleção correspondente
-    function resolveCollectionField(fieldName, textValue) {
+    // Se não encontrar, cria a opção automaticamente no banco
+    async function resolveCollectionField(fieldName, textValue) {
         if (!textValue || !mapeamentoColecoes[fieldName]) return textValue
         const options = opcoesBanco[fieldName] || []
         const normalizedText = norm(textValue)
-        // Busca exata
         const exact = options.find(o => norm(o.name) === normalizedText)
         if (exact) return exact._id
-        // Busca parcial (o texto da API contém o nome da opção ou vice-versa)
         const partial = options.find(o => normalizedText.includes(norm(o.name)) || norm(o.name).includes(normalizedText))
         if (partial) return partial._id
-        // Não encontrou — retorna o texto puro (o ADM pode ajustar manualmente)
+        // Não encontrou — cria a opção automaticamente
+        try {
+            const res = await authFetch(`${API_URL}/collections/${mapeamentoColecoes[fieldName].colecao}/add`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: textValue })
+            })
+            if (res && res.ok) {
+                const item = await res.json()
+                setOpcoesBanco(prev => ({
+                    ...prev,
+                    [fieldName]: [...(prev[fieldName] || []), item]
+                }))
+                return item._id
+            }
+        } catch { /* falha silenciosa — usa o texto puro */ }
         return textValue
     }
 
     // Aplica o auto-preenchimento completo de uma planta sugerida
-    function applySuggestion(fields) {
-        const resolved = {}
-        Object.entries(fields).forEach(([k, v]) => {
-            if (v === null || v === undefined || String(v).trim() === "") return
-            if (mapeamentoColecoes[k]) {
-                resolved[k] = resolveCollectionField(k, v)
-            } else {
-                resolved[k] = v
-            }
+    async function applySuggestion(fields) {
+        const collectionKeys = Object.entries(fields).filter(([k, v]) => {
+            if (v === null || v === undefined || String(v).trim() === "") return false
+            return !!mapeamentoColecoes[k]
         })
+        const textKeys = Object.entries(fields).filter(([k, v]) => {
+            if (v === null || v === undefined || String(v).trim() === "") return false
+            return !mapeamentoColecoes[k]
+        })
+
+        const resolved = {}
+        textKeys.forEach(([k, v]) => { resolved[k] = v })
+
+        // Resolve coleções em paralelo (cria opções automaticamente se necessário)
+        const results = await Promise.all(
+            collectionKeys.map(async ([k, v]) => {
+                const resolvedId = await resolveCollectionField(k, v)
+                return [k, resolvedId]
+            })
+        )
+        results.forEach(([k, v]) => { resolved[k] = v })
+
         updateForm(resolved)
         const count = Object.keys(resolved).length
         showToast(`Auto-preenchimento aplicado (${count} campos). Revise os dados antes de salvar.`)

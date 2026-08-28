@@ -47,13 +47,13 @@ export default function PlantSuggestBar({ onApply, placeholder = "Digite o nome 
         if (e.key === "Enter") e.preventDefault()
     }
 
-    function applyAll(r) {
+    async function applyAll(r) {
         const onlyMappable = {}
         Object.entries(r.fields || {}).forEach(([k, v]) => {
             if (v === null || v === undefined) return
             onlyMappable[k] = String(v)
         })
-        onApply(onlyMappable)
+        await onApply(onlyMappable)
         setResults([])
         setQuery("")
         setSearched(false)

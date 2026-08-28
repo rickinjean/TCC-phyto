@@ -387,7 +387,7 @@ Prefira valores das OPÇÕES quando disponíveis. Se não tiver certeza, preench
     try {
         const api = axios.create({ timeout: 45000 })
         const res = await api.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
             {
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
