@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
@@ -181,7 +181,32 @@ export default function Create() {
     const [hasDraft, setHasDraft] = useState(false)
     const [pasteValues, setPasteValues] = useState("")
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
     const autoSaveTimer = useRef(null)
+
+    // Clonar planta: busca dados e pré-preenche o formulário
+    useEffect(() => {
+        const cloneId = searchParams.get("clone")
+        if (!cloneId) return
+        async function loadClone() {
+            try {
+                const token = localStorage.getItem("token")
+                const headers = {}
+                if (token) headers.Authorization = `Bearer ${token}`
+                const res = await fetch(`${API_URL}/plant/${cloneId}/clone`, { headers })
+                if (!res.ok) {
+                    showToast("Erro ao buscar planta para clonar.", "error")
+                    return
+                }
+                const data = await res.json()
+                setForm(prev => ({ ...prev, ...data, name: "", scientificName: "" }))
+                showToast("Planta clonada! Ajuste nome e científico antes de salvar.")
+            } catch {
+                showToast("Erro ao conectar ao servidor para clonar.", "error")
+            }
+        }
+        loadClone()
+    }, [searchParams])
 
     useEffect(() => {
         async function load() {

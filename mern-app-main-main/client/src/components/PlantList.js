@@ -170,6 +170,13 @@ className="plant-list-card__edit btn btn-sm flex-grow-1"
                                 >
                                     Editar
                                 </Link>
+                                <Link
+className="plant-list-card__clone btn btn-sm flex-grow-1"
+                                    to={`/createplant?clone=${encodeId(props.record._id)}`}
+                                    
+                                >
+                                    Clonar
+                                </Link>
                                 <button
 className="plant-list-card__delete btn btn-sm"
                                     onClick={() => props.deleteRecord(props.record._id)}

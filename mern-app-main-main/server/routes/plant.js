@@ -38,6 +38,28 @@ const upload = multer({
 })
 
 /* ==================================================
+   CLONAR PLANTA (retorna cópia dos dados sem _id e images)
+================================================== */
+plantRoutes.route("/plant/:id/clone").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
+    const db_connect = dbo.getDb()
+    try {
+        const id = req.params.id
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "ID inválido" })
+        }
+        const result = await db_connect.collection("plants").findOne({ _id: new ObjectId(id) })
+        if (!result) {
+            return res.status(404).json({ message: `Planta com id ${id} não encontrada` })
+        }
+        // Remove _id, imagesPath e imagePath para criar uma cópia limpa
+        const { _id, imagesPath, imagePath, ...cloneData } = result
+        res.status(200).json(cloneData)
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
+/* ==================================================
    LISTAR PLANTAS (com filtros opcionais)
 ================================================== */
 plantRoutes.route("/plant").get(async function (req, res) {
