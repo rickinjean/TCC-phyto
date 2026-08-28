@@ -115,7 +115,7 @@ const App = () => {
                     <Route path="/login" element={<Login onLogin={handleLogin} />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/verify" element={<Verify />} />
-                    <Route exact path="/" element={token ? (role === "ADM" ? <UserList /> : <Navigate to="/plantlist" replace />) : <Navigate to="/login" replace />} />
+                    <Route exact path="/" element={token ? (role === "ADM" ? <UserList /> : <Navigate to="/inicio" replace />) : <Navigate to="/login" replace />} />
                     <Route path="/plantlist" element={token ? <PlantList role={role} favTick={favTick} /> : <Navigate to="/login" replace />} />
                     <Route path="/userlist" element={token && role === "ADM" ? <UserList /> : <Navigate to={token ? "/" : "/login"} replace />} />
                     <Route path="/edit/:id" element={token && role === "ADM" ? <Edit /> : <Navigate to={token ? "/" : "/login"} replace />} />

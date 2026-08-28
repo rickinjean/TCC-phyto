@@ -36,7 +36,7 @@ export default function Login({ onLogin }) {
 
             localStorage.setItem('token', data.token);
             onLogin(data.token);
-            navigate('/');
+            navigate('/inicio');
         } catch (error) {
             setError('Erro na conexão com o servidor');
         } finally {

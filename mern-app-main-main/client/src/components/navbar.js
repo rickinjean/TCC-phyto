@@ -83,6 +83,15 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                         <span className="small fw-semibold d-none d-lg-inline" style={{maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
                             {userName || "Usuário"}
                         </span>
+                        <button
+                            type="button"
+                            className="custom-navbar__logout"
+                            aria-label="Sair da conta"
+                            title="Sair"
+                            onClick={onLogout}
+                        >
+                            Sair
+                        </button>
                     </div>
                 )}
 

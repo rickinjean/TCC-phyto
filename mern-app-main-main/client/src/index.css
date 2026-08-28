@@ -354,6 +354,23 @@ button:focus-visible {
   color: var(--phyto-green-900);
 }
 
+.custom-navbar__logout {
+  border: 1px solid rgba(31, 107, 73, 0.25);
+  border-radius: 12px;
+  background: transparent;
+  color: #35594a;
+  font-weight: 700;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.custom-navbar__logout:hover,
+html[data-theme="dark"] .custom-navbar__logout:hover {
+  background: var(--phyto-green-100);
+  color: var(--phyto-green-900);
+}
+
 .custom-navbar__separator {
   margin: 0.75rem 0;
   border-color: rgba(31, 107, 73, 0.18);
@@ -888,7 +905,8 @@ html[data-theme="dark"] .custom-navbar {
 html[data-theme="dark"] .custom-navbar__brand,
 html[data-theme="dark"] .custom-navbar__link,
 html[data-theme="dark"] .custom-navbar__offcanvas-link,
-html[data-theme="dark"] .custom-navbar__offcanvas-button {
+html[data-theme="dark"] .custom-navbar__offcanvas-button,
+html[data-theme="dark"] .custom-navbar__logout {
   color: #d9f2e1;
 }
 
