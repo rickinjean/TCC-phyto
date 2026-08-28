@@ -183,7 +183,6 @@ export default function Create() {
     const [pasteValues, setPasteValues] = useState("")
     const [templates, setTemplates] = useState([])
     const [tmplName, setTmplName] = useState("")
-    const [tmplFields, setTmplFields] = useState("")
     const [tmplEditId, setTmplEditId] = useState(null)
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
@@ -391,6 +390,8 @@ export default function Create() {
     }
 
     /* ── TEMPLATES ── */
+    const [tmplForm, setTmplForm] = useState(INITIAL_FORM)
+
     function applyTemplate(tmpl) {
         updateForm(tmpl.fields)
         setTemplateStep(false)
@@ -408,8 +409,8 @@ export default function Create() {
         }
         const fieldsToSave = {}
         ALL_FIELDS.forEach(k => {
-            if (form[k] && String(form[k]).trim() !== "") {
-                fieldsToSave[k] = form[k]
+            if (tmplForm[k] && String(tmplForm[k]).trim() !== "") {
+                fieldsToSave[k] = tmplForm[k]
             }
         })
         if (Object.keys(fieldsToSave).length === 0) {
@@ -446,7 +447,7 @@ export default function Create() {
                 showToast("Template salvo!")
             }
             setTmplName("")
-            setTmplFields("")
+            setTmplForm(INITIAL_FORM)
             setTmplEditId(null)
             const btn = document.querySelector('#modalManageTemplates [data-bs-dismiss="modal"]')
             if (btn) btn.click()
@@ -458,7 +459,7 @@ export default function Create() {
     function editTemplate(tmpl) {
         setTmplEditId(tmpl._id)
         setTmplName(tmpl.name)
-        setTmplFields(Object.entries(tmpl.fields).map(([k, v]) => `${k}: ${v}`).join("\n"))
+        setTmplForm(prev => ({ ...INITIAL_FORM, ...tmpl.fields }))
     }
 
     async function deleteTemplate(id) {
@@ -475,6 +476,23 @@ export default function Create() {
         } catch {
             showToast("Erro ao excluir template.", "error")
         }
+    }
+
+    function updateTmplForm(value) {
+        setTmplForm(prev => ({ ...prev, ...value }))
+    }
+
+    function TmplSelectField({ campo, placeholder }) {
+        return (
+            <SearchableSelect
+                campo={campo}
+                placeholder={placeholder}
+                value={tmplForm[campo]}
+                options={opcoesBanco[campo] || []}
+                onChange={id => updateTmplForm({ [campo]: id })}
+                onManage={() => {}}
+            />
+        )
     }
 
     const onSubmit = useCallback(async (e) => {
@@ -1209,42 +1227,143 @@ export default function Create() {
 
             {/* ── MODAL GERENCIAR TEMPLATES ── */}
             <div className="modal fade" id="modalManageTemplates" tabIndex="-1" aria-hidden="true">
-                <div className="modal-dialog modal-lg">
+                <div className="modal-dialog modal-xl modal-dialog-scrollable">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <h5 className="modal-title">⚙️ Gerenciar Templates</h5>
+                            <h5 className="modal-title">{tmplEditId ? "Editar Template" : "Novo Template"}</h5>
                             <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                         </div>
                         <div className="modal-body">
                             <div className="mb-3">
-                                <label className="form-label fw-semibold">{tmplEditId ? "Editar template" : "Novo template"}</label>
+                                <label className="form-label fw-semibold">Nome do template</label>
                                 <input
                                     type="text"
-                                    className="form-control mb-2"
-                                    placeholder="Nome do template (ex: Frutífera)"
+                                    className="form-control"
+                                    placeholder="Ex: Frutífera, Ornamental, Suculenta..."
                                     value={tmplName}
                                     onChange={e => setTmplName(e.target.value)}
                                 />
-                                <textarea
-                                    className="form-control"
-                                    rows="6"
-                                    placeholder={"Campos pré-preenchidos (um por linha, formato campo: valor):\n\nEx:\ntype: Frutífera\nlight: Sol pleno\nwater: Abundante\nsoil: Rico em matéria orgânica\ndificulty: Média\npropagation: Sementes"}
-                                    value={tmplFields}
-                                    onChange={e => setTmplFields(e.target.value)}
-                                />
-                                <small className="text-muted">Formato: <code>campo: valor</code> um por linha. Campos válidos: name, scientificName, type, origin, light, water, soil, toxicity, dificulty, height, flowercolor, foliage, flowering, propagation, fruit, manha, amount, frequency, NPK, season, tools, prevention, monitoring, station, spacing, iluminosity, protection, idealTemperature, tolerance, planting, exhibition, maintenance, watering, fertilizing, pruning, pests, simpleDescription, description.</small>
-                                <div className="mt-2 d-flex gap-2">
-                                    <button type="button" className="btn btn-sm btn-success" onClick={saveTemplate}>
-                                        {tmplEditId ? "Atualizar" : "Salvar template"}
-                                    </button>
-                                    {tmplEditId && (
-                                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { setTmplEditId(null); setTmplName(""); setTmplFields("") }}>
-                                            Cancelar edição
-                                        </button>
-                                    )}
+                                <small className="text-muted">Preencha apenas os campos que devem ser pré-preenchidos. Campos em branco serão ignorados.</small>
+                            </div>
+
+                            <hr />
+                            <h6 className="mb-3">Campos do template</h6>
+
+                            <div className="row">
+                                <div className="col-md-4 mb-3">
+                                    <label className="form-label">Tipo / Função</label>
+                                    <TmplSelectField campo="type" placeholder="Tipo de planta..." />
+                                </div>
+                                <div className="col-md-4 mb-3">
+                                    <label className="form-label">Origem</label>
+                                    <TmplSelectField campo="origin" placeholder="Origem geográfica..." />
+                                </div>
+                                <div className="col-md-4 mb-3">
+                                    <label className="form-label">Propagação</label>
+                                    <TmplSelectField campo="propagation" placeholder="Como se propaga..." />
+                                </div>
+                                <div className="col-md-4 mb-3">
+                                    <label className="form-label">Toxicidade</label>
+                                    <TmplSelectField campo="toxicity" placeholder="Grau de toxicidade..." />
+                                </div>
+                                <div className="col-md-4 mb-3">
+                                    <label className="form-label">Dificuldade</label>
+                                    <TmplSelectField campo="dificulty" placeholder="Nível de cuidado..." />
+                                </div>
+                                <div className="col-md-4 mb-3">
+                                    <label className="form-label">Altura / Porte</label>
+                                    <TmplSelectField campo="height" placeholder="Porte da planta..." />
                                 </div>
                             </div>
-                            <hr />
+
+                            <h6 className="mb-3">Características físicas</h6>
+                            <div className="row">
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Cor da flor</label>
+                                    <TmplSelectField campo="flowercolor" placeholder="Cor..." />
+                                </div>
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Folhagem</label>
+                                    <TmplSelectField campo="foliage" placeholder="Tipo de folhagem..." />
+                                </div>
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Floração</label>
+                                    <TmplSelectField campo="flowering" placeholder="Época..." />
+                                </div>
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Fruto</label>
+                                    <TmplSelectField campo="fruit" placeholder="Tipo de fruto..." />
+                                </div>
+                            </div>
+
+                            <h6 className="mb-3">Ambiente</h6>
+                            <div className="row">
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Luz</label>
+                                    <TmplSelectField campo="light" placeholder="Necessidade de luz..." />
+                                </div>
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Água</label>
+                                    <TmplSelectField campo="water" placeholder="Necessidade de água..." />
+                                </div>
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Solo</label>
+                                    <TmplSelectField campo="soil" placeholder="Tipo de solo..." />
+                                </div>
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Tamanho</label>
+                                    <TmplSelectField campo="size" placeholder="Tamanho do vaso/local..." />
+                                </div>
+                            </div>
+
+                            <h6 className="mb-3">Cuidados</h6>
+                            <div className="row">
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Horário de rega</label>
+                                    <TmplSelectField campo="manha" placeholder="Melhor horário..." />
+                                </div>
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Quantidade de água</label>
+                                    <TmplSelectField campo="amount" placeholder="Quantidade..." />
+                                </div>
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Frequência adubação</label>
+                                    <TmplSelectField campo="frequency" placeholder="Frequência..." />
+                                </div>
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">NPK</label>
+                                    <TmplSelectField campo="NPK" placeholder="Tipo de NPK..." />
+                                </div>
+                            </div>
+
+                            <div className="d-flex justify-content-between align-items-center mt-3 mb-2">
+                                <h6 className="mb-0">Texto livre (opcional)</h6>
+                            </div>
+                            <div className="row">
+                                <div className="col-md-6 mb-3">
+                                    <label className="form-label">Descrição curta</label>
+                                    <textarea className="form-control" rows="2" maxLength={200} placeholder="Frase curta sobre a planta..."
+                                        value={tmplForm.simpleDescription} onChange={e => updateTmplForm({ simpleDescription: e.target.value })} />
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <label className="form-label">Como plantar</label>
+                                    <textarea className="form-control" rows="2" maxLength={500} placeholder="Instruções de plantio..."
+                                        value={tmplForm.planting} onChange={e => updateTmplForm({ planting: e.target.value })} />
+                                </div>
+                            </div>
+
+                            <div className="d-flex gap-2 mt-3">
+                                <button type="button" className="btn btn-success" onClick={saveTemplate}>
+                                    {tmplEditId ? "Atualizar template" : "Salvar template"}
+                                </button>
+                                {tmplEditId && (
+                                    <button type="button" className="btn btn-outline-secondary" onClick={() => { setTmplEditId(null); setTmplName(""); setTmplForm(INITIAL_FORM) }}>
+                                        Cancelar edição
+                                    </button>
+                                )}
+                            </div>
+
+                            <hr className="my-4" />
                             <h6>Templates existentes ({templates.length})</h6>
                             {templates.length === 0 && <p className="text-muted">Nenhum template cadastrado ainda.</p>}
                             <ul className="list-group">
