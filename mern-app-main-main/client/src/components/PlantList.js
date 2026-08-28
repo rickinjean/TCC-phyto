@@ -360,6 +360,12 @@ export default function PlantList({ role }) {
                             + Nova planta
                         </Link>
                         <Link
+                            to="/bulk-create"
+                            className="plant-list-add btn btn-sm btn-outline-primary"
+                        >
+                            📋 Cadastrar em Lote
+                        </Link>
+                        <Link
                             to="/import"
                             className="plant-list-add btn btn-sm btn-outline-success"
                         >

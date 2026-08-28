@@ -65,6 +65,8 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     <li><NavLink className="custom-navbar__dropdown-link" to="/create">C. Usuários</NavLink></li>
                                     <li><NavLink className="custom-navbar__dropdown-link" to="/userlist">L. Usuários</NavLink></li>
                                     <li><NavLink className="custom-navbar__dropdown-link" to="/createplant">C. Plantas</NavLink></li>
+                                    <li><NavLink className="custom-navbar__dropdown-link" to="/bulk-create">Lote Plantas</NavLink></li>
+                                    <li><NavLink className="custom-navbar__dropdown-link" to="/import">Importar CSV</NavLink></li>
                                 </ul>
                             </li>
                         </>
@@ -152,6 +154,16 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     <li className="nav-item">
                                         <NavLink className="custom-navbar__offcanvas-link" to="/createplant" onClick={closeMenu}>
                                             C. Plantas
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/bulk-create" onClick={closeMenu}>
+                                            Lote Plantas
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/import" onClick={closeMenu}>
+                                            Importar CSV
                                         </NavLink>
                                     </li>
                                     <hr className="custom-navbar__separator" />
