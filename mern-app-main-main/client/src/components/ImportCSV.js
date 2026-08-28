@@ -56,8 +56,25 @@ export default function ImportCSV() {
         setLoading(false)
     }
 
-    function downloadTemplate() {
-        window.open(`${API_URL}/plant/import/template`, "_blank")
+    async function downloadTemplate() {
+        try {
+            const res = await authFetch(`${API_URL}/plant/import/template`)
+            if (!res || !res.ok) {
+                alert("Erro ao baixar template.")
+                return
+            }
+            const blob = await res.blob()
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = "template_plantas.csv"
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            window.URL.revokeObjectURL(url)
+        } catch {
+            alert("Erro ao conectar ao servidor.")
+        }
     }
 
     return (
