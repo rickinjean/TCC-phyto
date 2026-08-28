@@ -6,6 +6,7 @@ import API_URL from "../config";
 
 export default function Register() {
     const [nome, setNome] = useState('');
+    const [user, setUser] = useState('');
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [confirmarSenha, setConfirmarSenha] = useState('');
@@ -31,7 +32,7 @@ export default function Register() {
             const response = await fetch(`${API_URL}/user/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nome, email, senha }),
+                body: JSON.stringify({ nome, user, email, senha }),
             });
 
             const data = await response.json();
@@ -111,6 +112,29 @@ export default function Register() {
                                     required
                                 />
                             </div>
+                        </div>
+
+                        {/* Campo username */}
+                        <div className="mb-3">
+                            <label htmlFor="user" className="form-label small fw-medium">Nome de usuário</label>
+                            <div className="input-group">
+                                <span className="input-group-text">
+                                    <i className="fas fa-at"></i>
+                                </span>
+                                <input
+                                    type="text"
+                                    id="user"
+                                    className="form-control"
+                                    placeholder="seu_usuario"
+                                    value={user}
+                                    onChange={(e) => setUser(e.target.value)}
+                                    pattern="[a-zA-Z0-9_]+"
+                                    minLength={3}
+                                    title="Apenas letras, números e underscore (mínimo 3 caracteres)"
+                                    required
+                                />
+                            </div>
+                            <small className="text-muted">Letras, números e underscore. Mínimo 3 caracteres.</small>
                         </div>
 
                         {/* Campo email */}

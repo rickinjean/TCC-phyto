@@ -5,7 +5,7 @@ import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
 import API_URL from "../config";
 
 export default function Login({ onLogin }) {
-    const [email, setEmail] = useState("")
+    const [user, setUser] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [error, setError] = useState("")
@@ -24,7 +24,7 @@ export default function Login({ onLogin }) {
             const response = await fetch(`${API_URL}/user/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email, senha: password }),
+                body: JSON.stringify({ user: user, senha: password }),
             });
 
             const data = await response.json();
@@ -88,19 +88,19 @@ export default function Login({ onLogin }) {
 
                     <form onSubmit={handleSubmit}>
 
-                        {/* Campo email */}
+                        {/* Campo usuário */}
                         <div className="mb-3">
-                            <label className="form-label small fw-medium">E-mail</label>
+                            <label className="form-label small fw-medium">Nome de usuário</label>
                             <div className="input-group">
                                 <span className="input-group-text">
-                                    <i className="fas fa-envelope"></i>
+                                    <i className="fas fa-user"></i>
                                 </span>
                                 <input
-                                    type="email"
+                                    type="text"
                                     className="form-control"
-                                    placeholder="seu@email.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="seu_usuario"
+                                    value={user}
+                                    onChange={(e) => setUser(e.target.value)}
                                     required
                                 />
                             </div>

@@ -8,13 +8,13 @@ const bcrypt = require("bcrypt")
 userRoutes.route('/user/login').post(async function (req, res) {
     const db_connect = dbo.getDb()
 
-    const { email, senha } = req.body;
+    const { user, senha } = req.body;
 
     try {
-        const usuario = await db_connect.collection("users").findOne({ email })
+        const usuario = await db_connect.collection("users").findOne({ user })
 
         if (!usuario) {
-            return res.status(400).json({ mensagem: 'Usuário não encontrado' });
+            return res.status(400).json({ mensagem: 'Usuário ou senha incorretos' });
         }
 
         if (!usuario.senha) {
@@ -24,7 +24,7 @@ userRoutes.route('/user/login').post(async function (req, res) {
         const senhaValida = await bcrypt.compare(senha, usuario.senha);
 
         if (!senhaValida) {
-            return res.status(400).json({ mensagem: 'Senha incorreta' });
+            return res.status(400).json({ mensagem: 'Usuário ou senha incorretos' });
         }
 
         const token = signToken({ userId: usuario._id, tipo: usuario.function, name: usuario.name, avatar: usuario.avatar || null })
@@ -40,28 +40,41 @@ userRoutes.route('/user/login').post(async function (req, res) {
 userRoutes.route('/user/register').post(async function (req, res) {
     const db_connect = dbo.getDb()
 
-    const { nome, email, senha } = req.body;
+    const { nome, user, email, senha } = req.body;
     const tipoUsuario = "User"
 
     try {
-        if (!nome || !email || !senha) {
-            return res.status(400).json({ mensagem: 'Nome, email e senha são obrigatórios' });
+        if (!nome || !user || !email || !senha) {
+            return res.status(400).json({ mensagem: 'Nome, usuário, email e senha são obrigatórios' });
+        }
+
+        if (user.length < 3) {
+            return res.status(400).json({ mensagem: 'O nome de usuário deve ter pelo menos 3 caracteres' });
+        }
+
+        if (!/^[a-zA-Z0-9_]+$/.test(user)) {
+            return res.status(400).json({ mensagem: 'O nome de usuário deve conter apenas letras, números e underscore' });
         }
 
         if (senha.length < 6) {
             return res.status(400).json({ mensagem: 'A senha deve ter pelo menos 6 caracteres' });
         }
 
-        const userExistente = await db_connect.collection("users").findOne({ email })
-
+        const userExistente = await db_connect.collection("users").findOne({ user })
         if (userExistente) {
-            return res.status(400).json({ mensagem: 'Usuário já cadastrado' });
+            return res.status(400).json({ mensagem: 'Este nome de usuário já está em uso' });
+        }
+
+        const emailExistente = await db_connect.collection("users").findOne({ email })
+        if (emailExistente) {
+            return res.status(400).json({ mensagem: 'Este email já está cadastrado' });
         }
 
         const salt = await bcrypt.genSalt(10);
         const senhaHash = await bcrypt.hash(senha, salt);
         const novoUsuario = {
             name: nome,
+            user,
             email,
             senha: senhaHash,
             function: tipoUsuario,
@@ -73,7 +86,7 @@ userRoutes.route('/user/register').post(async function (req, res) {
         return res.status(201).json({ mensagem: 'Usuário cadastrado com sucesso' });
     } catch (error) {
         console.error("Erro ao cadastrar usuário:", error);
-        return res.status(500).json({ mensagem: 'Erro ao cadastrar usuário', erro: error.message });
+        return res.status(500).json({ mensagem: 'Erro ao cadastrar usuário' });
     }
 }
 );

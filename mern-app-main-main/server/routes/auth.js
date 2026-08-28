@@ -6,6 +6,24 @@ const { signToken } = require("../middleware/auth")
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
 
+async function generateUsername(name, db) {
+    const base = (name || "usuario")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .slice(0, 15) || "usuario"
+    const suffix = Math.floor(1000 + Math.random() * 9000)
+    let candidate = `${base}_${suffix}`
+    let exists = await db.collection("users").findOne({ user: candidate })
+    let attempts = 0
+    while (exists && attempts < 10) {
+        candidate = `${base}_${Math.floor(1000 + Math.random() * 9000)}`
+        exists = await db.collection("users").findOne({ user: candidate })
+        attempts++
+    }
+    return candidate
+}
+
 async function findOrCreateUser(profile, provider) {
     const db_connect = dbo.getDb()
     if (!db_connect) throw new Error("Database not connected")
@@ -24,8 +42,10 @@ async function findOrCreateUser(profile, provider) {
             if (avatar) user.avatar = avatar
         }
     } else {
+        const username = await generateUsername(name, db_connect)
         const newUser = {
             name,
+            user: username,
             email,
             senha: null,
             function: "User",
