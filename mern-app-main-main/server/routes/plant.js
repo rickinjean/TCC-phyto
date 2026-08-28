@@ -605,140 +605,146 @@ const VERTICAL_FIELDS = [
 
 // Baixar template XLSX com layout vertical e cores
 plantRoutes.route("/plant/import/template").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
-    const wb = new ExcelJS.Workbook()
+    try {
+        const wb = new ExcelJS.Workbook()
+        wb.creator = "Phytografia"
+        wb.created = new Date()
 
-    // === ABA 1: INSTRUÇÕES ===
-    const wsInst = wb.addWorksheet("Instruções")
-    wsInst.getColumn(1).width = 70
+        // === ABA 1: INSTRUÇÕES ===
+        const wsInst = wb.addWorksheet("Instruções", { properties: { tabColor: { argb: "FF4472C4" } } })
+        wsInst.getColumn(1).width = 70
 
-    const instrucoes = [
-        { text: "COMO PREENCHER A PLANILHA DE IMPORTAÇÃO", opts: { font: { bold: true, size: 14 } } },
-        { text: "", opts: {} },
-        { text: "PASSO A PASSO:", opts: { font: { bold: true, size: 11 } } },
-        { text: "1. Abra a aba \"Dados\"", opts: {} },
-        { text: "2. Cada planta ocupa um bloco de linhas", opts: {} },
-        { text: "3. Preencha a coluna \"Valor\" ao lado de cada campo", opts: {} },
-        { text: "4. Campos obrigatórios: Nome Popular e Nome Científico (*)", opts: {} },
-        { text: "5. Campos de seleção aceitam texto — se não existir, será criado", opts: {} },
-        { text: "6. Campos opcionais: deixe vazio se não quiser preencher", opts: {} },
-        { text: "7. Para adicionar mais plantas, copie um bloco de campos", opts: {} },
-        { text: "", opts: {} },
-        { text: "CORES DAS SEÇÕES:", opts: { font: { bold: true, size: 11 } } },
-        { text: "🟢 Verde = Identificação (nome, descrição)", opts: {} },
-        { text: "🔵 Azul = Classificação Botânica (família, gênero, espécie)", opts: {} },
-        { text: "🟠 Laranja = Características (tipo, origem, toxicidade)", opts: {} },
-        { text: "🟡 Amarelo = Cuidados Básicos (luz, água, solo)", opts: {} },
-        { text: "🟣 Roxo = Manutenção (irrigação, adubação, poda, pragas)", opts: {} },
-        { text: "🔴 Vermelho = Plantio & Cultivo (plantio, estação, temperatura)", opts: {} },
-        { text: "⚪ Cinza = Imagens (URLs de fotos)", opts: {} },
-        { text: "", opts: {} },
-        { text: "DICA: Campos com * são obrigatórios", opts: { font: { bold: true } } },
-        { text: "DICA: Para cada planta nova, copie um bloco completo de campos", opts: { font: { bold: true } } },
-    ]
+        const instrucoes = [
+            { text: "COMO PREENCHER A PLANILHA DE IMPORTAÇÃO", opts: { font: { bold: true, size: 14 } } },
+            { text: "", opts: {} },
+            { text: "PASSO A PASSO:", opts: { font: { bold: true, size: 11 } } },
+            { text: "1. Abra a aba 'Dados'", opts: {} },
+            { text: "2. Cada planta ocupa um bloco de linhas separado por um separador", opts: {} },
+            { text: "3. Preencha a coluna 'Valor' ao lado de cada campo", opts: {} },
+            { text: "4. Campos obrigatórios: Nome Popular e Nome Científico (*)", opts: {} },
+            { text: "5. Campos de seleção aceitam texto — se não existir, será criado", opts: {} },
+            { text: "6. Campos opcionais: deixe vazio se não quiser preencher", opts: {} },
+            { text: "7. Para adicionar mais plantas, copie um bloco inteiro de campos", opts: {} },
+            { text: "", opts: {} },
+            { text: "CORES DAS SEÇÕES:", opts: { font: { bold: true, size: 11 } } },
+            { text: "Verde = Identificação (nome, descrição)", opts: {} },
+            { text: "Azul = Classificação Botânica (família, gênero, espécie)", opts: {} },
+            { text: "Laranja = Características (tipo, origem, toxicidade)", opts: {} },
+            { text: "Amarelo = Cuidados Básicos (luz, água, solo)", opts: {} },
+            { text: "Roxo = Manutenção (irrigação, adubação, poda, pragas)", opts: {} },
+            { text: "Vermelho = Plantio & Cultivo (plantio, estação, temperatura)", opts: {} },
+            { text: "Cinza = Imagens (URLs de fotos)", opts: {} },
+            { text: "", opts: {} },
+            { text: "DICA: Campos com * são obrigatórios", opts: { font: { bold: true } } },
+            { text: "DICA: Para cada planta nova, copie um bloco completo de campos", opts: { font: { bold: true } } },
+        ]
 
-    instrucoes.forEach((item, i) => {
-        const row = wsInst.getRow(i + 1)
-        row.getCell(1).value = item.text
-        if (item.opts.font) row.getCell(1).font = item.opts.font
-    })
+        instrucoes.forEach((item, i) => {
+            const row = wsInst.getRow(i + 1)
+            row.getCell(1).value = item.text
+            if (item.opts.font) row.getCell(1).font = item.opts.font
+        })
 
-    // === ABA 2: DADOS ===
-    const wsDados = wb.addWorksheet("Dados")
-    wsDados.getColumn(1).width = 25
-    wsDados.getColumn(2).width = 50
-    wsDados.getColumn(3).width = 30
+        // === ABA 2: DADOS ===
+        const wsDados = wb.addWorksheet("Dados", { properties: { tabColor: { argb: "FF70AD47" } } })
+        wsDados.getColumn(1).width = 25
+        wsDados.getColumn(2).width = 50
+        wsDados.getColumn(3).width = 30
 
-    // Cabeçalho
-    const headerRow = wsDados.getRow(1)
-    headerRow.getCell(1).value = "Campo"
-    headerRow.getCell(2).value = "Valor"
-    headerRow.getCell(3).value = "Nota"
-    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } }
-    headerRow.eachCell(cell => { cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF333333" } } })
+        // Cabeçalho
+        const headerRow = wsDados.getRow(1)
+        headerRow.getCell(1).value = "Campo"
+        headerRow.getCell(2).value = "Valor"
+        headerRow.getCell(3).value = "Seção"
+        headerRow.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 }
+        headerRow.eachCell(cell => {
+            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF333333" } }
+            cell.border = {
+                bottom: { style: "medium", color: { argb: "FF000000" } }
+            }
+        })
+        headerRow.height = 22
 
-    // Dados de exemplo (3 plantas)
-    const plantExamples = [
-        {
-            name: "Morango", scientificName: "Fragaria × ananassa",
-            simpleDescription: "Planta rasteira frutífera",
-            description: "Planta herbácea da família Rosaceae muito cultivada por seus frutos",
-            Filo: "Magnoliophyta", Classe: "Magnoliopsida", Ordem: "Rosales", Family: "Rosaceae", Genero: "Fragaria", Especie: "Fragaria × ananassa",
-            fruit: "Bagas", origin: "América do Sul", type: "Frutífera", propagation: "Sementes", toxicity: "Não é tóxica", dificulty: "Média",
-            height: "Até 0.3 m", flowercolor: "Branco", foliage: "Perene", flowering: "Primavera/Verão",
-            light: "Sol pleno", water: "Abundante", size: "Pequeno", soil: "Rico em matéria orgânica",
-            watering: "Rega frequente", fertilizing: "Adubação NPK 10-10-10 a cada 15 dias", pruning: "Poda de folhas secas", pests: "Pulgões e cochonilhas",
-            manha: "Início da manhã", amount: "Moderada", frequency: "Semanal", NPK: "10-10-10", season: "Primavera", tools: "Tesoura de poda", prevention: "Baixa", monitoring: "Baixo",
-            planting: "Plantar em local ensolarado", exhibition: "Exposição externa", maintenance: "Manutenção moderada",
-            station: "Primavera", spacing: "0.3 m", iluminosity: "6-8 horas", protection: "Nenhuma", idealTemperature: "15°C a 25°C", tolerance: "Alta",
-            imageUrl1: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Fragaria_%C3%97_ananassa_-_Blumenau.jpg/320px-Fragaria_%C3%97_ananassa_-_Blumenau.jpg"
-        },
-        {
-            name: "Lavanda", scientificName: "Lavandula angustifolia",
-            simpleDescription: "Erva aromática com flores roxas",
-            description: "Planta perene da família Lamiaceae usada em aromaterapia",
-            Filo: "Magnoliophyta", Classe: "Magnoliopsida", Ordem: "Lamiales", Family: "Lamiaceae", Genero: "Lavandula", Especie: "Lavandula angustifolia",
-            fruit: "Noz", origin: "Mediterrâneo", type: "Arbusto", propagation: "Estacas", toxicity: "Não é tóxica", dificulty: "Média",
-            height: "Até 0.8 m", flowercolor: "Rosa ou roxo", foliage: "Sempre-verde", flowering: "Verão",
-            light: "Sol pleno", water: "Pouca", size: "Pequeno", soil: "Arenoso",
-            watering: "Rega espaçada", fertilizing: "Adubação orgânica na primavera", pruning: "Poda após floração", pests: "Pulgões e fungos",
-            manha: "Início da manhã", amount: "Pouca", frequency: "Mensal", NPK: "Orgânico", season: "Primavera", tools: "Tesoura", prevention: "Baixa", monitoring: "Baixo",
-            planting: "Estacas na primavera", exhibition: "Exposição externa", maintenance: "Manutenção baixa",
-            station: "Primavera", spacing: "0.4 m", iluminosity: "8-12 horas", protection: "Nenhuma", idealTemperature: "10°C a 30°C", tolerance: "Alta",
-            imageUrl1: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Lavandula_angustifolia_%27Hidcote%27.jpg/320px-Lavandula_angustifolia_%27Hidcote%27.jpg"
-        },
-        {
-            name: "Samambaia", scientificName: "Nephrolepis exaltata",
-            simpleDescription: "Samambaia ornamental de folhas delicadas",
-            description: "Planta da família Nephrolepidaceae usada em vasos",
-            Filo: "Magnoliophyta", Classe: "Magnoliopsida", Ordem: "Polypodiales", Family: "Nephrolepidaceae", Genero: "Nephrolepis", Especie: "Nephrolepis exaltata",
-            fruit: "Sem fruto", origin: "América Tropical", type: "Samambaia", propagation: "Divisão de touceiras", toxicity: "Não é tóxica", dificulty: "Baixa",
-            height: "Até 1.2 m", flowercolor: "Verde", foliage: "Perene", flowering: "Todo o ano",
-            light: "Meia-sombra", water: "Abundante", size: "Médio", soil: "Orgânico",
-            watering: "Manter solo úmido", fertilizing: "Adubação líquida mensal", pruning: "Remover frondes secas", pests: "Cochonilhas",
-            manha: "Manhã", amount: "Abundante", frequency: "Mensal", NPK: "Líquido", season: "Todo o ano", tools: "Tesoura", prevention: "Baixa", monitoring: "Médio",
-            planting: "Divisão de touceiras", exhibition: "Meia-sombra", maintenance: "Manutenção moderada",
-            station: "Todo o ano", spacing: "0.3 m", iluminosity: "4-6 horas", protection: "Proteção parcial", idealTemperature: "15°C a 28°C", tolerance: "Média"
-        }
-    ]
+        let currentRow = 2
 
-    let currentRow = 2
-
-    plantExamples.forEach((plant, plantIndex) => {
-        // Linha separadora da planta
+        // Bloco vazio para a PLANTA 1
         const sepRow = wsDados.getRow(currentRow)
-        sepRow.getCell(1).value = `── PLANTA ${plantIndex + 1} ──`
+        sepRow.getCell(1).value = "── PLANTA 1 ──"
         sepRow.font = { bold: true, size: 12, color: { argb: "FF333333" } }
         sepRow.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
         sepRow.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
         sepRow.getCell(3).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
+        sepRow.height = 24
         currentRow++
 
-        // Campos da planta
+        // Todos os campos verticais (vazios para o usuário preencher)
         VERTICAL_FIELDS.forEach(field => {
             const row = wsDados.getRow(currentRow)
             const label = field.required ? `${field.label} *` : field.label
             row.getCell(1).value = label
-            row.getCell(2).value = plant[field.key] || ""
+            row.getCell(2).value = ""
             row.getCell(3).value = field.section
 
             // Cor da seção no label
-            row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + field.color } }
+            const bgColor = field.fontColor ? field.color : field.color
+            row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + bgColor } }
             if (field.fontColor) {
-                row.getCell(1).font = { color: { argb: "FF" + field.fontColor } }
+                row.getCell(1).font = { color: { argb: "FF" + field.fontColor }, bold: true }
+            } else {
+                row.getCell(1).font = { bold: true }
             }
+
+            row.getCell(3).font = { color: { argb: "FF666666" }, italic: true }
 
             currentRow++
         })
 
-        // Linha em branco entre plantas
+        // Linha em branco
         currentRow++
-    })
 
-    // Gerar buffer
-    const buffer = await wb.xlsx.writeBuffer()
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    res.setHeader("Content-Disposition", 'attachment; filename="template_plantas.xlsx"')
-    res.send(buffer)
+        // Bloco vazio para a PLANTA 2 (como exemplo de como copiar)
+        const sepRow2 = wsDados.getRow(currentRow)
+        sepRow2.getCell(1).value = "── PLANTA 2 ──"
+        sepRow2.font = { bold: true, size: 12, color: { argb: "FF333333" } }
+        sepRow2.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
+        sepRow2.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
+        sepRow2.getCell(3).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
+        sepRow2.height = 24
+        currentRow++
+
+        // Campos vazios para PLANTA 2
+        VERTICAL_FIELDS.forEach(field => {
+            const row = wsDados.getRow(currentRow)
+            const label = field.required ? `${field.label} *` : field.label
+            row.getCell(1).value = label
+            row.getCell(2).value = ""
+            row.getCell(3).value = field.section
+
+            const bgColor = field.fontColor ? field.color : field.color
+            row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + bgColor } }
+            if (field.fontColor) {
+                row.getCell(1).font = { color: { argb: "FF" + field.fontColor }, bold: true }
+            } else {
+                row.getCell(1).font = { bold: true }
+            }
+            row.getCell(3).font = { color: { argb: "FF666666" }, italic: true }
+
+            currentRow++
+        })
+
+        // Congelar primeira linha (cabeçalho)
+        wsDados.views = [{ state: "frozen", ySplit: 1 }]
+
+        // Gerar buffer com opções de formatação
+        const buffer = await wb.xlsx.writeBuffer({ useStyles: true, useSharedStrings: true })
+
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        res.setHeader("Content-Disposition", 'attachment; filename="template_plantas.xlsx"')
+        res.send(Buffer.from(buffer))
+    } catch (error) {
+        console.error("Erro ao gerar template:", error)
+        res.status(500).json({ message: "Erro ao gerar template: " + error.message })
+    }
 })
 
 // Mapeamento de label vertical -> campo interno
