@@ -6,10 +6,47 @@ const ObjectId = require("mongodb").ObjectId
 // Importar o multer e o path para gerir o upload de ficheiros
 const multer = require("multer")
 const path = require("path")
+const fs = require("fs")
+const https = require("https")
+const http = require("http")
 const { authenticateToken, authorizeRoles } = require("../middleware/auth")
 
 function escapeRegex(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+// Baixar imagem de URL e salvar em uploads/
+function downloadImage(url, plantName) {
+    return new Promise((resolve, reject) => {
+        if (!url || !url.trim()) return resolve(null)
+        const protocol = url.startsWith("https") ? https : http
+        const ext = path.extname(new URL(url).pathname) || ".jpg"
+        const safeName = plantName
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-zA-Z0-9]/g, "_")
+            .toLowerCase()
+        const filename = `csv_${safeName}_${Date.now()}${ext}`
+        const filepath = path.join(__dirname, "..", "uploads", filename)
+        const file = fs.createWriteStream(filepath)
+        protocol.get(url, { timeout: 10000 }, (response) => {
+            if (response.statusCode === 301 || response.statusCode === 302) {
+                const redirect = response.headers.location
+                const redirProtocol = redirect.startsWith("https") ? https : http
+                redirProtocol.get(redirect, { timeout: 10000 }, (res2) => {
+                    res2.pipe(file)
+                    file.on("finish", () => { file.close(); resolve(`/uploads/${filename}`) })
+                }).on("error", (err) => { fs.unlink(filepath, () => {}); reject(err) })
+                return
+            }
+            if (response.statusCode !== 200) {
+                file.close()
+                fs.unlink(filepath, () => {})
+                return reject(new Error(`HTTP ${response.statusCode}`))
+            }
+            response.pipe(file)
+            file.on("finish", () => { file.close(); resolve(`/uploads/${filename}`) })
+        }).on("error", (err) => { fs.unlink(filepath, () => {}); reject(err) })
+    })
 }
 
 // Configurar o armazenamento dos ficheiros localmente
@@ -443,7 +480,8 @@ const CSV_FIELDS = [
     "watering", "fertilizing", "pruning", "pests",
     "manha", "amount", "frequency", "NPK", "season", "tools", "prevention", "monitoring",
     "planting", "exhibition", "maintenance",
-    "station", "spacing", "iluminosity", "protection", "idealTemperature", "tolerance"
+    "station", "spacing", "iluminosity", "protection", "idealTemperature", "tolerance",
+    "imageUrl1", "imageUrl2"
 ]
 
 const CSV_LABELS = {
@@ -461,7 +499,8 @@ const CSV_LABELS = {
     prevention: "Prevenção Pragas", monitoring: "Monitoramento",
     planting: "Plantio", exhibition: "Exposição", maintenance: "Manutenção",
     station: "Estação Plantio", spacing: "Espaçamento", iluminosity: "Luminosidade",
-    protection: "Proteção", idealTemperature: "Temperatura Ideal", tolerance: "Tolerância"
+    protection: "Proteção", idealTemperature: "Temperatura Ideal", tolerance: "Tolerância",
+    imageUrl1: "URL Imagem 1", imageUrl2: "URL Imagem 2"
 }
 
 // Resolver texto -> ObjectId para campos de coleção
@@ -490,19 +529,45 @@ const COLLECTION_FIELDS = [
     "iluminosity", "protection", "idealTemperature", "tolerance"
 ]
 
-// Baixar template CSV vazio
+// Baixar template CSV com exemplos reais
 plantRoutes.route("/plant/import/template").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const header = CSV_FIELDS.map(f => CSV_LABELS[f] || f).join(",")
-    const example = [
-        "Morango,Fragaria × ananassa,Planta rasteira frutífera,Planta popular para frutos e jardins",
-        "Bagas,América do Sul,Frutífera,Sementes,Não é tóxica,Média,Magnoliophyta,Magnoliopsida,Rosales,Rosaceae,Fragaria,Fragaria × ananassa",
-        "Até 1 m,Rosa,Perene,Primavera/Verão,Sol pleno,Abundante,Médio,Bem drenado",
-        "Rega frequente,Adubação a cada 15 dias,Poda leve,Pragas ocasionais",
-        "Início da manhã,Moderada,Semanal,10-10-10,Primavera,Tesoura de poda,Baixa,Baixo",
-        "Plantar em local ensolarado,Exposição externa,Manutenção moderada",
-        "Primavera,0.3 m,6-8 horas,Nenhuma,20°C a 28°C,Alta"
-    ].join(",")
-    const csvContent = header + "\n" + example + "\n"
+    const examples = [
+        [
+            "Morango","Fragaria × ananassa","Planta rasteira frutífera","Planta herbácea da família Rosaceae muito cultivada por seus frutos",
+            "Bagas","América do Sul","Frutífera","Sementes","Não é tóxica","Média",
+            "Magnoliophyta","Magnoliopsida","Rosales","Rosaceae","Fragaria","Fragaria × ananassa",
+            "Até 0.3 m","Branco","Perene","Primavera/Verão","Sol pleno","Abundante","Pequeno","Rico em matéria orgânica",
+            "Rega frequente","Adubação NPK 10-10-10 a cada 15 dias","Poda de folhas secas","Pulgões e cochonilhas",
+            "Início da manhã","Moderada","Semanal","10-10-10","Primavera","Tesoura de poda","Baixa","Baixo",
+            "Plantar em local ensolarado","Exposição externa","Manutenção moderada",
+            "Primavera","0.3 m","6-8 horas","Nenhuma","15°C a 25°C","Alta",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Fragaria_%C3%97_ananassa_-_Blumenau.jpg/320px-Fragaria_%C3%97_ananassa_-_Blumenau.jpg",""
+        ].join(","),
+        [
+            "Lavanda","Lavandula angustifolia","Erva aromática com flores roxas","Planta perene da família Lamiaceae usada em aromaterapia",
+            "Noz","Mediterrâneo","Arbusto","Estacas","Não é tóxica","Média",
+            "Magnoliophyta","Magnoliopsida","Lamiales","Lamiaceae","Lavandula","Lavandula angustifolia",
+            "Até 0.8 m","Rosa ou roxo","Sempre-verde","Verão","Sol pleno","Pouca","Pequeno","Arenoso",
+            "Rega espaçada","Adubação orgânica na primavera","Poda após floração","Pulgões e fungos",
+            "Início da manhã","Pouca","Mensal","Orgânico","Primavera","Tesoura","Baixa","Baixo",
+            "Estacas na primavera","Exposição externa","Manutenção baixa",
+            "Primavera","0.4 m","8-12 horas","Nenhuma","10°C a 30°C","Alta",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Lavandula_angustifolia_%27Hidcote%27.jpg/320px-Lavandula_angustifolia_%27Hidcote%27.jpg",""
+        ].join(","),
+        [
+            "Samambaia","Nephrolepis exaltata","Samambaia ornamental de folhas delicadas","Planta da família Nephrolepidaceae usada em vasos",
+            "Sem fruto","América Tropical","Samambaia","Divisão de touceiras","Não é tóxica","Baixa",
+            "Magnoliophyta","Magnoliopsida","Polypodiales","Nephrolepidaceae","Nephrolepis","Nephrolepis exaltata",
+            "Até 1.2 m","Verde","Perene","Todo o ano","Meia-sombra","Abundante","Médio","Orgânico",
+            "Manter solo úmido","Adubação líquida mensal","Remover frondes secas","Cochonilhas",
+            "Manhã","Abundante","Mensal","Líquido","Todo o ano","Tesoura","Baixa","Médio",
+            "Divisão de touceiras","Meia-sombra","Manutenção moderada",
+            "Todo o ano","0.3 m","4-6 horas","Proteção parcial","15°C a 28°C","Média",
+            "",""
+        ].join(",")
+    ]
+    const csvContent = header + "\n" + examples.join("\n") + "\n"
     res.setHeader("Content-Type", "text/csv; charset=utf-8")
     res.setHeader("Content-Disposition", 'attachment; filename="template_plantas.csv"')
     res.send("\uFEFF" + csvContent)
@@ -565,10 +630,34 @@ plantRoutes.route("/plant/import").post(authenticateToken, authorizeRoles("ADM")
                 }
             }
 
+            // Extrair URLs de imagem (não salvar no documento)
+            const imageUrls = [plant.imageUrl1, plant.imageUrl2].filter(Boolean)
+            delete plant.imageUrl1
+            delete plant.imageUrl2
+
             try {
                 const insertResult = await db_connect.collection("plants").insertOne(plant)
+                const newPlantId = insertResult.insertedId
+
+                // Baixar e associar imagens
+                const imagePaths = []
+                for (const url of imageUrls) {
+                    try {
+                        const imgPath = await downloadImage(url, plant.name)
+                        if (imgPath) imagePaths.push(imgPath)
+                    } catch (imgErr) {
+                        console.log(`Erro ao baixar imagem: ${url} - ${imgErr.message}`)
+                    }
+                }
+                if (imagePaths.length > 0) {
+                    await db_connect.collection("plants").updateOne(
+                        { _id: newPlantId },
+                        { $set: { imagesPath: imagePaths, imagePath: imagePaths[0] || "" } }
+                    )
+                }
+
                 results.success++
-                results.plants.push({ _id: insertResult.insertedId, name: plant.name })
+                results.plants.push({ _id: newPlantId, name: plant.name })
             } catch (e) {
                 results.errors.push({ row: rowNum, message: e.message })
             }
