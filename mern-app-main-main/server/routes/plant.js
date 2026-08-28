@@ -2,6 +2,7 @@ const express = require("express")
 const plantRoutes = express.Router()
 const dbo = require("../db/conn")
 const ObjectId = require("mongodb").ObjectId
+const XLSX = require("xlsx")
 
 // Importar o multer e o path para gerir o upload de ficheiros
 const multer = require("multer")
@@ -543,72 +544,94 @@ const COLLECTION_FIELDS = [
     "iluminosity", "protection", "idealTemperature", "tolerance"
 ]
 
-// Baixar template CSV com exemplos reais
+// Baixar template XLSX formatado
 plantRoutes.route("/plant/import/template").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
-    const header = CSV_FIELDS.map(f => CSV_LABELS[f] || f).join(",")
-    const examples = [
-        [
-            // IDENTIFICAÇÃO
-            "Morango","Fragaria × ananassa","Planta rasteira frutífera","Planta herbácea da família Rosaceae muito cultivada por seus frutos",
-            // CLASSIFICAÇÃO BOTÂNICA
-            "Magnoliophyta","Magnoliopsida","Rosales","Rosaceae","Fragaria","Fragaria × ananassa",
-            // CARACTERÍSTICAS
-            "Bagas","América do Sul","Frutífera","Sementes","Não é tóxica","Média",
-            "Até 0.3 m","Branco","Perene","Primavera/Verão",
-            // CUIDADOS BÁSICOS
-            "Sol pleno","Abundante","Pequeno","Rico em matéria orgânica",
-            // MANUTENÇÃO
-            "Rega frequente","Adubação NPK 10-10-10 a cada 15 dias","Poda de folhas secas","Pulgões e cochonilhas",
-            "Início da manhã","Moderada","Semanal","10-10-10","Primavera","Tesoura de poda","Baixa","Baixo",
-            // PLANTIO & CULTIVO
-            "Plantar em local ensolarado","Exposição externa","Manutenção moderada",
-            "Primavera","0.3 m","6-8 horas","Nenhuma","15°C a 25°C","Alta",
-            // IMAGENS
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Fragaria_%C3%97_ananassa_-_Blumenau.jpg/320px-Fragaria_%C3%97_ananassa_-_Blumenau.jpg",""
-        ].join(","),
-        [
-            // IDENTIFICAÇÃO
-            "Lavanda","Lavandula angustifolia","Erva aromática com flores roxas","Planta perene da família Lamiaceae usada em aromaterapia",
-            // CLASSIFICAÇÃO BOTÂNICA
-            "Magnoliophyta","Magnoliopsida","Lamiales","Lamiaceae","Lavandula","Lavandula angustifolia",
-            // CARACTERÍSTICAS
-            "Noz","Mediterrâneo","Arbusto","Estacas","Não é tóxica","Média",
-            "Até 0.8 m","Rosa ou roxo","Sempre-verde","Verão",
-            // CUIDADOS BÁSICOS
-            "Sol pleno","Pouca","Pequeno","Arenoso",
-            // MANUTENÇÃO
-            "Rega espaçada","Adubação orgânica na primavera","Poda após floração","Pulgões e fungos",
-            "Início da manhã","Pouca","Mensal","Orgânico","Primavera","Tesoura","Baixa","Baixo",
-            // PLANTIO & CULTIVO
-            "Estacas na primavera","Exposição externa","Manutenção baixa",
-            "Primavera","0.4 m","8-12 horas","Nenhuma","10°C a 30°C","Alta",
-            // IMAGENS
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Lavandula_angustifolia_%27Hidcote%27.jpg/320px-Lavandula_angustifolia_%27Hidcote%27.jpg",""
-        ].join(","),
-        [
-            // IDENTIFICAÇÃO
-            "Samambaia","Nephrolepis exaltata","Samambaia ornamental de folhas delicadas","Planta da família Nephrolepidaceae usada em vasos",
-            // CLASSIFICAÇÃO BOTÂNICA
-            "Magnoliophyta","Magnoliopsida","Polypodiales","Nephrolepidaceae","Nephrolepis","Nephrolepis exaltata",
-            // CARACTERÍSTICAS
-            "Sem fruto","América Tropical","Samambaia","Divisão de touceiras","Não é tóxica","Baixa",
-            "Até 1.2 m","Verde","Perene","Todo o ano",
-            // CUIDADOS BÁSICOS
-            "Meia-sombra","Abundante","Médio","Orgânico",
-            // MANUTENÇÃO
-            "Manter solo úmido","Adubação líquida mensal","Remover frondes secas","Cochonilhas",
-            "Manhã","Abundante","Mensal","Líquido","Todo o ano","Tesoura","Baixa","Médio",
-            // PLANTIO & CULTIVO
-            "Divisão de touceiras","Meia-sombra","Manutenção moderada",
-            "Todo o ano","0.3 m","4-6 horas","Proteção parcial","15°C a 28°C","Média",
-            // IMAGENS
-            "",""
-        ].join(",")
+    const wb = XLSX.utils.book_new()
+
+    // === ABA 1: INSTRUÇÕES ===
+    const instrucoes = [
+        ["COMO PREENCHER A PLANILHA DE IMPORTAÇÃO DE PLANTAS"],
+        [""],
+        ["PASSO A PASSO:"],
+        ["1. Preencha os dados na aba 'Dados'"],
+        ["2. Cada linha = uma planta"],
+        ["3. Campos obrigatórios: Nome Popular e Nome Científico"],
+        ["4. Campos de seleção (Tipo, Luz, etc.) aceitam o texto exato"],
+        ["5. Se o texto não existir no banco, será criado automaticamente"],
+        ["6. Campos de texto livre (Irrigação, Adubação, Poda) = escreva livremente"],
+        ["7. URLs de imagem são opcionais — deixe vazio se não tiver"],
+        [""],
+        ["SEÇÕES DA PLANILHA (aba 'Dados'):"],
+        ["VERDE = Identificação (nome, descrição)"],
+        ["AZUL = Classificação Botânica (família, gênero, espécie)"],
+        ["LARANJA = Características (tipo, origem, toxicidade, etc.)"],
+        ["AMARELO = Cuidados Básicos (luz, água, solo)"],
+        ["ROXO = Manutenção (irrigação, adubação, poda, pragas)"],
+        ["VERMELHO = Plantio & Cultivo (plantio, estação, temperatura)"],
+        ["CINZA = Imagens (URLs de fotos)"],
+        [""],
+        ["DICA: Use os filtros do Google Sheets para navegar pelas colunas"],
+        ["DICA: Cada seção tem um cabeçalho colorido para facilitar a organização"]
     ]
-    const csvContent = header + "\n" + examples.join("\n") + "\n"
-    res.setHeader("Content-Type", "text/csv; charset=utf-8")
-    res.setHeader("Content-Disposition", 'attachment; filename="template_plantas.csv"')
-    res.send("\uFEFF" + csvContent)
+    const wsInstrucoes = XLSX.utils.aoa_to_sheet(instrucoes)
+    wsInstrucoes["!cols"] = [{ wch: 60 }]
+    XLSX.utils.book_append_sheet(wb, wsInstrucoes, "Instruções")
+
+    // === ABA 2: DADOS ===
+    const headers = CSV_FIELDS.map(f => CSV_LABELS[f] || f)
+    const headerRow = headers
+
+    // Linhas de exemplo (3 plantas)
+    const exemplos = [
+        // Morango
+        ["Morango","Fragaria × ananassa","Planta rasteira frutífera","Planta herbácea da família Rosaceae muito cultivada por seus frutos",
+         "Magnoliophyta","Magnoliopsida","Rosales","Rosaceae","Fragaria","Fragaria × ananassa",
+         "Bagas","América do Sul","Frutífera","Sementes","Não é tóxica","Média",
+         "Até 0.3 m","Branco","Perene","Primavera/Verão",
+         "Sol pleno","Abundante","Pequeno","Rico em matéria orgânica",
+         "Rega frequente","Adubação NPK 10-10-10 a cada 15 dias","Poda de folhas secas","Pulgões e cochonilhas",
+         "Início da manhã","Moderada","Semanal","10-10-10","Primavera","Tesoura de poda","Baixa","Baixo",
+         "Plantar em local ensolarado","Exposição externa","Manutenção moderada",
+         "Primavera","0.3 m","6-8 horas","Nenhuma","15°C a 25°C","Alta",
+         "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Fragaria_%C3%97_ananassa_-_Blumenau.jpg/320px-Fragaria_%C3%97_ananassa_-_Blumenau.jpg",""],
+        // Lavanda
+        ["Lavanda","Lavandula angustifolia","Erva aromática com flores roxas","Planta perene da família Lamiaceae usada em aromaterapia",
+         "Magnoliophyta","Magnoliopsida","Lamiales","Lamiaceae","Lavandula","Lavandula angustifolia",
+         "Noz","Mediterrâneo","Arbusto","Estacas","Não é tóxica","Média",
+         "Até 0.8 m","Rosa ou roxo","Sempre-verde","Verão",
+         "Sol pleno","Pouca","Pequeno","Arenoso",
+         "Rega espaçada","Adubação orgânica na primavera","Poda após floração","Pulgões e fungos",
+         "Início da manhã","Pouca","Mensal","Orgânico","Primavera","Tesoura","Baixa","Baixo",
+         "Estacas na primavera","Exposição externa","Manutenção baixa",
+         "Primavera","0.4 m","8-12 horas","Nenhuma","10°C a 30°C","Alta",
+         "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Lavandula_angustifolia_%27Hidcote%27.jpg/320px-Lavandula_angustifolia_%27Hidcote%27.jpg",""],
+        // Samambaia
+        ["Samambaia","Nephrolepis exaltata","Samambaia ornamental de folhas delicadas","Planta da família Nephrolepidaceae usada em vasos",
+         "Magnoliophyta","Magnoliopsida","Polypodiales","Nephrolepidaceae","Nephrolepis","Nephrolepis exaltata",
+         "Sem fruto","América Tropical","Samambaia","Divisão de touceiras","Não é tóxica","Baixa",
+         "Até 1.2 m","Verde","Perene","Todo o ano",
+         "Meia-sombra","Abundante","Médio","Orgânico",
+         "Manter solo úmido","Adubação líquida mensal","Remover frondes secas","Cochonilhas",
+         "Manhã","Abundante","Mensal","Líquido","Todo o ano","Tesoura","Baixa","Médio",
+         "Divisão de touceiras","Meia-sombra","Manutenção moderada",
+         "Todo o ano","0.3 m","4-6 horas","Proteção parcial","15°C a 28°C","Média",
+         "",""]
+    ]
+
+    const dados = [headerRow, ...exemplos]
+    const wsDados = XLSX.utils.aoa_to_sheet(dados)
+
+    // Larguras das colunas
+    wsDados["!cols"] = headers.map(h => ({ wch: Math.max(h.length + 2, 18) }))
+
+    XLSX.utils.book_append_sheet(wb, wsDados, "Dados")
+
+    // Gerar buffer XLSX
+    const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" })
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    res.setHeader("Content-Disposition", 'attachment; filename="template_plantas.xlsx"')
+    res.send(buffer)
 })
 
 // Importar CSV

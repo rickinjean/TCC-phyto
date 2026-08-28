@@ -67,7 +67,7 @@ export default function ImportCSV() {
             const url = window.URL.createObjectURL(blob)
             const a = document.createElement("a")
             a.href = url
-            a.download = "template_plantas.csv"
+            a.download = "template_plantas.xlsx"
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)
@@ -81,7 +81,7 @@ export default function ImportCSV() {
         <div className="admin-page container mt-4 mb-5">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h3 className="admin-page__title mb-1">Importar Plantas via CSV</h3>
+                    <h3 className="admin-page__title mb-1">Importar Plantas via Planilha</h3>
                     <p className="text-muted mb-0">Cadastre múltiplas plantas de uma vez usando uma planilha.</p>
                 </div>
                 <button className="btn btn-outline-secondary btn-sm" onClick={() => navigate("/plantlist")}>
@@ -97,11 +97,11 @@ export default function ImportCSV() {
                         <div className="flex-grow-1">
                             <h5 className="mb-1">Baixar modelo da planilha</h5>
                             <p className="text-muted mb-0 small">
-                                O modelo já vem com os nomes das colunas corretos. Preencha com suas plantas.
+                                O modelo é um arquivo Excel (.xlsx) com cabeçalhos coloridos e exemplos. Abra no Google Sheets.
                             </p>
                         </div>
                         <button className="btn btn-outline-success" onClick={downloadTemplate}>
-                            📥 Baixar CSV
+                            📥 Baixar planilha
                         </button>
                     </div>
                 </div>
@@ -115,7 +115,7 @@ export default function ImportCSV() {
                         <div className="flex-grow-1">
                             <h5 className="mb-1">Enviar planilha preenchida</h5>
                             <p className="text-muted mb-0 small">
-                                Envie o arquivo .csv preenchido com as plantas que deseja cadastrar.
+                                No Google Sheets: Arquivo &gt; Fazer download &gt; CSV. Envie o arquivo .csv gerado.
                             </p>
                         </div>
                         <div>
@@ -127,7 +127,7 @@ export default function ImportCSV() {
                                 onChange={handleFileChange}
                             />
                             <button className="btn btn-outline-primary" onClick={() => fileRef.current?.click()}>
-                                📄 Selecionar arquivo
+                                📄 Selecionar CSV
                             </button>
                         </div>
                     </div>
@@ -242,13 +242,16 @@ export default function ImportCSV() {
             {/* ── DICAS ── */}
             <div className="card border-0 bg-light">
                 <div className="card-body">
-                    <h6 className="card-title">💡 Dicas para importar</h6>
+                    <h6 className="card-title">💡 Como funciona</h6>
                     <ul className="mb-0 small text-muted">
+                        <li>Baixe a planilha Excel (.xlsx) e abra no Google Sheets</li>
+                        <li>Preencha na aba <strong>"Dados"</strong> — cada linha = uma planta</li>
+                        <li>A aba <strong>"Instruções"</strong> explica cada seção</li>
+                        <li>No Google Sheets: <strong>Arquivo &gt; Fazer download &gt; CSV</strong></li>
+                        <li>Envie o CSV gerado neste formulário</li>
                         <li><strong>Nome Popular</strong> e <strong>Nome Científico</strong> são os únicos campos obrigatórios</li>
-                        <li>Campos de seleção (Tipo, Origem, Luz, etc.) aceitam o texto exato — se não existir no banco, será criado automaticamente</li>
-                        <li>Campos de texto livre (Irrigação, Adubação, Poda, etc.) ficam como estão no CSV</li>
-                        <li>Cada linha do CSV = uma planta</li>
-                        <li>Se uma linha der erro, as outras continuam sendo importadas</li>
+                        <li>Campos de seleção aceitam o texto — se não existir, será criado automaticamente</li>
+                        <li>URLs de imagem são opcionais — deixe vazio se não tiver foto</li>
                     </ul>
                 </div>
             </div>
