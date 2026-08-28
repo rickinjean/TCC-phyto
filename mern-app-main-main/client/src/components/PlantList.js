@@ -352,12 +352,20 @@ export default function PlantList({ role }) {
                     )}
                 </div>
                 {role === "ADM" && (
-                    <Link
-                        to="/createplant"
-                        className="plant-list-add btn btn-sm"
-                    >
-                        + Nova planta
-                    </Link>
+                    <div className="d-flex gap-2">
+                        <Link
+                            to="/createplant"
+                            className="plant-list-add btn btn-sm"
+                        >
+                            + Nova planta
+                        </Link>
+                        <Link
+                            to="/import"
+                            className="plant-list-add btn btn-sm btn-outline-success"
+                        >
+                            📄 Importar CSV
+                        </Link>
+                    </div>
                 )}
             </div>
 

@@ -428,4 +428,156 @@ plantRoutes.route("/templates/:id").delete(authenticateToken, authorizeRoles("AD
     }
 })
 
+/* ==================================================
+   IMPORTAÇÃO CSV
+================================================== */
+
+const { parse } = require("csv-parse/sync")
+
+const CSV_FIELDS = [
+    "name", "scientificName", "simpleDescription", "description",
+    "fruit", "origin", "type", "propagation", "toxicity", "dificulty",
+    "Filo", "Classe", "Ordem", "Family", "Genero", "Especie",
+    "height", "flowercolor", "foliage", "flowering",
+    "light", "water", "size", "soil",
+    "watering", "fertilizing", "pruning", "pests",
+    "manha", "amount", "frequency", "NPK", "season", "tools", "prevention", "monitoring",
+    "planting", "exhibition", "maintenance",
+    "station", "spacing", "iluminosity", "protection", "idealTemperature", "tolerance"
+]
+
+const CSV_LABELS = {
+    name: "Nome Popular", scientificName: "Nome Científico",
+    simpleDescription: "Descrição Curta", description: "Descrição",
+    fruit: "Fruto", origin: "Origem", type: "Tipo", propagation: "Propagação",
+    toxicity: "Toxicidade", dificulty: "Dificuldade",
+    Filo: "Filo", Classe: "Classe", Ordem: "Ordem", Family: "Família",
+    Genero: "Gênero", Especie: "Espécie",
+    height: "Altura", flowercolor: "Cor da Flor", foliage: "Folhagem", flowering: "Floração",
+    light: "Luz", water: "Água", size: "Tamanho", soil: "Solo",
+    watering: "Irrigação", fertilizing: "Adubação", pruning: "Poda", pests: "Pragas",
+    manha: "Horário Rega", amount: "Quantidade Água", frequency: "Freq. Adubação",
+    NPK: "NPK", season: "Época Poda", tools: "Ferramenta Poda",
+    prevention: "Prevenção Pragas", monitoring: "Monitoramento",
+    planting: "Plantio", exhibition: "Exposição", maintenance: "Manutenção",
+    station: "Estação Plantio", spacing: "Espaçamento", iluminosity: "Luminosidade",
+    protection: "Proteção", idealTemperature: "Temperatura Ideal", tolerance: "Tolerância"
+}
+
+// Resolver texto -> ObjectId para campos de coleção
+async function resolveTextToId(db, collectionName, textValue) {
+    if (!textValue || !textValue.trim()) return ""
+    const normalized = textValue.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    const options = await db.collection(collectionName).find({}).toArray()
+    const exact = options.find(o => o.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === normalized)
+    if (exact) return exact._id.toString()
+    const partial = options.find(o =>
+        normalized.includes(o.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")) ||
+        o.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(normalized)
+    )
+    if (partial) return partial._id.toString()
+    // Criar novo item na coleção
+    const result = await db.collection(collectionName).insertOne({ name: textValue.trim() })
+    return result.insertedId.toString()
+}
+
+const COLLECTION_FIELDS = [
+    "fruit", "origin", "type", "propagation", "toxicity", "dificulty",
+    "height", "flowercolor", "foliage", "flowering",
+    "light", "water", "size", "soil",
+    "manha", "amount", "frequency", "NPK", "season", "tools",
+    "prevention", "monitoring", "station", "spacing",
+    "iluminosity", "protection", "idealTemperature", "tolerance"
+]
+
+// Baixar template CSV vazio
+plantRoutes.route("/plant/import/template").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
+    const header = CSV_FIELDS.map(f => CSV_LABELS[f] || f).join(",")
+    const example = [
+        "Morango,Fragaria × ananassa,Planta rasteira frutífera,Planta popular para frutos e jardins",
+        "Bagas,América do Sul,Frutífera,Sementes,Não é tóxica,Média,Magnoliophyta,Magnoliopsida,Rosales,Rosaceae,Fragaria,Fragaria × ananassa",
+        "Até 1 m,Rosa,Perene,Primavera/Verão,Sol pleno,Abundante,Médio,Bem drenado",
+        "Rega frequente,Adubação a cada 15 dias,Poda leve,Pragas ocasionais",
+        "Início da manhã,Moderada,Semanal,10-10-10,Primavera,Tesoura de poda,Baixa,Baixo",
+        "Plantar em local ensolarado,Exposição externa,Manutenção moderada",
+        "Primavera,0.3 m,6-8 horas,Nenhuma,20°C a 28°C,Alta"
+    ].join(",")
+    const csvContent = header + "\n" + example + "\n"
+    res.setHeader("Content-Type", "text/csv; charset=utf-8")
+    res.setHeader("Content-Disposition", 'attachment; filename="template_plantas.csv"')
+    res.send("\uFEFF" + csvContent)
+})
+
+// Importar CSV
+plantRoutes.route("/plant/import").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
+    const db_connect = dbo.getDb()
+    try {
+        const { csvContent } = req.body
+        if (!csvContent) {
+            return res.status(400).json({ message: "Nenhum conteúdo CSV fornecido." })
+        }
+
+        let records
+        try {
+            records = parse(csvContent, {
+                columns: true,
+                skip_empty_lines: true,
+                trim: true,
+                bom: true
+            })
+        } catch (e) {
+            return res.status(400).json({ message: "Erro ao ler CSV: " + e.message })
+        }
+
+        if (records.length === 0) {
+            return res.status(400).json({ message: "O CSV está vazio." })
+        }
+
+        // Mapear labels do CSV -> campos internos
+        const labelToField = {}
+        CSV_FIELDS.forEach(f => { labelToField[CSV_LABELS[f]] = f })
+
+        const results = { total: records.length, success: 0, errors: [], plants: [] }
+
+        for (let i = 0; i < records.length; i++) {
+            const row = records[i]
+            const rowNum = i + 2
+
+            // Mapear labels -> campos
+            const plant = {}
+            for (const [label, value] of Object.entries(row)) {
+                const field = labelToField[label] || label
+                if (CSV_FIELDS.includes(field) && value && value.trim()) {
+                    plant[field] = value.trim()
+                }
+            }
+
+            // Validação: name obrigatório
+            if (!plant.name) {
+                results.errors.push({ row: rowNum, message: "Nome popular é obrigatório." })
+                continue
+            }
+
+            // Resolver campos de coleção -> ObjectIds
+            for (const field of COLLECTION_FIELDS) {
+                if (plant[field]) {
+                    plant[field] = await resolveTextToId(db_connect, field, plant[field])
+                }
+            }
+
+            try {
+                const insertResult = await db_connect.collection("plants").insertOne(plant)
+                results.success++
+                results.plants.push({ _id: insertResult.insertedId, name: plant.name })
+            } catch (e) {
+                results.errors.push({ row: rowNum, message: e.message })
+            }
+        }
+
+        res.status(200).json(results)
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao importar: " + error.message })
+    }
+})
+
 module.exports = plantRoutes
