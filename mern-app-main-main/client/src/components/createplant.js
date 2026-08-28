@@ -181,12 +181,8 @@ export default function Create() {
     const [toast, setToast] = useState(null)
     const [hasDraft, setHasDraft] = useState(false)
     const [pasteValues, setPasteValues] = useState("")
-    const [templates, setTemplates] = useState([])
-    const [tmplName, setTmplName] = useState("")
-    const [tmplEditId, setTmplEditId] = useState(null)
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
-    const [templateStep, setTemplateStep] = useState(!searchParams.get("clone"))
     const autoSaveTimer = useRef(null)
 
     // Clonar planta: busca dados e pré-preenche o formulário
@@ -218,20 +214,14 @@ export default function Create() {
         async function load() {
             setLoading(true)
             try {
-                const [colRes, tmplRes] = await Promise.all([
-                    fetch(`${API_URL}/collections/all`),
-                    fetch(`${API_URL}/templates`)
-                ])
-                if (colRes.ok) {
-                    const all = await colRes.json()
+                const res = await fetch(`${API_URL}/collections/all`)
+                if (res.ok) {
+                    const all = await res.json()
                     const mapped = {}
                     for (const [key, meta] of Object.entries(mapeamentoColecoes)) {
                         mapped[key] = all[meta.colecao] || []
                     }
                     setOpcoesBanco(mapped)
-                }
-                if (tmplRes.ok) {
-                    setTemplates(await tmplRes.json())
                 }
             } catch (err) {
                 console.error("Erro ao carregar coleções:", err)
@@ -389,112 +379,6 @@ export default function Create() {
         }
     }
 
-    /* ── TEMPLATES ── */
-    const [tmplForm, setTmplForm] = useState(INITIAL_FORM)
-
-    function applyTemplate(tmpl) {
-        updateForm(tmpl.fields)
-        setTemplateStep(false)
-        showToast(`Template "${tmpl.name}" aplicado! Ajuste os campos e preencha o restante.`)
-    }
-
-    function skipTemplate() {
-        setTemplateStep(false)
-    }
-
-    async function saveTemplate() {
-        if (!tmplName.trim()) {
-            showToast("Digite um nome para o template.", "error")
-            return
-        }
-        const fieldsToSave = {}
-        ALL_FIELDS.forEach(k => {
-            if (tmplForm[k] && String(tmplForm[k]).trim() !== "") {
-                fieldsToSave[k] = tmplForm[k]
-            }
-        })
-        if (Object.keys(fieldsToSave).length === 0) {
-            showToast("Preencha pelo menos um campo antes de salvar como template.", "error")
-            return
-        }
-        const token = localStorage.getItem("token")
-        const headers = { "Content-Type": "application/json" }
-        if (token) headers.Authorization = `Bearer ${token}`
-        try {
-            let res
-            if (tmplEditId) {
-                res = await fetch(`${API_URL}/templates/${tmplEditId}`, {
-                    method: "PUT", headers,
-                    body: JSON.stringify({ name: tmplName, fields: fieldsToSave })
-                })
-            } else {
-                res = await fetch(`${API_URL}/templates/add`, {
-                    method: "POST", headers,
-                    body: JSON.stringify({ name: tmplName, fields: fieldsToSave })
-                })
-            }
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}))
-                showToast(err.message || "Erro ao salvar template.", "error")
-                return
-            }
-            const data = await res.json()
-            if (tmplEditId) {
-                setTemplates(prev => prev.map(t => t._id === tmplEditId ? { ...t, name: tmplName, fields: fieldsToSave } : t))
-                showToast("Template atualizado!")
-            } else {
-                setTemplates(prev => [...prev, { _id: data._id, name: tmplName, fields: fieldsToSave }])
-                showToast("Template salvo!")
-            }
-            setTmplName("")
-            setTmplForm(INITIAL_FORM)
-            setTmplEditId(null)
-            const btn = document.querySelector('#modalManageTemplates [data-bs-dismiss="modal"]')
-            if (btn) btn.click()
-        } catch {
-            showToast("Erro ao conectar ao servidor.", "error")
-        }
-    }
-
-    function editTemplate(tmpl) {
-        setTmplEditId(tmpl._id)
-        setTmplName(tmpl.name)
-        setTmplForm(prev => ({ ...INITIAL_FORM, ...tmpl.fields }))
-    }
-
-    async function deleteTemplate(id) {
-        if (!window.confirm("Tem certeza que deseja excluir este template?")) return
-        const token = localStorage.getItem("token")
-        const headers = {}
-        if (token) headers.Authorization = `Bearer ${token}`
-        try {
-            const res = await fetch(`${API_URL}/templates/${id}`, { method: "DELETE", headers })
-            if (res.ok) {
-                setTemplates(prev => prev.filter(t => t._id !== id))
-                showToast("Template excluído!")
-            }
-        } catch {
-            showToast("Erro ao excluir template.", "error")
-        }
-    }
-
-    function updateTmplForm(value) {
-        setTmplForm(prev => ({ ...prev, ...value }))
-    }
-
-    function TmplSelectField({ campo, placeholder }) {
-        return (
-            <SearchableSelect
-                campo={campo}
-                placeholder={placeholder}
-                value={tmplForm[campo]}
-                options={opcoesBanco[campo] || []}
-                onChange={id => updateTmplForm({ [campo]: id })}
-                onManage={() => {}}
-            />
-        )
-    }
-
     const onSubmit = useCallback(async (e) => {
         e.preventDefault()
         setSubmitting(true)
@@ -613,43 +497,6 @@ export default function Create() {
             </div>
 
             {/* ── SELEÇÃO DE TEMPLATE ── */}
-            {templateStep && (
-                <div className="wizard-template-select">
-                    <div className="wizard-step-header">
-                        <h4>📋 Escolher Template</h4>
-                        <p>Selecione um template para pré-preencher os campos ou comece do zero.</p>
-                    </div>
-                    <div className="row">
-                        <div className="col-md-4 mb-3">
-                            <div className="card h-100 border-0 shadow-sm wizard-template-card" role="button" onClick={skipTemplate}>
-                                <div className="card-body text-center">
-                                    <div style={{ fontSize: "2rem" }}>📝</div>
-                                    <h6 className="card-title mt-2 mb-1">Em branco</h6>
-                                    <small className="text-muted">Começar do zero</small>
-                                </div>
-                            </div>
-                        </div>
-                        {templates.map(t => (
-                            <div className="col-md-4 mb-3" key={t._id}>
-                                <div className="card h-100 border-0 shadow-sm wizard-template-card" role="button" onClick={() => applyTemplate(t)}>
-                                    <div className="card-body text-center">
-                                        <div style={{ fontSize: "2rem" }}>🌿</div>
-                                        <h6 className="card-title mt-2 mb-1">{t.name}</h6>
-                                        <small className="text-muted">{Object.keys(t.fields).length} campo(s) pré-preenchido(s)</small>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="d-flex justify-content-end mt-2">
-                        <button type="button" className="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalManageTemplates">
-                            ⚙️ Gerenciar templates
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {!templateStep && (<>
             <div className="wizard-progress mb-3">
                 <div className="d-flex justify-content-between align-items-center mb-1">
                     <span className="wizard-progress__label">
@@ -1131,7 +978,6 @@ export default function Create() {
                     )}
                 </div>
             </form>
-            </>)}
 
             {/* ── MODAL DE COLEÇÕES ── */}
             <div className="modal fade" id="modalDinamico" tabIndex="-1" aria-hidden="true">
@@ -1225,168 +1071,6 @@ export default function Create() {
                 </div>
             </div>
 
-            {/* ── MODAL GERENCIAR TEMPLATES ── */}
-            <div className="modal fade" id="modalManageTemplates" tabIndex="-1" aria-hidden="true">
-                <div className="modal-dialog modal-xl modal-dialog-scrollable">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title">{tmplEditId ? "Editar Template" : "Novo Template"}</h5>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="mb-3">
-                                <label className="form-label fw-semibold">Nome do template</label>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="Ex: Frutífera, Ornamental, Suculenta..."
-                                    value={tmplName}
-                                    onChange={e => setTmplName(e.target.value)}
-                                />
-                                <small className="text-muted">Preencha apenas os campos que devem ser pré-preenchidos. Campos em branco serão ignorados.</small>
-                            </div>
-
-                            <hr />
-                            <h6 className="mb-3">Campos do template</h6>
-
-                            <div className="row">
-                                <div className="col-md-4 mb-3">
-                                    <label className="form-label">Tipo / Função</label>
-                                    <TmplSelectField campo="type" placeholder="Tipo de planta..." />
-                                </div>
-                                <div className="col-md-4 mb-3">
-                                    <label className="form-label">Origem</label>
-                                    <TmplSelectField campo="origin" placeholder="Origem geográfica..." />
-                                </div>
-                                <div className="col-md-4 mb-3">
-                                    <label className="form-label">Propagação</label>
-                                    <TmplSelectField campo="propagation" placeholder="Como se propaga..." />
-                                </div>
-                                <div className="col-md-4 mb-3">
-                                    <label className="form-label">Toxicidade</label>
-                                    <TmplSelectField campo="toxicity" placeholder="Grau de toxicidade..." />
-                                </div>
-                                <div className="col-md-4 mb-3">
-                                    <label className="form-label">Dificuldade</label>
-                                    <TmplSelectField campo="dificulty" placeholder="Nível de cuidado..." />
-                                </div>
-                                <div className="col-md-4 mb-3">
-                                    <label className="form-label">Altura / Porte</label>
-                                    <TmplSelectField campo="height" placeholder="Porte da planta..." />
-                                </div>
-                            </div>
-
-                            <h6 className="mb-3">Características físicas</h6>
-                            <div className="row">
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">Cor da flor</label>
-                                    <TmplSelectField campo="flowercolor" placeholder="Cor..." />
-                                </div>
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">Folhagem</label>
-                                    <TmplSelectField campo="foliage" placeholder="Tipo de folhagem..." />
-                                </div>
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">Floração</label>
-                                    <TmplSelectField campo="flowering" placeholder="Época..." />
-                                </div>
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">Fruto</label>
-                                    <TmplSelectField campo="fruit" placeholder="Tipo de fruto..." />
-                                </div>
-                            </div>
-
-                            <h6 className="mb-3">Ambiente</h6>
-                            <div className="row">
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">Luz</label>
-                                    <TmplSelectField campo="light" placeholder="Necessidade de luz..." />
-                                </div>
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">Água</label>
-                                    <TmplSelectField campo="water" placeholder="Necessidade de água..." />
-                                </div>
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">Solo</label>
-                                    <TmplSelectField campo="soil" placeholder="Tipo de solo..." />
-                                </div>
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">Tamanho</label>
-                                    <TmplSelectField campo="size" placeholder="Tamanho do vaso/local..." />
-                                </div>
-                            </div>
-
-                            <h6 className="mb-3">Cuidados</h6>
-                            <div className="row">
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">Horário de rega</label>
-                                    <TmplSelectField campo="manha" placeholder="Melhor horário..." />
-                                </div>
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">Quantidade de água</label>
-                                    <TmplSelectField campo="amount" placeholder="Quantidade..." />
-                                </div>
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">Frequência adubação</label>
-                                    <TmplSelectField campo="frequency" placeholder="Frequência..." />
-                                </div>
-                                <div className="col-md-3 mb-3">
-                                    <label className="form-label">NPK</label>
-                                    <TmplSelectField campo="NPK" placeholder="Tipo de NPK..." />
-                                </div>
-                            </div>
-
-                            <div className="d-flex justify-content-between align-items-center mt-3 mb-2">
-                                <h6 className="mb-0">Texto livre (opcional)</h6>
-                            </div>
-                            <div className="row">
-                                <div className="col-md-6 mb-3">
-                                    <label className="form-label">Descrição curta</label>
-                                    <textarea className="form-control" rows="2" maxLength={200} placeholder="Frase curta sobre a planta..."
-                                        value={tmplForm.simpleDescription} onChange={e => updateTmplForm({ simpleDescription: e.target.value })} />
-                                </div>
-                                <div className="col-md-6 mb-3">
-                                    <label className="form-label">Como plantar</label>
-                                    <textarea className="form-control" rows="2" maxLength={500} placeholder="Instruções de plantio..."
-                                        value={tmplForm.planting} onChange={e => updateTmplForm({ planting: e.target.value })} />
-                                </div>
-                            </div>
-
-                            <div className="d-flex gap-2 mt-3">
-                                <button type="button" className="btn btn-success" onClick={saveTemplate}>
-                                    {tmplEditId ? "Atualizar template" : "Salvar template"}
-                                </button>
-                                {tmplEditId && (
-                                    <button type="button" className="btn btn-outline-secondary" onClick={() => { setTmplEditId(null); setTmplName(""); setTmplForm(INITIAL_FORM) }}>
-                                        Cancelar edição
-                                    </button>
-                                )}
-                            </div>
-
-                            <hr className="my-4" />
-                            <h6>Templates existentes ({templates.length})</h6>
-                            {templates.length === 0 && <p className="text-muted">Nenhum template cadastrado ainda.</p>}
-                            <ul className="list-group">
-                                {templates.map(t => (
-                                    <li key={t._id} className="list-group-item d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{t.name}</strong>
-                                            <small className="text-muted ms-2">{Object.keys(t.fields).length} campo(s)</small>
-                                        </div>
-                                        <div className="d-flex gap-1">
-                                            <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => editTemplate(t)}>Editar</button>
-                                            <button className="btn btn-sm btn-outline-danger" type="button" onClick={() => deleteTemplate(t._id)}>Excluir</button>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     )
 }

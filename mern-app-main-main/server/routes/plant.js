@@ -397,76 +397,6 @@ plantRoutes.route("/collections/:name/:id").delete(authenticateToken, authorizeR
    ROTAS DE TEMPLATES
 ================================================== */
 
-// LISTAR TODOS OS TEMPLATES
-plantRoutes.route("/templates").get(async function (req, res) {
-    const db_connect = dbo.getDb()
-    try {
-        const result = await db_connect.collection("templates").find({}).toArray()
-        res.status(200).json(result)
-    } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar templates: " + error.message })
-    }
-})
-
-// CRIAR TEMPLATE (ADM)
-plantRoutes.route("/templates/add").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
-    const db_connect = dbo.getDb()
-    try {
-        const { name, fields } = req.body
-        if (!name || !fields) {
-            return res.status(400).json({ message: "Nome e campos são obrigatórios." })
-        }
-        const tmpl = { name, fields, createdAt: new Date() }
-        const result = await db_connect.collection("templates").insertOne(tmpl)
-        res.status(201).json({ _id: result.insertedId, name, fields })
-    } catch (error) {
-        res.status(500).json({ message: "Erro ao criar template: " + error.message })
-    }
-})
-
-// EDITAR TEMPLATE (ADM)
-plantRoutes.route("/templates/:id").put(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
-    const db_connect = dbo.getDb()
-    try {
-        const id = req.params.id
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).json({ message: "ID inválido" })
-        }
-        const { name, fields } = req.body
-        const update = {}
-        if (name) update.name = name
-        if (fields) update.fields = fields
-        const result = await db_connect.collection("templates").updateOne(
-            { _id: new ObjectId(id) },
-            { $set: update }
-        )
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ message: "Template não encontrado." })
-        }
-        res.status(200).json({ message: "Template atualizado com sucesso." })
-    } catch (error) {
-        res.status(500).json({ message: "Erro ao atualizar template: " + error.message })
-    }
-})
-
-// DELETAR TEMPLATE (ADM)
-plantRoutes.route("/templates/:id").delete(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
-    const db_connect = dbo.getDb()
-    try {
-        const id = req.params.id
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).json({ message: "ID inválido" })
-        }
-        const result = await db_connect.collection("templates").deleteOne({ _id: new ObjectId(id) })
-        if (result.deletedCount === 0) {
-            return res.status(404).json({ message: "Template não encontrado." })
-        }
-        res.status(200).json({ message: "Template deletado com sucesso!" })
-    } catch (error) {
-        res.status(500).json({ message: "Erro ao deletar template: " + error.message })
-    }
-})
-
 /* ==================================================
    IMPORTAÇÃO CSV
 ================================================== */
@@ -629,45 +559,63 @@ VERTICAL_FIELDS.forEach(f => { VERTICAL_LABEL_TO_FIELD[f.label] = f.key })
 // Aceitar labels com asterisco (obrigatório)
 VERTICAL_FIELDS.forEach(f => { VERTICAL_LABEL_TO_FIELD[f.label + " *"] = f.key })
 
-// Parse XLSX vertical -> array de plantas
 function parseVerticalXlsx(buffer) {
     const wb = new ExcelJS.Workbook()
     return wb.xlsx.load(buffer).then(() => {
         const ws = wb.getWorksheet("Dados")
-        if (!ws) throw new Error("Aba 'Dados' não encontrada no arquivo.")
+        if (!ws) {
+            const sheetNames = wb.worksheets.map(s => s.name)
+            throw new Error(`Aba 'Dados' não encontrada. Abas disponíveis: ${sheetNames.join(", ")}`)
+        }
 
         const sectionNames = ["IDENTIFICAÇÃO", "IDENTIFICACAO", "CLASSIFICAÇÃO BOTÂNICA", "CLASSIFICACAO BOTANICA", "CARACTERÍSTICAS", "CARACTERISTICAS", "CUIDADOS BÁSICOS", "CUIDADOS BASICOS", "MANUTENÇÃO", "MANUTENCAO", "PLANTIO & CULTIVO", "PLANTIO E CULTIVO", "IMAGENS"]
+
+        const allRows = []
+        ws.eachRow((row, rowNumber) => {
+            const colA = (row.getCell(1).value || "").toString().trim()
+            const colB = (row.getCell(2).value || "").toString().trim()
+            allRows.push({ rowNumber, colA, colB })
+        })
+
+        console.log(`[XLSX] Total de linhas: ${allRows.length}`)
+        if (allRows.length > 0) {
+            console.log(`[XLSX] Primeiras 5 linhas:`, allRows.slice(0, 5).map(r => `L${r.rowNumber}: A="${r.colA}" B="${r.colB}"`))
+        }
 
         const plants = []
         let currentPlant = null
 
-        ws.eachRow((row, rowNumber) => {
-            if (rowNumber === 1) return // pular cabeçalho
-
-            const colA = (row.getCell(1).value || "").toString().trim()
-            const colB = (row.getCell(2).value || "").toString().trim()
+        for (const { rowNumber, colA, colB } of allRows) {
+            if (rowNumber === 1 && VERTICAL_LABEL_TO_FIELD[colA]) {
+                continue
+            }
 
             if (colA.startsWith("── PLANTA")) {
                 if (currentPlant && currentPlant.name) plants.push(currentPlant)
                 currentPlant = {}
-                return
+                continue
             }
 
             if (!colB && colA && sectionNames.some(s => colA.toUpperCase() === s.toUpperCase())) {
                 if (currentPlant && currentPlant.name) plants.push(currentPlant)
                 currentPlant = {}
-                return
+                continue
             }
-
-            if (!currentPlant) currentPlant = {}
 
             const fieldKey = VERTICAL_LABEL_TO_FIELD[colA]
             if (fieldKey && colB) {
+                if (!currentPlant) currentPlant = {}
                 currentPlant[fieldKey] = colB
             }
-        })
+        }
 
         if (currentPlant && currentPlant.name) plants.push(currentPlant)
+
+        console.log(`[XLSX] Plantas encontradas: ${plants.length}`)
+        if (plants.length > 0) {
+            console.log(`[XLSX] Primeira planta keys:`, Object.keys(plants[0]))
+        }
+
         return plants
     })
 }
@@ -677,6 +625,8 @@ plantRoutes.route("/plant/import").post(authenticateToken, authorizeRoles("ADM")
     const db_connect = dbo.getDb()
     try {
         const { csvContent, fileBase64, fileName } = req.body
+
+        console.log(`[IMPORT] fileName=${fileName}, hasBase64=${!!fileBase64}, hasCsv=${!!csvContent}`)
 
         let plants = []
 
