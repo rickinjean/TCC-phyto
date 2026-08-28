@@ -1,17 +1,35 @@
 const express = require("express")
 const userRoutes = express.Router()
 const dbo = require("../db/conn")
+const crypto = require("crypto")
 const ObjectId = require("mongodb").ObjectId
 const { authenticateToken, authorizeRoles, signToken } = require("../middleware/auth")
+const { enviarEmailConfirmacao, smtpConfigurado } = require("../mailer")
 const bcrypt = require("bcrypt")
+
+function escapeRegex(texto) {
+    return (texto || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
 
 userRoutes.route('/user/login').post(async function (req, res) {
     const db_connect = dbo.getDb()
 
-    const { user, senha } = req.body;
+    const identificador = (req.body.user || "").toString().trim().toLowerCase()
+    const senha = req.body.senha
+
+    if (!identificador || !senha) {
+        return res.status(400).json({ mensagem: 'Usuário/email e senha são obrigatórios' });
+    }
 
     try {
-        const usuario = await db_connect.collection("users").findOne({ user })
+        const exp = escapeRegex(identificador)
+        const usuario = await db_connect.collection("users").findOne({
+            $or: [
+                { user: identificador },
+                { user: { $regex: new RegExp(`^${exp}$`, "i") } },
+                { email: { $regex: new RegExp(`^${exp}$`, "i") } }
+            ]
+        })
 
         if (!usuario) {
             return res.status(400).json({ mensagem: 'Usuário ou senha incorretos' });
@@ -27,7 +45,11 @@ userRoutes.route('/user/login').post(async function (req, res) {
             return res.status(400).json({ mensagem: 'Usuário ou senha incorretos' });
         }
 
-        const token = signToken({ userId: usuario._id, tipo: usuario.function, name: usuario.name, avatar: usuario.avatar || null })
+        if (usuario.emailVerified === false) {
+            return res.status(403).json({ mensagem: 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada (e o spam).' });
+        }
+
+        const token = signToken({ userId: usuario._id, tipo: usuario.function, name: usuario.name || usuario.user, avatar: usuario.avatar || null })
 
         res.json({ mensagem: 'Login bem-sucedido', token });
     } catch (erro) {
@@ -40,53 +62,113 @@ userRoutes.route('/user/login').post(async function (req, res) {
 userRoutes.route('/user/register').post(async function (req, res) {
     const db_connect = dbo.getDb()
 
-    const { nome, user, email, senha } = req.body;
+    const user = (req.body.user || req.body.nome || "").toString().trim()
+    const email = (req.body.email || "").toString().trim().toLowerCase()
+    const senha = req.body.senha
     const tipoUsuario = "User"
 
     try {
-        if (!nome || !user || !email || !senha) {
-            return res.status(400).json({ mensagem: 'Nome, usuário, email e senha são obrigatórios' });
+        if (!user || !email || !senha) {
+            return res.status(400).json({ mensagem: 'Nome de usuário, email e senha são obrigatórios' });
         }
 
-        if (user.length < 3) {
-            return res.status(400).json({ mensagem: 'O nome de usuário deve ter pelo menos 3 caracteres' });
+        if (!/^[a-zA-Z0-9._]{3,20}$/.test(user)) {
+            return res.status(400).json({ mensagem: 'Nome de usuário deve ter de 3 a 20 caracteres (letras, números, ponto ou underline)' });
         }
 
-        if (!/^[a-zA-Z0-9_]+$/.test(user)) {
-            return res.status(400).json({ mensagem: 'O nome de usuário deve conter apenas letras, números e underscore' });
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ mensagem: 'Email inválido' });
         }
 
         if (senha.length < 6) {
             return res.status(400).json({ mensagem: 'A senha deve ter pelo menos 6 caracteres' });
         }
 
-        const userExistente = await db_connect.collection("users").findOne({ user })
+        const expUser = escapeRegex(user)
+        const userExistente = await db_connect.collection("users").findOne({ user: { $regex: new RegExp(`^${expUser}$`, "i") } })
         if (userExistente) {
             return res.status(400).json({ mensagem: 'Este nome de usuário já está em uso' });
         }
 
-        const emailExistente = await db_connect.collection("users").findOne({ email })
+        const expEmail = escapeRegex(email)
+        const emailExistente = await db_connect.collection("users").findOne({ email: { $regex: new RegExp(`^${expEmail}$`, "i") } })
         if (emailExistente) {
             return res.status(400).json({ mensagem: 'Este email já está cadastrado' });
         }
 
         const salt = await bcrypt.genSalt(10);
         const senhaHash = await bcrypt.hash(senha, salt);
+
         const novoUsuario = {
-            name: nome,
+            name: user,
             user,
             email,
             senha: senhaHash,
             function: tipoUsuario,
-        };
+            emailVerified: !smtpConfigurado,
+        }
+
+        if (smtpConfigurado) {
+            novoUsuario.emailVerified = false
+            novoUsuario.verificationToken = crypto.randomBytes(32).toString("hex")
+            novoUsuario.verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
+        }
 
         const result = await db_connect.collection("users").insertOne(novoUsuario);
 
+        if (smtpConfigurado) {
+            const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
+            const link = `${FRONTEND_URL}/verify?token=${novoUsuario.verificationToken}`
+            try {
+                await enviarEmailConfirmacao(user, email, link)
+            } catch (erroEmail) {
+                console.error("Erro ao enviar email de confirmação:", erroEmail.message)
+            }
+        }
+
         console.log("Usuário cadastrado com sucesso:", result.insertedId);
-        return res.status(201).json({ mensagem: 'Usuário cadastrado com sucesso' });
+        return res.status(201).json({
+            mensagem: smtpConfigurado
+                ? 'Cadastro realizado! Confirme seu e-mail no link que enviamos para ativar a conta.'
+                : 'Usuário cadastrado com sucesso',
+            precisaConfirmarEmail: smtpConfigurado
+        });
     } catch (error) {
         console.error("Erro ao cadastrar usuário:", error);
         return res.status(500).json({ mensagem: 'Erro ao cadastrar usuário' });
+    }
+}
+);
+
+userRoutes.route('/user/verify').get(async function (req, res) {
+    const db_connect = dbo.getDb()
+    const { token } = req.query
+
+    if (!token) {
+        return res.status(400).json({ mensagem: 'Token de verificação ausente' })
+    }
+
+    try {
+        const usuario = await db_connect.collection("users").findOne({ verificationToken: token })
+
+        if (!usuario) {
+            return res.status(400).json({ mensagem: 'Link de verificação inválido ou já utilizado' })
+        }
+
+        const expirado = usuario.verificationExpires && new Date(usuario.verificationExpires) < new Date()
+        if (expirado) {
+            return res.status(400).json({ mensagem: 'Link de verificação expirado. Faça o cadastro novamente.' })
+        }
+
+        await db_connect.collection("users").updateOne(
+            { _id: usuario._id },
+            { $set: { emailVerified: true }, $unset: { verificationToken: "", verificationExpires: "" } }
+        )
+
+        return res.json({ mensagem: 'E-mail confirmado com sucesso! Você já pode entrar.' })
+    } catch (erro) {
+        console.error(erro)
+        return res.status(500).json({ mensagem: 'Erro no servidor' })
     }
 }
 );

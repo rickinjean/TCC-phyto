@@ -90,7 +90,7 @@ export default function Login({ onLogin }) {
 
                         {/* Campo usuário */}
                         <div className="mb-3">
-                            <label className="form-label small fw-medium">Nome de usuário</label>
+                            <label className="form-label small fw-medium">Usuário</label>
                             <div className="input-group">
                                 <span className="input-group-text">
                                     <i className="fas fa-user"></i>
@@ -98,7 +98,7 @@ export default function Login({ onLogin }) {
                                 <input
                                     type="text"
                                     className="form-control"
-                                    placeholder="seu_usuario"
+                                    placeholder="Seu nome de usuário"
                                     value={user}
                                     onChange={(e) => setUser(e.target.value)}
                                     required

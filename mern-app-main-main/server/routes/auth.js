@@ -173,3 +173,4 @@ authRoutes.get("/auth/github/callback", async (req, res) => {
 })
 
 module.exports = authRoutes
+module.exports.generateUsername = generateUsername

@@ -5,8 +5,7 @@ import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
 import API_URL from "../config";
 
 export default function Register() {
-    const [nome, setNome] = useState('');
-    const [user, setUser] = useState('');
+    const [usuario, setUsuario] = useState('');
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [confirmarSenha, setConfirmarSenha] = useState('');
@@ -32,7 +31,7 @@ export default function Register() {
             const response = await fetch(`${API_URL}/user/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nome, user, email, senha }),
+                body: JSON.stringify({ user: usuario, email, senha }),
             });
 
             const data = await response.json();
@@ -42,8 +41,10 @@ export default function Register() {
             }
 
             setSucesso(true);
-            setMensagem('Usuário registrado com sucesso!');
-            setTimeout(() => navigate('/login'), 2000);
+            setMensagem(data.precisaConfirmarEmail
+                ? 'Cadastro realizado! Enviamos um link de confirmação para seu e-mail.'
+                : 'Usuário registrado com sucesso!');
+            setTimeout(() => navigate('/login'), 3000);
         } catch (error) {
             setMensagem('Erro ao conectar com o servidor');
         } finally {
@@ -95,46 +96,23 @@ export default function Register() {
 
                     <form onSubmit={handleRegister}>
 
-                        {/* Campo nome */}
+                        {/* Campo usuário */}
                         <div className="mb-3">
-                            <label htmlFor="nome" className="form-label small fw-medium">Nome completo</label>
+                            <label htmlFor="usuario" className="form-label small fw-medium">Nome de usuário</label>
                             <div className="input-group">
                                 <span className="input-group-text">
                                     <i className="fas fa-user"></i>
                                 </span>
                                 <input
                                     type="text"
-                                    id="nome"
+                                    id="usuario"
                                     className="form-control"
-                                    placeholder="Seu nome"
-                                    value={nome}
-                                    onChange={(e) => setNome(e.target.value)}
+                                    placeholder="Seu nome de usuário"
+                                    value={usuario}
+                                    onChange={(e) => setUsuario(e.target.value)}
                                     required
                                 />
                             </div>
-                        </div>
-
-                        {/* Campo username */}
-                        <div className="mb-3">
-                            <label htmlFor="user" className="form-label small fw-medium">Nome de usuário</label>
-                            <div className="input-group">
-                                <span className="input-group-text">
-                                    <i className="fas fa-at"></i>
-                                </span>
-                                <input
-                                    type="text"
-                                    id="user"
-                                    className="form-control"
-                                    placeholder="seu_usuario"
-                                    value={user}
-                                    onChange={(e) => setUser(e.target.value)}
-                                    pattern="[a-zA-Z0-9_]+"
-                                    minLength={3}
-                                    title="Apenas letras, números e underscore (mínimo 3 caracteres)"
-                                    required
-                                />
-                            </div>
-                            <small className="text-muted">Letras, números e underscore. Mínimo 3 caracteres.</small>
                         </div>
 
                         {/* Campo email */}

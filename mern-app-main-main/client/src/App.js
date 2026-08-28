@@ -10,6 +10,7 @@ import Create from "./components/create"
 import Createplant from "./components/createplant"
 import Login from "./components/Login"
 import Register from "./components/Register"
+import Verify from "./components/Verify"
 import PlantDetails from './components/PlantDetails';
 import Inicio from './components/inicio'
 import Sobre from './components/Sobre'
@@ -113,6 +114,7 @@ const App = () => {
                 <Routes>
                     <Route path="/login" element={<Login onLogin={handleLogin} />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/verify" element={<Verify />} />
                     <Route exact path="/" element={token ? (role === "ADM" ? <UserList /> : <Navigate to="/plantlist" replace />) : <Navigate to="/login" replace />} />
                     <Route path="/plantlist" element={token ? <PlantList role={role} favTick={favTick} /> : <Navigate to="/login" replace />} />
                     <Route path="/userlist" element={token && role === "ADM" ? <UserList /> : <Navigate to={token ? "/" : "/login"} replace />} />
