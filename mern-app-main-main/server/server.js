@@ -88,8 +88,30 @@ app.get("/health", function(req, res) {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() })
 })
 
-dbo.connectToMongoDB(function (error) {
+dbo.connectToMongoDB(async function (error) {
     if (error) throw error
+
+    const bcrypt = require("bcrypt")
+    const db = dbo.getDb()
+    const adminExiste = await db.collection("users").findOne({ function: "ADM" })
+    if (!adminExiste) {
+        const hash = await bcrypt.hash("admin123", 10)
+        await db.collection("users").insertOne({
+            name: "Admin",
+            user: "admin",
+            email: "admin@phyto.com",
+            senha: hash,
+            function: "ADM"
+        })
+        console.log("Conta ADM criada: admin / admin123")
+    } else if (!adminExiste.senha || !adminExiste.senha.startsWith("$2b$")) {
+        const hash = await bcrypt.hash("admin123", 10)
+        await db.collection("users").updateOne(
+            { _id: adminExiste._id },
+            { $set: { user: adminExiste.user || "admin", senha: hash } }
+        )
+        console.log("Senha do ADM redefinida: admin / admin123")
+    }
 
     app.listen(port, () => {
         console.log("Servidor rodando na porta: " + port)
