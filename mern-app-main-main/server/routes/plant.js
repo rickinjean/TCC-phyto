@@ -490,7 +490,7 @@ const CSV_FIELDS = [
     "planting", "exhibition", "maintenance",
     "station", "spacing", "iluminosity", "protection", "idealTemperature", "tolerance",
     // === IMAGENS ===
-    "imageUrl1", "imageUrl2"
+    "imageUrl1", "imageUrl2", "imageUrl3", "imageUrl4", "imageUrl5"
 ]
 
 const CSV_LABELS = {
@@ -516,7 +516,8 @@ const CSV_LABELS = {
     station: "Estação Plantio", spacing: "Espaçamento", iluminosity: "Luminosidade",
     protection: "Proteção", idealTemperature: "Temperatura Ideal", tolerance: "Tolerância",
     // Imagens
-    imageUrl1: "URL Imagem 1", imageUrl2: "URL Imagem 2"
+    imageUrl1: "URL Imagem 1", imageUrl2: "URL Imagem 2",
+    imageUrl3: "URL Imagem 3", imageUrl4: "URL Imagem 4", imageUrl5: "URL Imagem 5"
 }
 
 // Resolver texto -> ObjectId para campos de coleção
@@ -601,6 +602,9 @@ const VERTICAL_FIELDS = [
     // IMAGENS (cinza)
     { key: "imageUrl1", label: "URL Imagem 1", section: "IMAGENS", color: "A5A5A5" },
     { key: "imageUrl2", label: "URL Imagem 2", section: "IMAGENS", color: "A5A5A5" },
+    { key: "imageUrl3", label: "URL Imagem 3", section: "IMAGENS", color: "A5A5A5" },
+    { key: "imageUrl4", label: "URL Imagem 4", section: "IMAGENS", color: "A5A5A5" },
+    { key: "imageUrl5", label: "URL Imagem 5", section: "IMAGENS", color: "A5A5A5" },
 ]
 
 // Baixar template XLSX com layout vertical e cores
@@ -860,9 +864,12 @@ plantRoutes.route("/plant/import").post(authenticateToken, authorizeRoles("ADM")
             }
 
             // Extrair URLs de imagem
-            const imageUrls = [plant.imageUrl1, plant.imageUrl2].filter(Boolean)
+            const imageUrls = [plant.imageUrl1, plant.imageUrl2, plant.imageUrl3, plant.imageUrl4, plant.imageUrl5].filter(Boolean)
             delete plant.imageUrl1
             delete plant.imageUrl2
+            delete plant.imageUrl3
+            delete plant.imageUrl4
+            delete plant.imageUrl5
 
             try {
                 const insertResult = await db_connect.collection("plants").insertOne(plant)
