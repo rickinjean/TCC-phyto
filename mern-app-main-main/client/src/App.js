@@ -8,7 +8,6 @@ import Edit from "./components/edit"
 import Editplant from './components/editplant';
 import Create from "./components/create"
 import Createplant from "./components/createplant"
-import ImportCSV from "./components/ImportCSV"
 import Login from "./components/Login"
 import Register from "./components/Register"
 import PlantDetails from './components/PlantDetails';
@@ -121,7 +120,7 @@ const App = () => {
                     <Route path="/editplant/:id" element={token && role === "ADM" ? <Editplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
                     <Route path="/create" element={token && role === "ADM" ? <Create /> : <Navigate to={token ? "/" : "/login"} replace />} />
                     <Route path="/createplant" element={token && role === "ADM" ? <Createplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
-                    <Route path="/import" element={token && role === "ADM" ? <ImportCSV /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
+
                     <Route path="/plantdetails/:id" element={token ? <PlantDetails onFavChange={notifyFavChange} /> : <Navigate to="/login" replace />} />
                     <Route path="/home" element={<Navigate to="/" replace />} />
                     <Route path="/inicio" element={<Inicio />} />

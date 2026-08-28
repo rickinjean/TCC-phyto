@@ -359,12 +359,6 @@ export default function PlantList({ role }) {
                         >
                             + Nova planta
                         </Link>
-                        <Link
-                            to="/import"
-                            className="plant-list-add btn btn-sm btn-outline-success"
-                        >
-                            📄 Importar CSV
-                        </Link>
                     </div>
                 )}
             </div>

@@ -2028,40 +2028,6 @@ textarea:focus {
 }
 
 /* =====================================================
-   PLANT FORM – TEMPLATE SELECTION
-   ===================================================== */
-
-.wizard-template-card {
-  cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-.wizard-template-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-}
-.wizard-template-select {
-  margin-bottom: 1.5rem;
-}
-
-/* =====================================================
-   IMPORT CSV
-   ===================================================== */
-
-.import-step-number {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #2f8a5d;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-/* =====================================================
    PLANT FORM – MODAL LIST
    ===================================================== */
 
