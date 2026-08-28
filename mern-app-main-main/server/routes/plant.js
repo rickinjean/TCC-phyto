@@ -636,6 +636,8 @@ function parseVerticalXlsx(buffer) {
         const ws = wb.getWorksheet("Dados")
         if (!ws) throw new Error("Aba 'Dados' não encontrada no arquivo.")
 
+        const sectionNames = ["IDENTIFICAÇÃO", "IDENTIFICACAO", "CLASSIFICAÇÃO BOTÂNICA", "CLASSIFICACAO BOTANICA", "CARACTERÍSTICAS", "CARACTERISTICAS", "CUIDADOS BÁSICOS", "CUIDADOS BASICOS", "MANUTENÇÃO", "MANUTENCAO", "PLANTIO & CULTIVO", "PLANTIO E CULTIVO", "IMAGENS"]
+
         const plants = []
         let currentPlant = null
 
@@ -645,8 +647,13 @@ function parseVerticalXlsx(buffer) {
             const colA = (row.getCell(1).value || "").toString().trim()
             const colB = (row.getCell(2).value || "").toString().trim()
 
-            // Detectar separador de planta
             if (colA.startsWith("── PLANTA")) {
+                if (currentPlant && currentPlant.name) plants.push(currentPlant)
+                currentPlant = {}
+                return
+            }
+
+            if (!colB && colA && sectionNames.some(s => colA.toUpperCase() === s.toUpperCase())) {
                 if (currentPlant && currentPlant.name) plants.push(currentPlant)
                 currentPlant = {}
                 return
@@ -654,14 +661,12 @@ function parseVerticalXlsx(buffer) {
 
             if (!currentPlant) currentPlant = {}
 
-            // Mapear label -> campo
             const fieldKey = VERTICAL_LABEL_TO_FIELD[colA]
             if (fieldKey && colB) {
                 currentPlant[fieldKey] = colB
             }
         })
 
-        // Última planta
         if (currentPlant && currentPlant.name) plants.push(currentPlant)
         return plants
     })
