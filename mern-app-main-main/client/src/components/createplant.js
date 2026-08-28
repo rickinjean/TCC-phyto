@@ -182,12 +182,12 @@ export default function Create() {
     const [hasDraft, setHasDraft] = useState(false)
     const [pasteValues, setPasteValues] = useState("")
     const [templates, setTemplates] = useState([])
-    const [templateStep, setTemplateStep] = useState(!searchParams.get("clone"))
     const [tmplName, setTmplName] = useState("")
     const [tmplFields, setTmplFields] = useState("")
     const [tmplEditId, setTmplEditId] = useState(null)
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
+    const [templateStep, setTemplateStep] = useState(!searchParams.get("clone"))
     const autoSaveTimer = useRef(null)
 
     // Clonar planta: busca dados e pré-preenche o formulário
