@@ -125,11 +125,11 @@ const App = () => {
 
                     <Route path="/plantdetails/:id" element={token ? <PlantDetails onFavChange={notifyFavChange} /> : <Navigate to="/login" replace />} />
                     <Route path="/home" element={<Navigate to="/" replace />} />
-                    <Route path="/inicio" element={<Inicio />} />
-                    <Route path="/Sobre" element={<Sobre />} />
+                    <Route path="/inicio" element={token ? <Inicio /> : <Navigate to="/login" replace />} />
+                    <Route path="/Sobre" element={token ? <Sobre /> : <Navigate to="/login" replace />} />
                     <Route path="/sobre" element={<Navigate to="/Sobre" replace />} />
                     <Route path="/favoritos" element={token ? <Favorites key={favTick} /> : <Navigate to="/login" replace />} />
-                    <Route path="*" element={<Navigate to={token ? (role === "ADM" ? "/" : "/plantlist") : "/login"} replace />} />
+                    <Route path="*" element={<Navigate to={token ? (role === "ADM" ? "/" : "/inicio") : "/login"} replace />} />
                 </Routes>
             </main>
             <Footer />
