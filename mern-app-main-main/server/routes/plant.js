@@ -3,6 +3,7 @@ const plantRoutes = express.Router()
 const dbo = require("../db/conn")
 const ObjectId = require("mongodb").ObjectId
 const XLSX = require("xlsx")
+const ExcelJS = require("exceljs")
 
 // Importar o multer e o path para gerir o upload de ficheiros
 const multer = require("multer")
@@ -544,141 +545,302 @@ const COLLECTION_FIELDS = [
     "iluminosity", "protection", "idealTemperature", "tolerance"
 ]
 
-// Baixar template XLSX formatado
+// Definição dos campos verticais para o template
+const VERTICAL_FIELDS = [
+    // IDENTIFICAÇÃO (verde)
+    { key: "name", label: "Nome Popular", section: "IDENTIFICAÇÃO", color: "92D050", required: true },
+    { key: "scientificName", label: "Nome Científico", section: "IDENTIFICAÇÃO", color: "92D050", required: true },
+    { key: "simpleDescription", label: "Descrição Curta", section: "IDENTIFICAÇÃO", color: "92D050" },
+    { key: "description", label: "Descrição", section: "IDENTIFICAÇÃO", color: "92D050" },
+    // CLASSIFICAÇÃO BOTÂNICA (azul)
+    { key: "Filo", label: "Filo", section: "CLASSIFICAÇÃO BOTÂNICA", color: "5B9BD5" },
+    { key: "Classe", label: "Classe", section: "CLASSIFICAÇÃO BOTÂNICA", color: "5B9BD5" },
+    { key: "Ordem", label: "Ordem", section: "CLASSIFICAÇÃO BOTÂNICA", color: "5B9BD5" },
+    { key: "Family", label: "Família", section: "CLASSIFICAÇÃO BOTÂNICA", color: "5B9BD5" },
+    { key: "Genero", label: "Gênero", section: "CLASSIFICAÇÃO BOTÂNICA", color: "5B9BD5" },
+    { key: "Especie", label: "Espécie", section: "CLASSIFICAÇÃO BOTÂNICA", color: "5B9BD5" },
+    // CARACTERÍSTICAS (laranja)
+    { key: "fruit", label: "Fruto", section: "CARACTERÍSTICAS", color: "ED7D31" },
+    { key: "origin", label: "Origem", section: "CARACTERÍSTICAS", color: "ED7D31" },
+    { key: "type", label: "Tipo", section: "CARACTERÍSTICAS", color: "ED7D31" },
+    { key: "propagation", label: "Propagação", section: "CARACTERÍSTICAS", color: "ED7D31" },
+    { key: "toxicity", label: "Toxicidade", section: "CARACTERÍSTICAS", color: "ED7D31" },
+    { key: "dificulty", label: "Dificuldade", section: "CARACTERÍSTICAS", color: "ED7D31" },
+    { key: "height", label: "Altura", section: "CARACTERÍSTICAS", color: "ED7D31" },
+    { key: "flowercolor", label: "Cor da Flor", section: "CARACTERÍSTICAS", color: "ED7D31" },
+    { key: "foliage", label: "Folhagem", section: "CARACTERÍSTICAS", color: "ED7D31" },
+    { key: "flowering", label: "Floração", section: "CARACTERÍSTICAS", color: "ED7D31" },
+    // CUIDADOS BÁSICOS (amarelo)
+    { key: "light", label: "Luz", section: "CUIDADOS BÁSICOS", color: "FFC000" },
+    { key: "water", label: "Água", section: "CUIDADOS BÁSICOS", color: "FFC000" },
+    { key: "size", label: "Tamanho", section: "CUIDADOS BÁSICOS", color: "FFC000" },
+    { key: "soil", label: "Solo", section: "CUIDADOS BÁSICOS", color: "FFC000" },
+    // MANUTENÇÃO (roxo)
+    { key: "watering", label: "Irrigação", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    { key: "fertilizing", label: "Adubação", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    { key: "pruning", label: "Poda", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    { key: "pests", label: "Pragas", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    { key: "manha", label: "Horário Rega", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    { key: "amount", label: "Quantidade Água", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    { key: "frequency", label: "Freq. Adubação", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    { key: "NPK", label: "NPK", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    { key: "season", label: "Época Poda", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    { key: "tools", label: "Ferramenta Poda", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    { key: "prevention", label: "Prevenção Pragas", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    { key: "monitoring", label: "Monitoramento", section: "MANUTENÇÃO", color: "7030A0", fontColor: "FFFFFF" },
+    // PLANTIO & CULTIVO (vermelho)
+    { key: "planting", label: "Plantio", section: "PLANTIO & CULTIVO", color: "FF0000", fontColor: "FFFFFF" },
+    { key: "exhibition", label: "Exposição", section: "PLANTIO & CULTIVO", color: "FF0000", fontColor: "FFFFFF" },
+    { key: "maintenance", label: "Manutenção", section: "PLANTIO & CULTIVO", color: "FF0000", fontColor: "FFFFFF" },
+    { key: "station", label: "Estação Plantio", section: "PLANTIO & CULTIVO", color: "FF0000", fontColor: "FFFFFF" },
+    { key: "spacing", label: "Espaçamento", section: "PLANTIO & CULTIVO", color: "FF0000", fontColor: "FFFFFF" },
+    { key: "iluminosity", label: "Luminosidade", section: "PLANTIO & CULTIVO", color: "FF0000", fontColor: "FFFFFF" },
+    { key: "protection", label: "Proteção", section: "PLANTIO & CULTIVO", color: "FF0000", fontColor: "FFFFFF" },
+    { key: "idealTemperature", label: "Temperatura Ideal", section: "PLANTIO & CULTIVO", color: "FF0000", fontColor: "FFFFFF" },
+    { key: "tolerance", label: "Tolerância", section: "PLANTIO & CULTIVO", color: "FF0000", fontColor: "FFFFFF" },
+    // IMAGENS (cinza)
+    { key: "imageUrl1", label: "URL Imagem 1", section: "IMAGENS", color: "A5A5A5" },
+    { key: "imageUrl2", label: "URL Imagem 2", section: "IMAGENS", color: "A5A5A5" },
+]
+
+// Baixar template XLSX com layout vertical e cores
 plantRoutes.route("/plant/import/template").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
-    const wb = XLSX.utils.book_new()
+    const wb = new ExcelJS.Workbook()
 
     // === ABA 1: INSTRUÇÕES ===
+    const wsInst = wb.addWorksheet("Instruções")
+    wsInst.getColumn(1).width = 70
+
     const instrucoes = [
-        ["COMO PREENCHER A PLANILHA DE IMPORTAÇÃO DE PLANTAS"],
-        [""],
-        ["PASSO A PASSO:"],
-        ["1. Preencha os dados na aba 'Dados'"],
-        ["2. Cada linha = uma planta"],
-        ["3. Campos obrigatórios: Nome Popular e Nome Científico"],
-        ["4. Campos de seleção (Tipo, Luz, etc.) aceitam o texto exato"],
-        ["5. Se o texto não existir no banco, será criado automaticamente"],
-        ["6. Campos de texto livre (Irrigação, Adubação, Poda) = escreva livremente"],
-        ["7. URLs de imagem são opcionais — deixe vazio se não tiver"],
-        [""],
-        ["SEÇÕES DA PLANILHA (aba 'Dados'):"],
-        ["VERDE = Identificação (nome, descrição)"],
-        ["AZUL = Classificação Botânica (família, gênero, espécie)"],
-        ["LARANJA = Características (tipo, origem, toxicidade, etc.)"],
-        ["AMARELO = Cuidados Básicos (luz, água, solo)"],
-        ["ROXO = Manutenção (irrigação, adubação, poda, pragas)"],
-        ["VERMELHO = Plantio & Cultivo (plantio, estação, temperatura)"],
-        ["CINZA = Imagens (URLs de fotos)"],
-        [""],
-        ["DICA: Use os filtros do Google Sheets para navegar pelas colunas"],
-        ["DICA: Cada seção tem um cabeçalho colorido para facilitar a organização"]
+        { text: "COMO PREENCHER A PLANILHA DE IMPORTAÇÃO", opts: { font: { bold: true, size: 14 } } },
+        { text: "", opts: {} },
+        { text: "PASSO A PASSO:", opts: { font: { bold: true, size: 11 } } },
+        { text: "1. Abra a aba \"Dados\"", opts: {} },
+        { text: "2. Cada planta ocupa um bloco de linhas", opts: {} },
+        { text: "3. Preencha a coluna \"Valor\" ao lado de cada campo", opts: {} },
+        { text: "4. Campos obrigatórios: Nome Popular e Nome Científico (*)", opts: {} },
+        { text: "5. Campos de seleção aceitam texto — se não existir, será criado", opts: {} },
+        { text: "6. Campos opcionais: deixe vazio se não quiser preencher", opts: {} },
+        { text: "7. Para adicionar mais plantas, copie um bloco de campos", opts: {} },
+        { text: "", opts: {} },
+        { text: "CORES DAS SEÇÕES:", opts: { font: { bold: true, size: 11 } } },
+        { text: "🟢 Verde = Identificação (nome, descrição)", opts: {} },
+        { text: "🔵 Azul = Classificação Botânica (família, gênero, espécie)", opts: {} },
+        { text: "🟠 Laranja = Características (tipo, origem, toxicidade)", opts: {} },
+        { text: "🟡 Amarelo = Cuidados Básicos (luz, água, solo)", opts: {} },
+        { text: "🟣 Roxo = Manutenção (irrigação, adubação, poda, pragas)", opts: {} },
+        { text: "🔴 Vermelho = Plantio & Cultivo (plantio, estação, temperatura)", opts: {} },
+        { text: "⚪ Cinza = Imagens (URLs de fotos)", opts: {} },
+        { text: "", opts: {} },
+        { text: "DICA: Campos com * são obrigatórios", opts: { font: { bold: true } } },
+        { text: "DICA: Para cada planta nova, copie um bloco completo de campos", opts: { font: { bold: true } } },
     ]
-    const wsInstrucoes = XLSX.utils.aoa_to_sheet(instrucoes)
-    wsInstrucoes["!cols"] = [{ wch: 60 }]
-    XLSX.utils.book_append_sheet(wb, wsInstrucoes, "Instruções")
+
+    instrucoes.forEach((item, i) => {
+        const row = wsInst.getRow(i + 1)
+        row.getCell(1).value = item.text
+        if (item.opts.font) row.getCell(1).font = item.opts.font
+    })
 
     // === ABA 2: DADOS ===
-    const headers = CSV_FIELDS.map(f => CSV_LABELS[f] || f)
-    const headerRow = headers
+    const wsDados = wb.addWorksheet("Dados")
+    wsDados.getColumn(1).width = 25
+    wsDados.getColumn(2).width = 50
+    wsDados.getColumn(3).width = 30
 
-    // Linhas de exemplo (3 plantas)
-    const exemplos = [
-        // Morango
-        ["Morango","Fragaria × ananassa","Planta rasteira frutífera","Planta herbácea da família Rosaceae muito cultivada por seus frutos",
-         "Magnoliophyta","Magnoliopsida","Rosales","Rosaceae","Fragaria","Fragaria × ananassa",
-         "Bagas","América do Sul","Frutífera","Sementes","Não é tóxica","Média",
-         "Até 0.3 m","Branco","Perene","Primavera/Verão",
-         "Sol pleno","Abundante","Pequeno","Rico em matéria orgânica",
-         "Rega frequente","Adubação NPK 10-10-10 a cada 15 dias","Poda de folhas secas","Pulgões e cochonilhas",
-         "Início da manhã","Moderada","Semanal","10-10-10","Primavera","Tesoura de poda","Baixa","Baixo",
-         "Plantar em local ensolarado","Exposição externa","Manutenção moderada",
-         "Primavera","0.3 m","6-8 horas","Nenhuma","15°C a 25°C","Alta",
-         "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Fragaria_%C3%97_ananassa_-_Blumenau.jpg/320px-Fragaria_%C3%97_ananassa_-_Blumenau.jpg",""],
-        // Lavanda
-        ["Lavanda","Lavandula angustifolia","Erva aromática com flores roxas","Planta perene da família Lamiaceae usada em aromaterapia",
-         "Magnoliophyta","Magnoliopsida","Lamiales","Lamiaceae","Lavandula","Lavandula angustifolia",
-         "Noz","Mediterrâneo","Arbusto","Estacas","Não é tóxica","Média",
-         "Até 0.8 m","Rosa ou roxo","Sempre-verde","Verão",
-         "Sol pleno","Pouca","Pequeno","Arenoso",
-         "Rega espaçada","Adubação orgânica na primavera","Poda após floração","Pulgões e fungos",
-         "Início da manhã","Pouca","Mensal","Orgânico","Primavera","Tesoura","Baixa","Baixo",
-         "Estacas na primavera","Exposição externa","Manutenção baixa",
-         "Primavera","0.4 m","8-12 horas","Nenhuma","10°C a 30°C","Alta",
-         "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Lavandula_angustifolia_%27Hidcote%27.jpg/320px-Lavandula_angustifolia_%27Hidcote%27.jpg",""],
-        // Samambaia
-        ["Samambaia","Nephrolepis exaltata","Samambaia ornamental de folhas delicadas","Planta da família Nephrolepidaceae usada em vasos",
-         "Magnoliophyta","Magnoliopsida","Polypodiales","Nephrolepidaceae","Nephrolepis","Nephrolepis exaltata",
-         "Sem fruto","América Tropical","Samambaia","Divisão de touceiras","Não é tóxica","Baixa",
-         "Até 1.2 m","Verde","Perene","Todo o ano",
-         "Meia-sombra","Abundante","Médio","Orgânico",
-         "Manter solo úmido","Adubação líquida mensal","Remover frondes secas","Cochonilhas",
-         "Manhã","Abundante","Mensal","Líquido","Todo o ano","Tesoura","Baixa","Médio",
-         "Divisão de touceiras","Meia-sombra","Manutenção moderada",
-         "Todo o ano","0.3 m","4-6 horas","Proteção parcial","15°C a 28°C","Média",
-         "",""]
+    // Cabeçalho
+    const headerRow = wsDados.getRow(1)
+    headerRow.getCell(1).value = "Campo"
+    headerRow.getCell(2).value = "Valor"
+    headerRow.getCell(3).value = "Nota"
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } }
+    headerRow.eachCell(cell => { cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF333333" } } })
+
+    // Dados de exemplo (3 plantas)
+    const plantExamples = [
+        {
+            name: "Morango", scientificName: "Fragaria × ananassa",
+            simpleDescription: "Planta rasteira frutífera",
+            description: "Planta herbácea da família Rosaceae muito cultivada por seus frutos",
+            Filo: "Magnoliophyta", Classe: "Magnoliopsida", Ordem: "Rosales", Family: "Rosaceae", Genero: "Fragaria", Especie: "Fragaria × ananassa",
+            fruit: "Bagas", origin: "América do Sul", type: "Frutífera", propagation: "Sementes", toxicity: "Não é tóxica", dificulty: "Média",
+            height: "Até 0.3 m", flowercolor: "Branco", foliage: "Perene", flowering: "Primavera/Verão",
+            light: "Sol pleno", water: "Abundante", size: "Pequeno", soil: "Rico em matéria orgânica",
+            watering: "Rega frequente", fertilizing: "Adubação NPK 10-10-10 a cada 15 dias", pruning: "Poda de folhas secas", pests: "Pulgões e cochonilhas",
+            manha: "Início da manhã", amount: "Moderada", frequency: "Semanal", NPK: "10-10-10", season: "Primavera", tools: "Tesoura de poda", prevention: "Baixa", monitoring: "Baixo",
+            planting: "Plantar em local ensolarado", exhibition: "Exposição externa", maintenance: "Manutenção moderada",
+            station: "Primavera", spacing: "0.3 m", iluminosity: "6-8 horas", protection: "Nenhuma", idealTemperature: "15°C a 25°C", tolerance: "Alta",
+            imageUrl1: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Fragaria_%C3%97_ananassa_-_Blumenau.jpg/320px-Fragaria_%C3%97_ananassa_-_Blumenau.jpg"
+        },
+        {
+            name: "Lavanda", scientificName: "Lavandula angustifolia",
+            simpleDescription: "Erva aromática com flores roxas",
+            description: "Planta perene da família Lamiaceae usada em aromaterapia",
+            Filo: "Magnoliophyta", Classe: "Magnoliopsida", Ordem: "Lamiales", Family: "Lamiaceae", Genero: "Lavandula", Especie: "Lavandula angustifolia",
+            fruit: "Noz", origin: "Mediterrâneo", type: "Arbusto", propagation: "Estacas", toxicity: "Não é tóxica", dificulty: "Média",
+            height: "Até 0.8 m", flowercolor: "Rosa ou roxo", foliage: "Sempre-verde", flowering: "Verão",
+            light: "Sol pleno", water: "Pouca", size: "Pequeno", soil: "Arenoso",
+            watering: "Rega espaçada", fertilizing: "Adubação orgânica na primavera", pruning: "Poda após floração", pests: "Pulgões e fungos",
+            manha: "Início da manhã", amount: "Pouca", frequency: "Mensal", NPK: "Orgânico", season: "Primavera", tools: "Tesoura", prevention: "Baixa", monitoring: "Baixo",
+            planting: "Estacas na primavera", exhibition: "Exposição externa", maintenance: "Manutenção baixa",
+            station: "Primavera", spacing: "0.4 m", iluminosity: "8-12 horas", protection: "Nenhuma", idealTemperature: "10°C a 30°C", tolerance: "Alta",
+            imageUrl1: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Lavandula_angustifolia_%27Hidcote%27.jpg/320px-Lavandula_angustifolia_%27Hidcote%27.jpg"
+        },
+        {
+            name: "Samambaia", scientificName: "Nephrolepis exaltata",
+            simpleDescription: "Samambaia ornamental de folhas delicadas",
+            description: "Planta da família Nephrolepidaceae usada em vasos",
+            Filo: "Magnoliophyta", Classe: "Magnoliopsida", Ordem: "Polypodiales", Family: "Nephrolepidaceae", Genero: "Nephrolepis", Especie: "Nephrolepis exaltata",
+            fruit: "Sem fruto", origin: "América Tropical", type: "Samambaia", propagation: "Divisão de touceiras", toxicity: "Não é tóxica", dificulty: "Baixa",
+            height: "Até 1.2 m", flowercolor: "Verde", foliage: "Perene", flowering: "Todo o ano",
+            light: "Meia-sombra", water: "Abundante", size: "Médio", soil: "Orgânico",
+            watering: "Manter solo úmido", fertilizing: "Adubação líquida mensal", pruning: "Remover frondes secas", pests: "Cochonilhas",
+            manha: "Manhã", amount: "Abundante", frequency: "Mensal", NPK: "Líquido", season: "Todo o ano", tools: "Tesoura", prevention: "Baixa", monitoring: "Médio",
+            planting: "Divisão de touceiras", exhibition: "Meia-sombra", maintenance: "Manutenção moderada",
+            station: "Todo o ano", spacing: "0.3 m", iluminosity: "4-6 horas", protection: "Proteção parcial", idealTemperature: "15°C a 28°C", tolerance: "Média"
+        }
     ]
 
-    const dados = [headerRow, ...exemplos]
-    const wsDados = XLSX.utils.aoa_to_sheet(dados)
+    let currentRow = 2
 
-    // Larguras das colunas
-    wsDados["!cols"] = headers.map(h => ({ wch: Math.max(h.length + 2, 18) }))
+    plantExamples.forEach((plant, plantIndex) => {
+        // Linha separadora da planta
+        const sepRow = wsDados.getRow(currentRow)
+        sepRow.getCell(1).value = `── PLANTA ${plantIndex + 1} ──`
+        sepRow.font = { bold: true, size: 12, color: { argb: "FF333333" } }
+        sepRow.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
+        sepRow.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
+        sepRow.getCell(3).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
+        currentRow++
 
-    XLSX.utils.book_append_sheet(wb, wsDados, "Dados")
+        // Campos da planta
+        VERTICAL_FIELDS.forEach(field => {
+            const row = wsDados.getRow(currentRow)
+            const label = field.required ? `${field.label} *` : field.label
+            row.getCell(1).value = label
+            row.getCell(2).value = plant[field.key] || ""
+            row.getCell(3).value = field.section
 
-    // Gerar buffer XLSX
-    const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" })
+            // Cor da seção no label
+            row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + field.color } }
+            if (field.fontColor) {
+                row.getCell(1).font = { color: { argb: "FF" + field.fontColor } }
+            }
 
+            currentRow++
+        })
+
+        // Linha em branco entre plantas
+        currentRow++
+    })
+
+    // Gerar buffer
+    const buffer = await wb.xlsx.writeBuffer()
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     res.setHeader("Content-Disposition", 'attachment; filename="template_plantas.xlsx"')
     res.send(buffer)
 })
 
-// Importar CSV
+// Mapeamento de label vertical -> campo interno
+const VERTICAL_LABEL_TO_FIELD = {}
+VERTICAL_FIELDS.forEach(f => { VERTICAL_LABEL_TO_FIELD[f.label] = f.key })
+// Aceitar labels com asterisco (obrigatório)
+VERTICAL_FIELDS.forEach(f => { VERTICAL_LABEL_TO_FIELD[f.label + " *"] = f.key })
+
+// Parse XLSX vertical -> array de plantas
+function parseVerticalXlsx(buffer) {
+    const wb = new ExcelJS.Workbook()
+    return wb.xlsx.load(buffer).then(() => {
+        const ws = wb.getWorksheet("Dados")
+        if (!ws) throw new Error("Aba 'Dados' não encontrada no arquivo.")
+
+        const plants = []
+        let currentPlant = null
+
+        ws.eachRow((row, rowNumber) => {
+            if (rowNumber === 1) return // pular cabeçalho
+
+            const colA = (row.getCell(1).value || "").toString().trim()
+            const colB = (row.getCell(2).value || "").toString().trim()
+
+            // Detectar separador de planta
+            if (colA.startsWith("── PLANTA")) {
+                if (currentPlant && currentPlant.name) plants.push(currentPlant)
+                currentPlant = {}
+                return
+            }
+
+            if (!currentPlant) currentPlant = {}
+
+            // Mapear label -> campo
+            const fieldKey = VERTICAL_LABEL_TO_FIELD[colA]
+            if (fieldKey && colB) {
+                currentPlant[fieldKey] = colB
+            }
+        })
+
+        // Última planta
+        if (currentPlant && currentPlant.name) plants.push(currentPlant)
+        return plants
+    })
+}
+
+// Importar CSV ou XLSX
 plantRoutes.route("/plant/import").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
     try {
-        const { csvContent } = req.body
-        if (!csvContent) {
-            return res.status(400).json({ message: "Nenhum conteúdo CSV fornecido." })
-        }
+        const { csvContent, fileBase64, fileName } = req.body
 
-        let records
-        try {
-            records = parse(csvContent, {
-                columns: true,
-                skip_empty_lines: true,
-                trim: true,
-                bom: true
-            })
-        } catch (e) {
-            return res.status(400).json({ message: "Erro ao ler CSV: " + e.message })
-        }
+        let plants = []
 
-        if (records.length === 0) {
-            return res.status(400).json({ message: "O CSV está vazio." })
-        }
+        // Determinar formato
+        const isXlsx = fileName && (fileName.endsWith(".xlsx") || fileName.endsWith(".xls"))
 
-        // Mapear labels do CSV -> campos internos
-        const labelToField = {}
-        CSV_FIELDS.forEach(f => { labelToField[CSV_LABELS[f]] = f })
-
-        const results = { total: records.length, success: 0, errors: [], plants: [] }
-
-        for (let i = 0; i < records.length; i++) {
-            const row = records[i]
-            const rowNum = i + 2
-
-            // Mapear labels -> campos
-            const plant = {}
-            for (const [label, value] of Object.entries(row)) {
-                const field = labelToField[label] || label
-                if (CSV_FIELDS.includes(field) && value && value.trim()) {
-                    plant[field] = value.trim()
-                }
+        if (isXlsx && fileBase64) {
+            // XLSX vertical
+            try {
+                const buffer = Buffer.from(fileBase64, "base64")
+                plants = await parseVerticalXlsx(buffer)
+            } catch (e) {
+                return res.status(400).json({ message: "Erro ao ler planilha: " + e.message })
             }
+        } else if (csvContent) {
+            // CSV horizontal
+            let records
+            try {
+                records = parse(csvContent, { columns: true, skip_empty_lines: true, trim: true, bom: true })
+            } catch (e) {
+                return res.status(400).json({ message: "Erro ao ler CSV: " + e.message })
+            }
+            if (records.length === 0) {
+                return res.status(400).json({ message: "O arquivo está vazio." })
+            }
+            const labelToField = {}
+            CSV_FIELDS.forEach(f => { labelToField[CSV_LABELS[f]] = f })
+            for (const row of records) {
+                const plant = {}
+                for (const [label, value] of Object.entries(row)) {
+                    const field = labelToField[label] || label
+                    if (CSV_FIELDS.includes(field) && value && value.trim()) {
+                        plant[field] = value.trim()
+                    }
+                }
+                if (plant.name) plants.push(plant)
+            }
+        } else {
+            return res.status(400).json({ message: "Nenhum conteúdo fornecido." })
+        }
 
-            // Validação: name obrigatório
+        if (plants.length === 0) {
+            return res.status(400).json({ message: "Nenhuma planta encontrada no arquivo." })
+        }
+
+        const results = { total: plants.length, success: 0, errors: [], plants: [] }
+
+        for (let i = 0; i < plants.length; i++) {
+            const plant = plants[i]
+            const rowNum = i + 1
+
             if (!plant.name) {
                 results.errors.push({ row: rowNum, message: "Nome popular é obrigatório." })
                 continue
@@ -691,7 +853,7 @@ plantRoutes.route("/plant/import").post(authenticateToken, authorizeRoles("ADM")
                 }
             }
 
-            // Extrair URLs de imagem (não salvar no documento)
+            // Extrair URLs de imagem
             const imageUrls = [plant.imageUrl1, plant.imageUrl2].filter(Boolean)
             delete plant.imageUrl1
             delete plant.imageUrl2

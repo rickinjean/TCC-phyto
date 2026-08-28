@@ -6,6 +6,8 @@ import authFetch from "../authFetch"
 export default function ImportCSV() {
     const [file, setFile] = useState(null)
     const [csvContent, setCsvContent] = useState("")
+    const [fileBase64, setFileBase64] = useState("")
+    const [fileName, setFileName] = useState("")
     const [preview, setPreview] = useState(null)
     const [loading, setLoading] = useState(false)
     const [result, setResult] = useState(null)
@@ -16,30 +18,49 @@ export default function ImportCSV() {
     function handleFileChange(e) {
         const selected = e.target.files[0]
         if (!selected) return
-        if (!selected.name.endsWith(".csv")) {
-            alert("Selecione um arquivo .csv")
+        const isCsv = selected.name.endsWith(".csv")
+        const isXlsx = selected.name.endsWith(".xlsx") || selected.name.endsWith(".xls")
+        if (!isCsv && !isXlsx) {
+            alert("Selecione um arquivo .csv ou .xlsx")
             return
         }
         setFile(selected)
+        setFileName(selected.name)
         setResult(null)
-        const reader = new FileReader()
-        reader.onload = (ev) => {
-            const content = ev.target.result
-            setCsvContent(content)
-            const lines = content.split("\n").filter(l => l.trim())
-            setPreview({ totalLines: lines.length - 1, headers: lines[0] })
+
+        if (isXlsx) {
+            // Ler XLSX como base64
+            const reader = new FileReader()
+            reader.onload = (ev) => {
+                const base64 = ev.target.result.split(",")[1]
+                setFileBase64(base64)
+                setCsvContent("")
+                setPreview({ totalLines: "?", note: "Planilha XLSX — será processada no servidor" })
+            }
+            reader.readAsDataURL(selected)
+        } else {
+            // Ler CSV como texto
+            const reader = new FileReader()
+            reader.onload = (ev) => {
+                const content = ev.target.result
+                setCsvContent(content)
+                setFileBase64("")
+                const lines = content.split("\n").filter(l => l.trim())
+                setPreview({ totalLines: lines.length - 1, headers: lines[0] })
+            }
+            reader.readAsText(selected, "UTF-8")
         }
-        reader.readAsText(selected, "UTF-8")
     }
 
     async function handleImport() {
-        if (!csvContent) return
+        if (!csvContent && !fileBase64) return
         setLoading(true)
         try {
+            const body = csvContent ? { csvContent } : { fileBase64, fileName }
             const res = await authFetch(`${API_URL}/plant/import`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ csvContent })
+                body: JSON.stringify(body)
             })
             if (!res || !res.ok) {
                 const err = res ? await res.json().catch(() => ({})) : {}
@@ -97,7 +118,7 @@ export default function ImportCSV() {
                         <div className="flex-grow-1">
                             <h5 className="mb-1">Baixar modelo da planilha</h5>
                             <p className="text-muted mb-0 small">
-                                O modelo é um arquivo Excel (.xlsx) com cabeçalhos coloridos e exemplos. Abra no Google Sheets.
+                                O modelo é um arquivo Excel (.xlsx) com layout vertical colorido. Abra no Google Sheets.
                             </p>
                         </div>
                         <button className="btn btn-outline-success" onClick={downloadTemplate}>
@@ -115,19 +136,19 @@ export default function ImportCSV() {
                         <div className="flex-grow-1">
                             <h5 className="mb-1">Enviar planilha preenchida</h5>
                             <p className="text-muted mb-0 small">
-                                No Google Sheets: Arquivo &gt; Fazer download &gt; CSV. Envie o arquivo .csv gerado.
+                                Envie o arquivo .xlsx preenchido — ou exporte como CSV no Google Sheets.
                             </p>
                         </div>
                         <div>
                             <input
                                 ref={fileRef}
                                 type="file"
-                                accept=".csv"
+                                accept=".csv,.xlsx,.xls"
                                 className="d-none"
                                 onChange={handleFileChange}
                             />
                             <button className="btn btn-outline-primary" onClick={() => fileRef.current?.click()}>
-                                📄 Selecionar CSV
+                                📄 Selecionar arquivo
                             </button>
                         </div>
                     </div>
@@ -245,10 +266,10 @@ export default function ImportCSV() {
                     <h6 className="card-title">💡 Como funciona</h6>
                     <ul className="mb-0 small text-muted">
                         <li>Baixe a planilha Excel (.xlsx) e abra no Google Sheets</li>
-                        <li>Preencha na aba <strong>"Dados"</strong> — cada linha = uma planta</li>
-                        <li>A aba <strong>"Instruções"</strong> explica cada seção</li>
-                        <li>No Google Sheets: <strong>Arquivo &gt; Fazer download &gt; CSV</strong></li>
-                        <li>Envie o CSV gerado neste formulário</li>
+                        <li>Na aba <strong>"Dados"</strong>, preencha a coluna <strong>"Valor"</strong> ao lado de cada campo</li>
+                        <li>Cada planta ocupa um bloco de linhas separado por um separador</li>
+                        <li>Para adicionar mais plantas, copie um bloco de campos</li>
+                        <li>Envie o arquivo <strong>.xlsx</strong> preenchido — ou exporte como CSV</li>
                         <li><strong>Nome Popular</strong> e <strong>Nome Científico</strong> são os únicos campos obrigatórios</li>
                         <li>Campos de seleção aceitam o texto — se não existir, será criado automaticamente</li>
                         <li>URLs de imagem são opcionais — deixe vazio se não tiver foto</li>
