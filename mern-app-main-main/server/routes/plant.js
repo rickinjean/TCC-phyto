@@ -472,34 +472,48 @@ plantRoutes.route("/templates/:id").delete(authenticateToken, authorizeRoles("AD
 const { parse } = require("csv-parse/sync")
 
 const CSV_FIELDS = [
+    // === IDENTIFICAÇÃO ===
     "name", "scientificName", "simpleDescription", "description",
-    "fruit", "origin", "type", "propagation", "toxicity", "dificulty",
+    // === CLASSIFICAÇÃO BOTÂNICA ===
     "Filo", "Classe", "Ordem", "Family", "Genero", "Especie",
+    // === CARACTERÍSTICAS ===
+    "fruit", "origin", "type", "propagation", "toxicity", "dificulty",
     "height", "flowercolor", "foliage", "flowering",
+    // === CUIDADOS BÁSICOS ===
     "light", "water", "size", "soil",
+    // === MANUTENÇÃO ===
     "watering", "fertilizing", "pruning", "pests",
     "manha", "amount", "frequency", "NPK", "season", "tools", "prevention", "monitoring",
+    // === PLANTIO & CULTIVO ===
     "planting", "exhibition", "maintenance",
     "station", "spacing", "iluminosity", "protection", "idealTemperature", "tolerance",
+    // === IMAGENS ===
     "imageUrl1", "imageUrl2"
 ]
 
 const CSV_LABELS = {
+    // Identificação
     name: "Nome Popular", scientificName: "Nome Científico",
     simpleDescription: "Descrição Curta", description: "Descrição",
-    fruit: "Fruto", origin: "Origem", type: "Tipo", propagation: "Propagação",
-    toxicity: "Toxicidade", dificulty: "Dificuldade",
+    // Classificação Botânica
     Filo: "Filo", Classe: "Classe", Ordem: "Ordem", Family: "Família",
     Genero: "Gênero", Especie: "Espécie",
+    // Características
+    fruit: "Fruto", origin: "Origem", type: "Tipo", propagation: "Propagação",
+    toxicity: "Toxicidade", dificulty: "Dificuldade",
     height: "Altura", flowercolor: "Cor da Flor", foliage: "Folhagem", flowering: "Floração",
+    // Cuidados Básicos
     light: "Luz", water: "Água", size: "Tamanho", soil: "Solo",
+    // Manutenção
     watering: "Irrigação", fertilizing: "Adubação", pruning: "Poda", pests: "Pragas",
     manha: "Horário Rega", amount: "Quantidade Água", frequency: "Freq. Adubação",
     NPK: "NPK", season: "Época Poda", tools: "Ferramenta Poda",
     prevention: "Prevenção Pragas", monitoring: "Monitoramento",
+    // Plantio & Cultivo
     planting: "Plantio", exhibition: "Exposição", maintenance: "Manutenção",
     station: "Estação Plantio", spacing: "Espaçamento", iluminosity: "Luminosidade",
     protection: "Proteção", idealTemperature: "Temperatura Ideal", tolerance: "Tolerância",
+    // Imagens
     imageUrl1: "URL Imagem 1", imageUrl2: "URL Imagem 2"
 }
 
@@ -534,36 +548,60 @@ plantRoutes.route("/plant/import/template").get(authenticateToken, authorizeRole
     const header = CSV_FIELDS.map(f => CSV_LABELS[f] || f).join(",")
     const examples = [
         [
+            // IDENTIFICAÇÃO
             "Morango","Fragaria × ananassa","Planta rasteira frutífera","Planta herbácea da família Rosaceae muito cultivada por seus frutos",
-            "Bagas","América do Sul","Frutífera","Sementes","Não é tóxica","Média",
+            // CLASSIFICAÇÃO BOTÂNICA
             "Magnoliophyta","Magnoliopsida","Rosales","Rosaceae","Fragaria","Fragaria × ananassa",
-            "Até 0.3 m","Branco","Perene","Primavera/Verão","Sol pleno","Abundante","Pequeno","Rico em matéria orgânica",
+            // CARACTERÍSTICAS
+            "Bagas","América do Sul","Frutífera","Sementes","Não é tóxica","Média",
+            "Até 0.3 m","Branco","Perene","Primavera/Verão",
+            // CUIDADOS BÁSICOS
+            "Sol pleno","Abundante","Pequeno","Rico em matéria orgânica",
+            // MANUTENÇÃO
             "Rega frequente","Adubação NPK 10-10-10 a cada 15 dias","Poda de folhas secas","Pulgões e cochonilhas",
             "Início da manhã","Moderada","Semanal","10-10-10","Primavera","Tesoura de poda","Baixa","Baixo",
+            // PLANTIO & CULTIVO
             "Plantar em local ensolarado","Exposição externa","Manutenção moderada",
             "Primavera","0.3 m","6-8 horas","Nenhuma","15°C a 25°C","Alta",
+            // IMAGENS
             "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Fragaria_%C3%97_ananassa_-_Blumenau.jpg/320px-Fragaria_%C3%97_ananassa_-_Blumenau.jpg",""
         ].join(","),
         [
+            // IDENTIFICAÇÃO
             "Lavanda","Lavandula angustifolia","Erva aromática com flores roxas","Planta perene da família Lamiaceae usada em aromaterapia",
-            "Noz","Mediterrâneo","Arbusto","Estacas","Não é tóxica","Média",
+            // CLASSIFICAÇÃO BOTÂNICA
             "Magnoliophyta","Magnoliopsida","Lamiales","Lamiaceae","Lavandula","Lavandula angustifolia",
-            "Até 0.8 m","Rosa ou roxo","Sempre-verde","Verão","Sol pleno","Pouca","Pequeno","Arenoso",
+            // CARACTERÍSTICAS
+            "Noz","Mediterrâneo","Arbusto","Estacas","Não é tóxica","Média",
+            "Até 0.8 m","Rosa ou roxo","Sempre-verde","Verão",
+            // CUIDADOS BÁSICOS
+            "Sol pleno","Pouca","Pequeno","Arenoso",
+            // MANUTENÇÃO
             "Rega espaçada","Adubação orgânica na primavera","Poda após floração","Pulgões e fungos",
             "Início da manhã","Pouca","Mensal","Orgânico","Primavera","Tesoura","Baixa","Baixo",
+            // PLANTIO & CULTIVO
             "Estacas na primavera","Exposição externa","Manutenção baixa",
             "Primavera","0.4 m","8-12 horas","Nenhuma","10°C a 30°C","Alta",
+            // IMAGENS
             "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Lavandula_angustifolia_%27Hidcote%27.jpg/320px-Lavandula_angustifolia_%27Hidcote%27.jpg",""
         ].join(","),
         [
+            // IDENTIFICAÇÃO
             "Samambaia","Nephrolepis exaltata","Samambaia ornamental de folhas delicadas","Planta da família Nephrolepidaceae usada em vasos",
-            "Sem fruto","América Tropical","Samambaia","Divisão de touceiras","Não é tóxica","Baixa",
+            // CLASSIFICAÇÃO BOTÂNICA
             "Magnoliophyta","Magnoliopsida","Polypodiales","Nephrolepidaceae","Nephrolepis","Nephrolepis exaltata",
-            "Até 1.2 m","Verde","Perene","Todo o ano","Meia-sombra","Abundante","Médio","Orgânico",
+            // CARACTERÍSTICAS
+            "Sem fruto","América Tropical","Samambaia","Divisão de touceiras","Não é tóxica","Baixa",
+            "Até 1.2 m","Verde","Perene","Todo o ano",
+            // CUIDADOS BÁSICOS
+            "Meia-sombra","Abundante","Médio","Orgânico",
+            // MANUTENÇÃO
             "Manter solo úmido","Adubação líquida mensal","Remover frondes secas","Cochonilhas",
             "Manhã","Abundante","Mensal","Líquido","Todo o ano","Tesoura","Baixa","Médio",
+            // PLANTIO & CULTIVO
             "Divisão de touceiras","Meia-sombra","Manutenção moderada",
             "Todo o ano","0.3 m","4-6 horas","Proteção parcial","15°C a 28°C","Média",
+            // IMAGENS
             "",""
         ].join(",")
     ]
