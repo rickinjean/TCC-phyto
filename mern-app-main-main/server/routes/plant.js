@@ -607,147 +607,19 @@ const VERTICAL_FIELDS = [
     { key: "imageUrl5", label: "URL Imagem 5", section: "IMAGENS", color: "A5A5A5" },
 ]
 
-// Baixar template XLSX com layout vertical e cores
+// Baixar template XLSX (arquivo estático criado manualmente)
 plantRoutes.route("/plant/import/template").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     try {
-        const wb = new ExcelJS.Workbook()
-        wb.creator = "Phytografia"
-        wb.created = new Date()
-
-        // === ABA 1: INSTRUÇÕES ===
-        const wsInst = wb.addWorksheet("Instruções", { properties: { tabColor: { argb: "FF4472C4" } } })
-        wsInst.getColumn(1).width = 70
-
-        const instrucoes = [
-            { text: "COMO PREENCHER A PLANILHA DE IMPORTAÇÃO", opts: { font: { bold: true, size: 14 } } },
-            { text: "", opts: {} },
-            { text: "PASSO A PASSO:", opts: { font: { bold: true, size: 11 } } },
-            { text: "1. Abra a aba 'Dados'", opts: {} },
-            { text: "2. Cada planta ocupa um bloco de linhas separado por um separador", opts: {} },
-            { text: "3. Preencha a coluna 'Valor' ao lado de cada campo", opts: {} },
-            { text: "4. Campos obrigatórios: Nome Popular e Nome Científico (*)", opts: {} },
-            { text: "5. Campos de seleção aceitam texto — se não existir, será criado", opts: {} },
-            { text: "6. Campos opcionais: deixe vazio se não quiser preencher", opts: {} },
-            { text: "7. Para adicionar mais plantas, copie um bloco inteiro de campos", opts: {} },
-            { text: "", opts: {} },
-            { text: "CORES DAS SEÇÕES:", opts: { font: { bold: true, size: 11 } } },
-            { text: "Verde = Identificação (nome, descrição)", opts: {} },
-            { text: "Azul = Classificação Botânica (família, gênero, espécie)", opts: {} },
-            { text: "Laranja = Características (tipo, origem, toxicidade)", opts: {} },
-            { text: "Amarelo = Cuidados Básicos (luz, água, solo)", opts: {} },
-            { text: "Roxo = Manutenção (irrigação, adubação, poda, pragas)", opts: {} },
-            { text: "Vermelho = Plantio & Cultivo (plantio, estação, temperatura)", opts: {} },
-            { text: "Cinza = Imagens (URLs de fotos)", opts: {} },
-            { text: "", opts: {} },
-            { text: "DICA: Campos com * são obrigatórios", opts: { font: { bold: true } } },
-            { text: "DICA: Para cada planta nova, copie um bloco completo de campos", opts: { font: { bold: true } } },
-        ]
-
-        instrucoes.forEach((item, i) => {
-            const row = wsInst.getRow(i + 1)
-            row.getCell(1).value = item.text
-            if (item.opts.font) row.getCell(1).font = item.opts.font
-        })
-
-        // === ABA 2: DADOS ===
-        const wsDados = wb.addWorksheet("Dados", { properties: { tabColor: { argb: "FF70AD47" } } })
-        wsDados.getColumn(1).width = 25
-        wsDados.getColumn(2).width = 50
-        wsDados.getColumn(3).width = 30
-
-        // Cabeçalho
-        const headerRow = wsDados.getRow(1)
-        headerRow.getCell(1).value = "Campo"
-        headerRow.getCell(2).value = "Valor"
-        headerRow.getCell(3).value = "Seção"
-        headerRow.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 }
-        headerRow.eachCell(cell => {
-            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF333333" } }
-            cell.border = {
-                bottom: { style: "medium", color: { argb: "FF000000" } }
-            }
-        })
-        headerRow.height = 22
-
-        let currentRow = 2
-
-        // Bloco vazio para a PLANTA 1
-        const sepRow = wsDados.getRow(currentRow)
-        sepRow.getCell(1).value = "── PLANTA 1 ──"
-        sepRow.font = { bold: true, size: 12, color: { argb: "FF333333" } }
-        sepRow.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
-        sepRow.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
-        sepRow.getCell(3).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
-        sepRow.height = 24
-        currentRow++
-
-        // Todos os campos verticais (vazios para o usuário preencher)
-        VERTICAL_FIELDS.forEach(field => {
-            const row = wsDados.getRow(currentRow)
-            const label = field.required ? `${field.label} *` : field.label
-            row.getCell(1).value = label
-            row.getCell(2).value = ""
-            row.getCell(3).value = field.section
-
-            // Cor da seção no label
-            const bgColor = field.fontColor ? field.color : field.color
-            row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + bgColor } }
-            if (field.fontColor) {
-                row.getCell(1).font = { color: { argb: "FF" + field.fontColor }, bold: true }
-            } else {
-                row.getCell(1).font = { bold: true }
-            }
-
-            row.getCell(3).font = { color: { argb: "FF666666" }, italic: true }
-
-            currentRow++
-        })
-
-        // Linha em branco
-        currentRow++
-
-        // Bloco vazio para a PLANTA 2 (como exemplo de como copiar)
-        const sepRow2 = wsDados.getRow(currentRow)
-        sepRow2.getCell(1).value = "── PLANTA 2 ──"
-        sepRow2.font = { bold: true, size: 12, color: { argb: "FF333333" } }
-        sepRow2.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
-        sepRow2.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
-        sepRow2.getCell(3).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } }
-        sepRow2.height = 24
-        currentRow++
-
-        // Campos vazios para PLANTA 2
-        VERTICAL_FIELDS.forEach(field => {
-            const row = wsDados.getRow(currentRow)
-            const label = field.required ? `${field.label} *` : field.label
-            row.getCell(1).value = label
-            row.getCell(2).value = ""
-            row.getCell(3).value = field.section
-
-            const bgColor = field.fontColor ? field.color : field.color
-            row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + bgColor } }
-            if (field.fontColor) {
-                row.getCell(1).font = { color: { argb: "FF" + field.fontColor }, bold: true }
-            } else {
-                row.getCell(1).font = { bold: true }
-            }
-            row.getCell(3).font = { color: { argb: "FF666666" }, italic: true }
-
-            currentRow++
-        })
-
-        // Congelar primeira linha (cabeçalho)
-        wsDados.views = [{ state: "frozen", ySplit: 1 }]
-
-        // Gerar buffer com opções de formatação
-        const buffer = await wb.xlsx.writeBuffer({ useStyles: true, useSharedStrings: true })
-
+        const templatePath = path.join(__dirname, "..", "data", "template_plantas.xlsx")
+        if (!fs.existsSync(templatePath)) {
+            return res.status(404).json({ message: "Template não encontrado. Crie o arquivo em server/data/template_plantas.xlsx" })
+        }
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         res.setHeader("Content-Disposition", 'attachment; filename="template_plantas.xlsx"')
-        res.send(Buffer.from(buffer))
+        res.sendFile(templatePath)
     } catch (error) {
-        console.error("Erro ao gerar template:", error)
-        res.status(500).json({ message: "Erro ao gerar template: " + error.message })
+        console.error("Erro ao enviar template:", error)
+        res.status(500).json({ message: "Erro ao enviar template: " + error.message })
     }
 })
 
