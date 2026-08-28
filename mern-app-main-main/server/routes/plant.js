@@ -387,18 +387,17 @@ Prefira valores das OPÇÕES quando disponíveis. Se não tiver certeza, preench
     try {
         const api = axios.create({ timeout: 45000 })
         const res = await api.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
+            `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`,
             {
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.3,
-                    responseMimeType: "application/json"
-                }
+                model: "gemini-3.6-flash",
+                messages: [{ role: "user", content: prompt }],
+                temperature: 0.3,
+                response_format: { type: "json_object" }
             },
-            { headers: { "x-goog-api-key": key, "Content-Type": "application/json" } }
+            { headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" } }
         )
 
-        const text = res.data?.candidates?.[0]?.content?.parts?.[0]?.text
+        const text = res.data?.choices?.[0]?.message?.content
         if (!text) return null
 
         let parsed
