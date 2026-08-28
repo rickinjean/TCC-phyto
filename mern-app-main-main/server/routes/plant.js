@@ -354,4 +354,78 @@ plantRoutes.route("/collections/:name/:id").delete(authenticateToken, authorizeR
     }
 })
 
+/* ==================================================
+   ROTAS DE TEMPLATES
+================================================== */
+
+// LISTAR TODOS OS TEMPLATES
+plantRoutes.route("/templates").get(async function (req, res) {
+    const db_connect = dbo.getDb()
+    try {
+        const result = await db_connect.collection("templates").find({}).toArray()
+        res.status(200).json(result)
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao buscar templates: " + error.message })
+    }
+})
+
+// CRIAR TEMPLATE (ADM)
+plantRoutes.route("/templates/add").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
+    const db_connect = dbo.getDb()
+    try {
+        const { name, fields } = req.body
+        if (!name || !fields) {
+            return res.status(400).json({ message: "Nome e campos são obrigatórios." })
+        }
+        const tmpl = { name, fields, createdAt: new Date() }
+        const result = await db_connect.collection("templates").insertOne(tmpl)
+        res.status(201).json({ _id: result.insertedId, name, fields })
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao criar template: " + error.message })
+    }
+})
+
+// EDITAR TEMPLATE (ADM)
+plantRoutes.route("/templates/:id").put(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
+    const db_connect = dbo.getDb()
+    try {
+        const id = req.params.id
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "ID inválido" })
+        }
+        const { name, fields } = req.body
+        const update = {}
+        if (name) update.name = name
+        if (fields) update.fields = fields
+        const result = await db_connect.collection("templates").updateOne(
+            { _id: new ObjectId(id) },
+            { $set: update }
+        )
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ message: "Template não encontrado." })
+        }
+        res.status(200).json({ message: "Template atualizado com sucesso." })
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao atualizar template: " + error.message })
+    }
+})
+
+// DELETAR TEMPLATE (ADM)
+plantRoutes.route("/templates/:id").delete(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
+    const db_connect = dbo.getDb()
+    try {
+        const id = req.params.id
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "ID inválido" })
+        }
+        const result = await db_connect.collection("templates").deleteOne({ _id: new ObjectId(id) })
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: "Template não encontrado." })
+        }
+        res.status(200).json({ message: "Template deletado com sucesso!" })
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao deletar template: " + error.message })
+    }
+})
+
 module.exports = plantRoutes

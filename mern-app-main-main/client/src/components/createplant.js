@@ -181,6 +181,11 @@ export default function Create() {
     const [toast, setToast] = useState(null)
     const [hasDraft, setHasDraft] = useState(false)
     const [pasteValues, setPasteValues] = useState("")
+    const [templates, setTemplates] = useState([])
+    const [templateStep, setTemplateStep] = useState(!searchParams.get("clone"))
+    const [tmplName, setTmplName] = useState("")
+    const [tmplFields, setTmplFields] = useState("")
+    const [tmplEditId, setTmplEditId] = useState(null)
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const autoSaveTimer = useRef(null)
@@ -214,14 +219,20 @@ export default function Create() {
         async function load() {
             setLoading(true)
             try {
-                const res = await fetch(`${API_URL}/collections/all`)
-                if (res.ok) {
-                    const all = await res.json()
+                const [colRes, tmplRes] = await Promise.all([
+                    fetch(`${API_URL}/collections/all`),
+                    fetch(`${API_URL}/templates`)
+                ])
+                if (colRes.ok) {
+                    const all = await colRes.json()
                     const mapped = {}
                     for (const [key, meta] of Object.entries(mapeamentoColecoes)) {
                         mapped[key] = all[meta.colecao] || []
                     }
                     setOpcoesBanco(mapped)
+                }
+                if (tmplRes.ok) {
+                    setTemplates(await tmplRes.json())
                 }
             } catch (err) {
                 console.error("Erro ao carregar coleções:", err)
@@ -379,6 +390,93 @@ export default function Create() {
         }
     }
 
+    /* ── TEMPLATES ── */
+    function applyTemplate(tmpl) {
+        updateForm(tmpl.fields)
+        setTemplateStep(false)
+        showToast(`Template "${tmpl.name}" aplicado! Ajuste os campos e preencha o restante.`)
+    }
+
+    function skipTemplate() {
+        setTemplateStep(false)
+    }
+
+    async function saveTemplate() {
+        if (!tmplName.trim()) {
+            showToast("Digite um nome para o template.", "error")
+            return
+        }
+        const fieldsToSave = {}
+        ALL_FIELDS.forEach(k => {
+            if (form[k] && String(form[k]).trim() !== "") {
+                fieldsToSave[k] = form[k]
+            }
+        })
+        if (Object.keys(fieldsToSave).length === 0) {
+            showToast("Preencha pelo menos um campo antes de salvar como template.", "error")
+            return
+        }
+        const token = localStorage.getItem("token")
+        const headers = { "Content-Type": "application/json" }
+        if (token) headers.Authorization = `Bearer ${token}`
+        try {
+            let res
+            if (tmplEditId) {
+                res = await fetch(`${API_URL}/templates/${tmplEditId}`, {
+                    method: "PUT", headers,
+                    body: JSON.stringify({ name: tmplName, fields: fieldsToSave })
+                })
+            } else {
+                res = await fetch(`${API_URL}/templates/add`, {
+                    method: "POST", headers,
+                    body: JSON.stringify({ name: tmplName, fields: fieldsToSave })
+                })
+            }
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}))
+                showToast(err.message || "Erro ao salvar template.", "error")
+                return
+            }
+            const data = await res.json()
+            if (tmplEditId) {
+                setTemplates(prev => prev.map(t => t._id === tmplEditId ? { ...t, name: tmplName, fields: fieldsToSave } : t))
+                showToast("Template atualizado!")
+            } else {
+                setTemplates(prev => [...prev, { _id: data._id, name: tmplName, fields: fieldsToSave }])
+                showToast("Template salvo!")
+            }
+            setTmplName("")
+            setTmplFields("")
+            setTmplEditId(null)
+            const btn = document.querySelector('#modalManageTemplates [data-bs-dismiss="modal"]')
+            if (btn) btn.click()
+        } catch {
+            showToast("Erro ao conectar ao servidor.", "error")
+        }
+    }
+
+    function editTemplate(tmpl) {
+        setTmplEditId(tmpl._id)
+        setTmplName(tmpl.name)
+        setTmplFields(Object.entries(tmpl.fields).map(([k, v]) => `${k}: ${v}`).join("\n"))
+    }
+
+    async function deleteTemplate(id) {
+        if (!window.confirm("Tem certeza que deseja excluir este template?")) return
+        const token = localStorage.getItem("token")
+        const headers = {}
+        if (token) headers.Authorization = `Bearer ${token}`
+        try {
+            const res = await fetch(`${API_URL}/templates/${id}`, { method: "DELETE", headers })
+            if (res.ok) {
+                setTemplates(prev => prev.filter(t => t._id !== id))
+                showToast("Template excluído!")
+            }
+        } catch {
+            showToast("Erro ao excluir template.", "error")
+        }
+    }
+
     const onSubmit = useCallback(async (e) => {
         e.preventDefault()
         setSubmitting(true)
@@ -496,7 +594,44 @@ export default function Create() {
                 )}
             </div>
 
-            {/* ── BARRA DE PROGRESSO ── */}
+            {/* ── SELEÇÃO DE TEMPLATE ── */}
+            {templateStep && (
+                <div className="wizard-template-select">
+                    <div className="wizard-step-header">
+                        <h4>📋 Escolher Template</h4>
+                        <p>Selecione um template para pré-preencher os campos ou comece do zero.</p>
+                    </div>
+                    <div className="row">
+                        <div className="col-md-4 mb-3">
+                            <div className="card h-100 border-0 shadow-sm wizard-template-card" role="button" onClick={skipTemplate}>
+                                <div className="card-body text-center">
+                                    <div style={{ fontSize: "2rem" }}>📝</div>
+                                    <h6 className="card-title mt-2 mb-1">Em branco</h6>
+                                    <small className="text-muted">Começar do zero</small>
+                                </div>
+                            </div>
+                        </div>
+                        {templates.map(t => (
+                            <div className="col-md-4 mb-3" key={t._id}>
+                                <div className="card h-100 border-0 shadow-sm wizard-template-card" role="button" onClick={() => applyTemplate(t)}>
+                                    <div className="card-body text-center">
+                                        <div style={{ fontSize: "2rem" }}>🌿</div>
+                                        <h6 className="card-title mt-2 mb-1">{t.name}</h6>
+                                        <small className="text-muted">{Object.keys(t.fields).length} campo(s) pré-preenchido(s)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="d-flex justify-content-end mt-2">
+                        <button type="button" className="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalManageTemplates">
+                            ⚙️ Gerenciar templates
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {!templateStep && (<>
             <div className="wizard-progress mb-3">
                 <div className="d-flex justify-content-between align-items-center mb-1">
                     <span className="wizard-progress__label">
@@ -978,6 +1113,7 @@ export default function Create() {
                     )}
                 </div>
             </form>
+            </>)}
 
             {/* ── MODAL DE COLEÇÕES ── */}
             <div className="modal fade" id="modalDinamico" tabIndex="-1" aria-hidden="true">
@@ -1066,6 +1202,68 @@ export default function Create() {
                         <div className="modal-footer">
                             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                             <button type="button" className="btn btn-primary" onClick={applyPastedValues}>Aplicar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── MODAL GERENCIAR TEMPLATES ── */}
+            <div className="modal fade" id="modalManageTemplates" tabIndex="-1" aria-hidden="true">
+                <div className="modal-dialog modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">⚙️ Gerenciar Templates</h5>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="mb-3">
+                                <label className="form-label fw-semibold">{tmplEditId ? "Editar template" : "Novo template"}</label>
+                                <input
+                                    type="text"
+                                    className="form-control mb-2"
+                                    placeholder="Nome do template (ex: Frutífera)"
+                                    value={tmplName}
+                                    onChange={e => setTmplName(e.target.value)}
+                                />
+                                <textarea
+                                    className="form-control"
+                                    rows="6"
+                                    placeholder={"Campos pré-preenchidos (um por linha, formato campo: valor):\n\nEx:\ntype: Frutífera\nlight: Sol pleno\nwater: Abundante\nsoil: Rico em matéria orgânica\ndificulty: Média\npropagation: Sementes"}
+                                    value={tmplFields}
+                                    onChange={e => setTmplFields(e.target.value)}
+                                />
+                                <small className="text-muted">Formato: <code>campo: valor</code> um por linha. Campos válidos: name, scientificName, type, origin, light, water, soil, toxicity, dificulty, height, flowercolor, foliage, flowering, propagation, fruit, manha, amount, frequency, NPK, season, tools, prevention, monitoring, station, spacing, iluminosity, protection, idealTemperature, tolerance, planting, exhibition, maintenance, watering, fertilizing, pruning, pests, simpleDescription, description.</small>
+                                <div className="mt-2 d-flex gap-2">
+                                    <button type="button" className="btn btn-sm btn-success" onClick={saveTemplate}>
+                                        {tmplEditId ? "Atualizar" : "Salvar template"}
+                                    </button>
+                                    {tmplEditId && (
+                                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { setTmplEditId(null); setTmplName(""); setTmplFields("") }}>
+                                            Cancelar edição
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            <hr />
+                            <h6>Templates existentes ({templates.length})</h6>
+                            {templates.length === 0 && <p className="text-muted">Nenhum template cadastrado ainda.</p>}
+                            <ul className="list-group">
+                                {templates.map(t => (
+                                    <li key={t._id} className="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{t.name}</strong>
+                                            <small className="text-muted ms-2">{Object.keys(t.fields).length} campo(s)</small>
+                                        </div>
+                                        <div className="d-flex gap-1">
+                                            <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => editTemplate(t)}>Editar</button>
+                                            <button className="btn btn-sm btn-outline-danger" type="button" onClick={() => deleteTemplate(t._id)}>Excluir</button>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                         </div>
                     </div>
                 </div>
