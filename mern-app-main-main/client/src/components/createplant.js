@@ -4,7 +4,6 @@ import API_URL from "../config"
 import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
 import SearchableSelect from "./SearchableSelect"
-import PlantSuggestBar from "./PlantSuggestBar"
 
 const STEPS = [
     { key: "basicos", label: "Dados Básicos", icon: "🌱" },
@@ -320,100 +319,37 @@ export default function Create() {
         if (btn) btn.click()
     }
 
-    // Preenchimento automático da classificação taxonômica via APIs (Gemini + GBIF)
-    async function handleTaxonomySuggest() {
-        const query = [form.Especie, form.Genero, form.name].map(s => (s || "").trim()).filter(Boolean).join(" ")
-        if (!query) {
-            showToast("Preencha o Nome, Gênero ou a Espécie para buscar.", "error")
-            return
-        }
+    // Autocomplete da classificação taxonômica a partir do gênero
+    async function handleGenusSuggest() {
+        const genero = (form.Genero || "").trim()
+        if (!genero) return
         try {
-            const res = await fetch(`${API_URL}/plant/suggest?${new URLSearchParams({ q: query })}`)
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}))
-                showToast(err.message || "Não foi possível identificar a classificação.", "error")
+            const search = new URLSearchParams({ search: genero })
+            const res = await fetch(`${API_URL}/plant/?${search.toString()}`)
+            if (!res.ok) return
+            const plants = await res.json()
+            const match = plants.find(p =>
+                p.Genero && p.Genero.trim().toLowerCase() === genero.toLowerCase()
+            )
+            if (!match) {
+                showToast("Nenhuma planta com esse gênero foi encontrada.", "error")
                 return
             }
-            const data = await res.json()
-            const fields = data.results && data.results[0] && data.results[0].fields
-            if (!fields) {
-                showToast("Nenhuma classificação encontrada para essa busca.", "error")
-                return
+            const update = {}
+            if (!form.Filo) update.Filo = match.Filo || ""
+            if (!form.Classe) update.Classe = match.Classe || ""
+            if (!form.Ordem) update.Ordem = match.Ordem || ""
+            if (!form.Family) update.Family = match.Family || ""
+            if (!form.Especie) update.Especie = match.Especie || ""
+            if (Object.keys(update).length > 0) {
+                updateForm(update)
+                showToast(`Dados taxonômicos de "${match.name}" preenchidos.`)
+            } else {
+                showToast("Gênero já tem dados preenchidos.")
             }
-            updateForm({
-                Filo: fields.Filo || "",
-                Classe: fields.Classe || "",
-                Ordem: fields.Ordem || "",
-                Family: fields.Family || "",
-                Genero: fields.Genero || "",
-                Especie: fields.Especie || ""
-            })
-            showToast("Classificação taxonômica preenchida automaticamente via API.")
         } catch {
-            showToast("Erro ao consultar a base taxonômica.", "error")
+            showToast("Erro ao buscar dados do gênero.", "error")
         }
-    }
-
-    // Normaliza texto para comparação (remove acentos, lowercase)
-    function norm(s) {
-        return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()
-    }
-
-    // Resolve o texto retornado pela API contra o ObjectId da coleção correspondente
-    // Se não encontrar, cria a opção automaticamente no banco
-    async function resolveCollectionField(fieldName, textValue) {
-        if (!textValue || !mapeamentoColecoes[fieldName]) return textValue
-        const options = opcoesBanco[fieldName] || []
-        const normalizedText = norm(textValue)
-        const exact = options.find(o => norm(o.name) === normalizedText)
-        if (exact) return exact._id
-        const partial = options.find(o => normalizedText.includes(norm(o.name)) || norm(o.name).includes(normalizedText))
-        if (partial) return partial._id
-        // Não encontrou — cria a opção automaticamente
-        try {
-            const res = await authFetch(`${API_URL}/collections/${mapeamentoColecoes[fieldName].colecao}/add`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: textValue })
-            })
-            if (res && res.ok) {
-                const item = await res.json()
-                setOpcoesBanco(prev => ({
-                    ...prev,
-                    [fieldName]: [...(prev[fieldName] || []), item]
-                }))
-                return item._id
-            }
-        } catch { /* falha silenciosa — usa o texto puro */ }
-        return textValue
-    }
-
-    // Aplica o auto-preenchimento completo de uma planta sugerida
-    async function applySuggestion(fields) {
-        const collectionKeys = Object.entries(fields).filter(([k, v]) => {
-            if (v === null || v === undefined || String(v).trim() === "") return false
-            return !!mapeamentoColecoes[k]
-        })
-        const textKeys = Object.entries(fields).filter(([k, v]) => {
-            if (v === null || v === undefined || String(v).trim() === "") return false
-            return !mapeamentoColecoes[k]
-        })
-
-        const resolved = {}
-        textKeys.forEach(([k, v]) => { resolved[k] = v })
-
-        // Resolve coleções em paralelo (cria opções automaticamente se necessário)
-        const results = await Promise.all(
-            collectionKeys.map(async ([k, v]) => {
-                const resolvedId = await resolveCollectionField(k, v)
-                return [k, resolvedId]
-            })
-        )
-        results.forEach(([k, v]) => { resolved[k] = v })
-
-        updateForm(resolved)
-        const count = Object.keys(resolved).length
-        showToast(`Auto-preenchimento aplicado (${count} campos). Revise os dados antes de salvar.`)
     }
 
     const onSubmit = useCallback(async (e) => {
@@ -577,9 +513,6 @@ export default function Create() {
                             <h4>🌱 Dados Básicos</h4>
                             <p>Nome, imagem e descrição da planta</p>
                         </div>
-                        <div className="wizard-step-content__suggest mb-3">
-                            <PlantSuggestBar onApply={applySuggestion} />
-                        </div>
                         <div className="row">
                             <div className="col-md-6 mb-3">
                                 <label className="wizard-label">Nome Popular <span className="text-danger">*</span></label>
@@ -672,25 +605,16 @@ export default function Create() {
                                 <SelectField campo="dificulty" placeholder="Nível de cuidado..." />
                             </div>
                         </div>
-                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div className="d-flex justify-content-between align-items-center">
                             <h5 className="wizard-subtitle mb-0">Classificação Taxonômica</h5>
-                            <div className="d-flex gap-2">
-                                <button
-                                    type="button"
-                                    className="btn btn-sm btn-success"
-                                    onClick={handleTaxonomySuggest}
-                                >
-                                    🔍 Preencher classificação
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-secondary"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#modalPaste"
-                                >
-                                    📋 Colar valores
-                                </button>
-                            </div>
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalPaste"
+                            >
+                                📋 Colar valores
+                            </button>
                         </div>
                         <div className="row mt-2">
                             <div className="col-md-2 col-4 mb-3">
@@ -711,7 +635,7 @@ export default function Create() {
                             </div>
                             <div className="col-md-2 col-4 mb-3">
                                 <FieldLabel optional>Gênero</FieldLabel>
-                                <input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} />
+                                <input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} onBlur={handleGenusSuggest} placeholder="Digite e saia do campo" />
                             </div>
                             <div className="col-md-2 col-4 mb-3">
                                 <FieldLabel optional>Espécie</FieldLabel>

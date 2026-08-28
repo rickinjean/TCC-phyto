@@ -4,7 +4,6 @@ import API_URL from "../config"
 import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
 import { decodeId } from "../idCodec"
-import PlantSuggestBar from "./PlantSuggestBar"
 
 const STEPS = [
     { key: "basicos", label: "Dados Básicos", icon: "🌱" },
@@ -155,6 +154,7 @@ export default function Edit() {
     const [novoValorInput, setNovoValorInput] = useState("")
     const [modalSearch, setModalSearch] = useState("")
     const [toast, setToast] = useState(null)
+    const [pasteValues, setPasteValues] = useState("")
     const params = useParams()
     const navigate = useNavigate()
     const realId = decodeId(params.id)
@@ -257,97 +257,49 @@ export default function Edit() {
         }
     }
 
-    // Preenchimento automático da classificação taxonômica via APIs (Gemini + GBIF)
-    async function handleTaxonomySuggest() {
-        const query = [form.Especie, form.Genero, form.name].map(s => (s || "").trim()).filter(Boolean).join(" ")
-        if (!query) {
-            showToast("Preencha o Nome, Gênero ou a Espécie para buscar.", "error")
-            return
-        }
+    function handlePasteValues() {
+        const lines = pasteValues.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean)
+        const targets = ["Filo", "Classe", "Ordem", "Family", "Genero", "Especie"]
+        if (lines.length === 0) return
+        const update = {}
+        lines.slice(0, targets.length).forEach((val, i) => {
+            update[targets[i]] = val
+        })
+        updateForm(update)
+        showToast("Valores distribuídos!")
+        const btn = document.querySelector('#modalPaste [data-bs-dismiss="modal"]')
+        if (btn) btn.click()
+    }
+
+    // Autocomplete da classificação taxonômica a partir do gênero
+    async function handleGenusSuggest() {
+        const genero = (form.Genero || "").trim()
+        if (!genero) return
         try {
-            const res = await fetch(`${API_URL}/plant/suggest?${new URLSearchParams({ q: query })}`)
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}))
-                showToast(err.message || "Não foi possível identificar a classificação.", "error")
-                return
+            const search = new URLSearchParams({ search: genero })
+            const res = await fetch(`${API_URL}/plant/?${search.toString()}`)
+            if (!res.ok) return
+            const plants = await res.json()
+            const match = plants.find(p =>
+                p.Genero && p.Genero.trim().toLowerCase() === genero.toLowerCase()
+            )
+            if (match) {
+                const update = {}
+                if (!form.Filo) update.Filo = match.Filo || ""
+                if (!form.Classe) update.Classe = match.Classe || ""
+                if (!form.Ordem) update.Ordem = match.Ordem || ""
+                if (!form.Family) update.Family = match.Family || ""
+                if (!form.Especie) update.Especie = match.Especie || ""
+                if (Object.keys(update).length > 0) {
+                    updateForm(update)
+                    showToast(`Dados taxonômicos de "${match.name}" preenchidos.`)
+                }
+            } else {
+                showToast("Nenhuma planta com esse gênero foi encontrada.", "error")
             }
-            const data = await res.json()
-            const fields = data.results && data.results[0] && data.results[0].fields
-            if (!fields) {
-                showToast("Nenhuma classificação encontrada para essa busca.", "error")
-                return
-            }
-            updateForm({
-                Filo: fields.Filo || "",
-                Classe: fields.Classe || "",
-                Ordem: fields.Ordem || "",
-                Family: fields.Family || "",
-                Genero: fields.Genero || "",
-                Especie: fields.Especie || ""
-            })
-            showToast("Classificação taxonômica preenchida automaticamente via API.")
         } catch {
-            showToast("Erro ao consultar a base taxonômica.", "error")
+            showToast("Erro ao buscar dados do gênero.", "error")
         }
-    }
-
-    // Normaliza texto para comparação (remove acentos, lowercase)
-    function norm(s) {
-        return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()
-    }
-
-    // Resolve o texto retornado pela API contra o ObjectId da coleção correspondente
-    async function resolveCollectionField(fieldName, textValue) {
-        if (!textValue || !mapeamentoColecoes[fieldName]) return textValue
-        const options = opcoesBanco[fieldName] || []
-        const normalizedText = norm(textValue)
-        const exact = options.find(o => norm(o.name) === normalizedText)
-        if (exact) return exact._id
-        const partial = options.find(o => normalizedText.includes(norm(o.name)) || norm(o.name).includes(normalizedText))
-        if (partial) return partial._id
-        try {
-            const res = await authFetch(`${API_URL}/collections/${mapeamentoColecoes[fieldName].colecao}/add`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: textValue })
-            })
-            if (res && res.ok) {
-                const item = await res.json()
-                setOpcoesBanco(prev => ({
-                    ...prev,
-                    [fieldName]: [...(prev[fieldName] || []), item]
-                }))
-                return item._id
-            }
-        } catch { /* falha silenciosa */ }
-        return textValue
-    }
-
-    // Aplica o auto-preenchimento completo de uma planta sugerida
-    async function applySuggestion(fields) {
-        const collectionKeys = Object.entries(fields).filter(([k, v]) => {
-            if (v === null || v === undefined || String(v).trim() === "") return false
-            return !!mapeamentoColecoes[k]
-        })
-        const textKeys = Object.entries(fields).filter(([k, v]) => {
-            if (v === null || v === undefined || String(v).trim() === "") return false
-            return !mapeamentoColecoes[k]
-        })
-
-        const resolved = {}
-        textKeys.forEach(([k, v]) => { resolved[k] = v })
-
-        const results = await Promise.all(
-            collectionKeys.map(async ([k, v]) => {
-                const resolvedId = await resolveCollectionField(k, v)
-                return [k, resolvedId]
-            })
-        )
-        results.forEach(([k, v]) => { resolved[k] = v })
-
-        updateForm(resolved)
-        const count = Object.keys(resolved).length
-        showToast(`Auto-preenchimento aplicado (${count} campos). Revise os dados antes de salvar.`)
     }
 
     async function onSubmit(e) {
@@ -479,9 +431,6 @@ export default function Edit() {
                             <h4>🌱 Dados Básicos</h4>
                             <p>Nome, imagem e descrição da planta</p>
                         </div>
-                        <div className="wizard-step-content__suggest mb-3">
-                            <PlantSuggestBar onApply={applySuggestion} />
-                        </div>
                         <div className="row">
                             <div className="col-md-6 mb-3">
                                 <label className="wizard-label">Nome Popular <span className="text-danger">*</span></label>
@@ -527,18 +476,18 @@ export default function Edit() {
                             <div className="col-md-4 mb-3"><label className="wizard-label">Toxicidade</label><SelectField campo="toxicity" placeholder="Grau de toxicidade..." /></div>
                             <div className="col-md-4 mb-3"><label className="wizard-label">Dificuldade</label><SelectField campo="dificulty" placeholder="Nível de cuidado..." /></div>
                         </div>
-                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <h5 className="wizard-subtitle mb-0">Classificação Taxonômica</h5>
-                            <button type="button" className="btn btn-sm btn-success" onClick={handleTaxonomySuggest}>
-                                🔍 Preencher classificação
+                        <h5 className="wizard-subtitle">Classificação Taxonômica</h5>
+                        <div className="d-flex justify-content-end mb-2">
+                            <button type="button" className="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalPaste">
+                                📋 Colar valores
                             </button>
                         </div>
-                        <div className="row mt-2">
+                        <div className="row">
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Filo</label><input type="text" className="form-control" value={form.Filo} onChange={e => updateForm({ Filo: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Classe</label><input type="text" className="form-control" value={form.Classe} onChange={e => updateForm({ Classe: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Ordem</label><input type="text" className="form-control" value={form.Ordem} onChange={e => updateForm({ Ordem: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Família</label><input type="text" className="form-control" value={form.Family} onChange={e => updateForm({ Family: e.target.value })} /></div>
-                            <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Gênero</label><input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} /></div>
+                            <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Gênero</label><input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} onBlur={handleGenusSuggest} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Espécie</label><input type="text" className="form-control" value={form.Especie} onChange={e => updateForm({ Especie: e.target.value })} /></div>
                         </div>
                     </div>
@@ -697,6 +646,32 @@ export default function Edit() {
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── MODAL: COLAR VALORES ── */}
+            <div className="modal fade" id="modalPaste" tabIndex="-1" aria-hidden="true">
+                <div className="modal-dialog">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Colar valores da classificação</h5>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div className="modal-body">
+                            <p className="text-muted small mb-2">Cole os valores na ordem: Filo, Classe, Ordem, Família, Gênero, Espécie (um por linha ou separados por vírgula/ponto e vírgula).</p>
+                            <textarea
+                                className="form-control"
+                                rows="6"
+                                placeholder={"Magnoliophyta\nMagnoliopsida\nRosales\nRosaceae\nFragaria\nFragaria × ananassa"}
+                                value={pasteValues}
+                                onChange={e => setPasteValues(e.target.value)}
+                            />
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" className="btn btn-primary" onClick={handlePasteValues}>Distribuir</button>
                         </div>
                     </div>
                 </div>
