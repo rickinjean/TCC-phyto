@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
+import { decodeId } from "../idCodec"
 import SearchableSelect from "./SearchableSelect"
 
 const STEPS = [
@@ -188,12 +189,13 @@ export default function Create() {
     useEffect(() => {
         const cloneId = searchParams.get("clone")
         if (!cloneId) return
+        const realId = decodeId(cloneId)
         async function loadClone() {
             try {
                 const token = localStorage.getItem("token")
                 const headers = {}
                 if (token) headers.Authorization = `Bearer ${token}`
-                const res = await fetch(`${API_URL}/plant/${cloneId}/clone`, { headers })
+                const res = await fetch(`${API_URL}/plant/${realId}/clone`, { headers })
                 if (!res.ok) {
                     showToast("Erro ao buscar planta para clonar.", "error")
                     return
