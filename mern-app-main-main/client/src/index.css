@@ -1732,7 +1732,10 @@ html[data-theme="dark"] .btn-primary:focus {
 .wizard-stepper {
   position: relative;
   display: flex;
-  align-items: center;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 0;
   padding: 1rem 0 1.5rem;
   overflow-x: auto;
@@ -1748,7 +1751,8 @@ html[data-theme="dark"] .btn-primary:focus {
   background: none;
   cursor: pointer;
   z-index: 2;
-  min-width: 70px;
+  flex: 1 1 0;
+  min-width: 0;
   transition: all 200ms ease;
 }
 
@@ -3293,6 +3297,7 @@ html[data-theme="dark"] .custom-navbar__link--dropdown {
   .wizard-stepper__step {
     padding: 0.35rem 0.4rem;
     min-width: 50px;
+    flex: 1 1 0;
   }
 
   .wizard-stepper__number {
