@@ -90,7 +90,7 @@ const PlantCard = (props) => {
                                             src={`${API_URL}${src}`}
                                             alt={`${props.record.name} ${index + 1}`}
                                             className="plant-list-card__image d-block w-100"
-                                            
+                                            loading="lazy"
                                         />
                                     </div>
                                 ))
@@ -100,7 +100,7 @@ const PlantCard = (props) => {
                                         src={props.record.imagePath || PLACEHOLDER_IMG}
                                         alt={props.record.name}
                                         className="plant-list-card__image d-block w-100"
-                                        
+                                        loading="lazy"
                                     />
                                 </div>
                             )}
@@ -153,7 +153,7 @@ const PlantCard = (props) => {
                         {props.record.simpleDescription}
                     </p>
 
-                    <div className="d-flex gap-2 mt-3">
+                    <div className="d-flex gap-2 flex-wrap mt-3">
                         <Link
 className="plant-list-card__details btn btn-sm flex-grow-1"
                             to={`/plantdetails/${encodeId(props.record._id)}`}
@@ -193,10 +193,23 @@ className="plant-list-card__delete btn btn-sm"
     )
 }
 
-const EmptyState = () => (
+const EmptyState = ({ hasActiveFilters, onClear }) => (
     <div className="plant-list-empty col-12 text-center py-5">
         <div className="plant-list-empty__icon">🌱</div>
-        <p className="plant-list-empty__text">Nenhuma planta cadastrada ainda.</p>
+        <p className="plant-list-empty__text">
+            {hasActiveFilters
+                ? "Nenhuma planta encontrada para os filtros aplicados."
+                : "Nenhuma planta cadastrada ainda."}
+        </p>
+        {hasActiveFilters && (
+            <button
+                className="plant-list-empty__clear btn btn-sm btn-outline-secondary"
+                onClick={onClear}
+                type="button"
+            >
+                Limpar Filtros
+            </button>
+        )}
     </div>
 )
 
@@ -431,7 +444,10 @@ export default function PlantList({ role }) {
                         />
                     ))
                 ) : (
-                    <EmptyState />
+                    <EmptyState
+                        hasActiveFilters={hasActiveFilters}
+                        onClear={clearFilters}
+                    />
                 )}
             </div>
         </div>
