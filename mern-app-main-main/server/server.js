@@ -2,8 +2,11 @@ require("dotenv").config()
 const express = require("express")
 const app = express()
 const path = require("path")
+const fs = require("fs")
 const cors = require("cors")
 const rateLimit = require("express-rate-limit")
+const mongodb = require("mongodb")
+const { getBucket } = require("./gridfs")
 
 if (!process.env.JWT_SECRET) {
     console.error("ERRO: JWT_SECRET não está definida. Crie um arquivo .env na pasta server/ com essa variável.")
@@ -50,7 +53,30 @@ app.use(cors({
     credentials: true
 }))
 app.use(express.json())
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+
+// Imagens: prioriza o GridFS (MongoDB) e cai para arquivos antigos salvos em disco
+app.use('/uploads', function (req, res) {
+    const nome = decodeURIComponent(req.path.replace(/^\//, ""))
+
+    const serveFallback = () => {
+        const caminhoDisco = path.join(__dirname, 'uploads', nome)
+        if (fs.existsSync(caminhoDisco)) return res.sendFile(caminhoDisco)
+        res.status(404).json({ message: "Imagem não encontrada" })
+    }
+
+    if (!nome) return serveFallback()
+
+    let id = null
+    if (mongodb.ObjectId.isValid(nome)) {
+        id = new mongodb.ObjectId(nome)
+    } else {
+        return serveFallback()
+    }
+
+    const stream = getBucket().openDownloadStream(id)
+    stream.on("error", serveFallback)
+    stream.pipe(res)
+})
 
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,

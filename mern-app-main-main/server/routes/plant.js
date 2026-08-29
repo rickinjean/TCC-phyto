@@ -3,30 +3,18 @@ const plantRoutes = express.Router()
 const dbo = require("../db/conn")
 const ObjectId = require("mongodb").ObjectId
 
-// Importar o multer e o path para gerir o upload de ficheiros
+// Importar o multer para gerir o upload de ficheiros
 const multer = require("multer")
-const path = require("path")
-const fs = require("fs")
+const { getBucket } = require("../gridfs")
 const { authenticateToken, authorizeRoles } = require("../middleware/auth")
 
 function escapeRegex(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
-// Configurar o armazenamento dos ficheiros localmente
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, "..", "uploads"))
-    },
-    filename: function (req, file, cb) {
-        // Gera um nome único para o ficheiro usando timestamp + random para evitar colisões
-        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`
-        cb(null, uniqueSuffix + path.extname(file.originalname))
-    }
-})
-
+// Salvar diretamente em memória e gravar no GridFS (MongoDB), não no disco
 const upload = multer({
-    storage: storage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: function (req, file, cb) {
         const allowedMimes = ["image/jpeg", "image/pjpeg", "image/png", "image/webp", "image/gif"]
@@ -37,6 +25,37 @@ const upload = multer({
         }
     }
 })
+
+async function salvarImagensGridFS(files) {
+    const bucket = getBucket()
+    const paths = []
+    for (const file of files) {
+        const id = await new Promise((resolve, reject) => {
+            const stream = bucket.openUploadStream(file.originalname, {
+                contentType: file.mimetype,
+                metadata: { originalname: file.originalname }
+            })
+            stream.on("error", reject)
+            stream.on("finish", () => resolve(stream.id))
+            stream.end(file.buffer)
+        })
+        paths.push(`/uploads/${id}`)
+    }
+    return paths
+}
+
+async function deletarImagensGridFS(paths) {
+    const bucket = getBucket()
+    await Promise.allSettled((paths || []).map(async (p) => {
+        const idStr = String(p).split("/").pop()
+        if (!ObjectId.isValid(idStr)) return
+        try {
+            await bucket.delete(new ObjectId(idStr))
+        } catch {
+            // arquivo já não existe no GridFS — ignora
+        }
+    }))
+}
 
 /* ==================================================
    CLONAR PLANTA (retorna cópia dos dados sem _id e images)
@@ -117,63 +136,67 @@ plantRoutes.route("/plant/:id").get(async function (req, res) {
 plantRoutes.route("/plant/add").post(authenticateToken, authorizeRoles("ADM"), upload.fields([{ name: "images", maxCount: 5 }]), async function (req, res) {
     const db_connect = dbo.getDb()
     const files = req.files?.images || []
-    const imagePaths = files.map(file => `/uploads/${file.filename}`)
-    console.log(`[plant/add] recebido ${files.length} arquivo(s)`)
-    const myobj = {
-        name: req.body.name,
-        scientificName: req.body.scientificName,
-        description: req.body.description,
-        simpleDescription: req.body.simpleDescription,
-        fruit: req.body.fruit,
-        origin: req.body.origin,
-        type: req.body.type,
-        propagation: req.body.propagation,
-        toxicity: req.body.toxicity,
-        dificulty: req.body.dificulty,
-        Filo: req.body.Filo,
-        Classe: req.body.Classe,
-        Ordem: req.body.Ordem,
-        Family: req.body.Family,
-        Genero: req.body.Genero,
-        Especie: req.body.Especie,
-        height: req.body.height,
-        flowercolor: req.body.flowercolor,
-        foliage: req.body.foliage,
-        flowering: req.body.flowering,
-        light: req.body.light,
-        water: req.body.water,
-        size: req.body.size,
-        soil: req.body.soil,
-        watering: req.body.watering,
-        fertilizing: req.body.fertilizing,
-        pruning: req.body.pruning,
-        pests: req.body.pests,
-        manha: req.body.manha,
-        amount: req.body.amount,
-        frequency: req.body.frequency,
-        NPK: req.body.NPK,
-        season: req.body.season,
-        tools: req.body.tools,
-        prevention: req.body.prevention,
-        monitoring: req.body.monitoring,
-        planting: req.body.planting,
-        exhibition: req.body.exhibition,
-        maintenance: req.body.maintenance,
-        station: req.body.station,
-        spacing: req.body.spacing,
-        iluminosity: req.body.iluminosity, // CORRIGIDO PARA ESTAR IGUAL AO FRONT-END
-        protection: req.body.protection,
-        idealTemperature: req.body.idealTemperature,
-        tolerance: req.body.tolerance,
-        
-        imagesPath: imagePaths,
-        imagePath: imagePaths[0] || ""
-    }
-
+    let imagePaths = []
     try {
+        if (files.length > 0) {
+            imagePaths = await salvarImagensGridFS(files)
+        }
+        console.log(`[plant/add] recebido ${files.length} arquivo(s)`)
+        const myobj = {
+            name: req.body.name,
+            scientificName: req.body.scientificName,
+            description: req.body.description,
+            simpleDescription: req.body.simpleDescription,
+            fruit: req.body.fruit,
+            origin: req.body.origin,
+            type: req.body.type,
+            propagation: req.body.propagation,
+            toxicity: req.body.toxicity,
+            dificulty: req.body.dificulty,
+            Filo: req.body.Filo,
+            Classe: req.body.Classe,
+            Ordem: req.body.Ordem,
+            Family: req.body.Family,
+            Genero: req.body.Genero,
+            Especie: req.body.Especie,
+            height: req.body.height,
+            flowercolor: req.body.flowercolor,
+            foliage: req.body.foliage,
+            flowering: req.body.flowering,
+            light: req.body.light,
+            water: req.body.water,
+            size: req.body.size,
+            soil: req.body.soil,
+            watering: req.body.watering,
+            fertilizing: req.body.fertilizing,
+            pruning: req.body.pruning,
+            pests: req.body.pests,
+            manha: req.body.manha,
+            amount: req.body.amount,
+            frequency: req.body.frequency,
+            NPK: req.body.NPK,
+            season: req.body.season,
+            tools: req.body.tools,
+            prevention: req.body.prevention,
+            monitoring: req.body.monitoring,
+            planting: req.body.planting,
+            exhibition: req.body.exhibition,
+            maintenance: req.body.maintenance,
+            station: req.body.station,
+            spacing: req.body.spacing,
+            iluminosity: req.body.iluminosity, // CORRIGIDO PARA ESTAR IGUAL AO FRONT-END
+            protection: req.body.protection,
+            idealTemperature: req.body.idealTemperature,
+            tolerance: req.body.tolerance,
+
+            imagesPath: imagePaths,
+            imagePath: imagePaths[0] || ""
+        }
+
         const result = await db_connect.collection("plants").insertOne(myobj)
         res.status(201).json({ result, imagesReceived: files.length, imagesPath: imagePaths })
     } catch (error) {
+        if (imagePaths.length > 0) await deletarImagensGridFS(imagePaths)
         res.status(500).json({ message: error.message })
     }
 })
@@ -239,11 +262,22 @@ plantRoutes.route("/plant/:id").put(authenticateToken, authorizeRoles("ADM"), up
         }
 
         const files = req.files?.images || []
-        if (files.length > 0) {
-            const imagesPath = files.map(file => `/uploads/${file.filename}`)
-            updateFields.imagesPath = imagesPath
-            updateFields.imagePath = imagesPath[0] || ""
-            console.log(`[plant/:id PUT] recebido ${files.length} arquivo(s)`)
+        let novasPaths = []
+        try {
+            if (files.length > 0) {
+                novasPaths = await salvarImagensGridFS(files)
+                const docAtual = await db_connect.collection("plants").findOne(myquery)
+                const antigasPaths = docAtual?.imagesPath?.length > 0
+                    ? docAtual.imagesPath
+                    : (docAtual?.imagePath ? [docAtual.imagePath] : [])
+                updateFields.imagesPath = novasPaths
+                updateFields.imagePath = novasPaths[0] || ""
+                console.log(`[plant/:id PUT] recebido ${files.length} arquivo(s)`)
+                await deletarImagensGridFS(antigasPaths.filter(p => !novasPaths.includes(p)))
+            }
+        } catch (error) {
+            if (novasPaths.length > 0) await deletarImagensGridFS(novasPaths)
+            throw error
         }
 
         const newvalues = { $set: updateFields }
@@ -268,10 +302,17 @@ plantRoutes.route("/plant/:id").delete(authenticateToken, authorizeRoles("ADM"),
         if (!ObjectId.isValid(id)) {
             return res.status(400).json({ message: "ID inválido" })
         }
-        const result = await db_connect.collection("plants").deleteOne({ _id: new ObjectId(id) })
-        if (result.deletedCount === 0) {
+        const doc = await db_connect.collection("plants").findOne({ _id: new ObjectId(id) })
+        if (!doc) {
             return res.status(404).json({ message: "Planta não encontrada" })
         }
+
+        const imagens = doc.imagesPath?.length > 0
+            ? doc.imagesPath
+            : (doc.imagePath ? [doc.imagePath] : [])
+
+        await db_connect.collection("plants").deleteOne({ _id: new ObjectId(id) })
+        await deletarImagensGridFS(imagens)
         res.status(200).json({ message: "Planta deletada com sucesso" })
     } catch (err) {
         res.status(500).json({ message: "Erro ao deletar planta" })
