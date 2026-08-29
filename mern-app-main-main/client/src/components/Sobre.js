@@ -268,6 +268,8 @@ export default function About() {
                             { icon: 'fa-handshake', titulo: 'Acessibilidade',   texto: 'Conhecimento botânico deve estar disponível para todos, com interface intuitiva e navegação simples.' },
                             { icon: 'fa-lightbulb', titulo: 'Sustentabilidade', texto: 'Promovemos a conscientização sobre a importância das plantas para o equilíbrio ambiental.' },
                             { icon: 'fa-heart',     titulo: 'Paixão pela Botânica', texto: 'O interesse por plantas e biodiversidade é o que nos motiva a melhorar constantemente o sistema.' },
+                            { icon: 'fa-rocket',    titulo: 'Inovação', texto: 'Buscamos aprimorar a plataforma continuamente com novas tecnologias e funcionalidades.' },
+                            { icon: 'fa-users',     titulo: 'Comunidade', texto: 'A construção do conhecimento é colaborativa, junto a pesquisadores, estudantes e entusiastas.' },
                         ].map((valor, i) => (
                             <div className="col-md-6 col-lg-4" key={i}>
                                 <div className="about-card card h-100 border-0 shadow-sm text-center p-3">

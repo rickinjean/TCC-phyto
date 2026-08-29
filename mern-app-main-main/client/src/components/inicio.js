@@ -278,7 +278,7 @@ export default function Home() {
                     </div>
 
                     <div className="text-center mt-4">
-                        <Link className="home-featured__all btn btn-outline-primary rounded-pill" to="/plantlist">
+                        <Link className="home-featured__all btn btn-primary rounded-pill" to="/plantlist">
                             Ver todas as plantas
                         </Link>
                     </div>

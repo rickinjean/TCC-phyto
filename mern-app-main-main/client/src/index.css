@@ -1282,6 +1282,15 @@ textarea:focus {
   color: var(--phyto-green-900);
 }
 
+html[data-theme="dark"] .btn-primary {
+  color: #061b12;
+}
+
+html[data-theme="dark"] .btn-primary:hover,
+html[data-theme="dark"] .btn-primary:focus {
+  color: #061b12;
+}
+
 /* Página inicial */
 .home-page {
   min-height: 100%;

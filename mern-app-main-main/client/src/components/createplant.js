@@ -529,12 +529,12 @@ export default function Create() {
                                 />
                             </div>
                             <div className="col-12 mb-3">
-                                <FieldLabel optional>Imagens</FieldLabel>
+                                <FieldLabel>Imagens</FieldLabel>
                                 <ImageDropZone imageFiles={imageFiles} setImageFiles={setImageFiles} />
                             </div>
                             <div className="col-12 mb-3">
                                 <div className="d-flex justify-content-between align-items-end">
-                                    <FieldLabel optional>Resumo Rápido</FieldLabel>
+                                    <FieldLabel>Resumo Rápido</FieldLabel>
                                     <CharacterCounter value={form.simpleDescription || ""} max={TEXT_LIMITS.simpleDescription} />
                                 </div>
                                 <textarea
@@ -548,7 +548,7 @@ export default function Create() {
                             </div>
                             <div className="col-12 mb-3">
                                 <div className="d-flex justify-content-between align-items-end">
-                                    <FieldLabel optional>Descrição Detalhada</FieldLabel>
+                                    <FieldLabel>Descrição Detalhada</FieldLabel>
                                     <CharacterCounter value={form.description || ""} max={TEXT_LIMITS.description} />
                                 </div>
                                 <textarea
@@ -573,27 +573,27 @@ export default function Create() {
                         </div>
                         <div className="row">
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Fruto</FieldLabel>
+                                <FieldLabel>Fruto</FieldLabel>
                                 <SelectField campo="fruit" placeholder="Tipo de fruto..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Origem</FieldLabel>
+                                <FieldLabel>Origem</FieldLabel>
                                 <SelectField campo="origin" placeholder="Origem geográfica..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Função / Tipo</FieldLabel>
+                                <FieldLabel>Função / Tipo</FieldLabel>
                                 <SelectField campo="type" placeholder="Função da planta..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Propagação</FieldLabel>
+                                <FieldLabel>Propagação</FieldLabel>
                                 <SelectField campo="propagation" placeholder="Como se propaga..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Toxicidade</FieldLabel>
+                                <FieldLabel>Toxicidade</FieldLabel>
                                 <SelectField campo="toxicity" placeholder="Grau de toxicidade..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Dificuldade</FieldLabel>
+                                <FieldLabel>Dificuldade</FieldLabel>
                                 <SelectField campo="dificulty" placeholder="Nível de cuidado..." />
                             </div>
                         </div>
@@ -602,27 +602,27 @@ export default function Create() {
                         </div>
                         <div className="row mt-2">
                             <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Filo</FieldLabel>
+                                <FieldLabel>Filo</FieldLabel>
                                 <input type="text" className="form-control" value={form.Filo} onChange={e => updateForm({ Filo: e.target.value })} />
                             </div>
                             <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Classe</FieldLabel>
+                                <FieldLabel>Classe</FieldLabel>
                                 <input type="text" className="form-control" value={form.Classe} onChange={e => updateForm({ Classe: e.target.value })} />
                             </div>
                             <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Ordem</FieldLabel>
+                                <FieldLabel>Ordem</FieldLabel>
                                 <input type="text" className="form-control" value={form.Ordem} onChange={e => updateForm({ Ordem: e.target.value })} />
                             </div>
                             <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Família</FieldLabel>
+                                <FieldLabel>Família</FieldLabel>
                                 <input type="text" className="form-control" value={form.Family} onChange={e => updateForm({ Family: e.target.value })} />
                             </div>
                             <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Gênero</FieldLabel>
+                                <FieldLabel>Gênero</FieldLabel>
                                 <input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} placeholder="Digite e saia do campo" />
                             </div>
                             <div className="col-md-2 col-4 mb-3">
-                                <FieldLabel optional>Espécie</FieldLabel>
+                                <FieldLabel>Espécie</FieldLabel>
                                 <input type="text" className="form-control" value={form.Especie} onChange={e => updateForm({ Especie: e.target.value })} />
                             </div>
                         </div>
@@ -638,19 +638,19 @@ export default function Create() {
                         </div>
                         <div className="row">
                             <div className="col-md-6 mb-3">
-                                <FieldLabel optional>Altura / Porte</FieldLabel>
+                                <FieldLabel>Altura / Porte</FieldLabel>
                                 <SelectField campo="height" placeholder="Porte da planta..." />
                             </div>
                             <div className="col-md-6 mb-3">
-                                <FieldLabel optional>Cor da Flor</FieldLabel>
+                                <FieldLabel>Cor da Flor</FieldLabel>
                                 <SelectField campo="flowercolor" placeholder="Cores das flores..." />
                             </div>
                             <div className="col-md-6 mb-3">
-                                <FieldLabel optional>Folhagem</FieldLabel>
+                                <FieldLabel>Folhagem</FieldLabel>
                                 <SelectField campo="foliage" placeholder="Tipo de folhagem..." />
                             </div>
                             <div className="col-md-6 mb-3">
-                                <FieldLabel optional>Época de Floração</FieldLabel>
+                                <FieldLabel>Época de Floração</FieldLabel>
                                 <SelectField campo="flowering" placeholder="Quando floresce..." />
                             </div>
                         </div>
@@ -666,19 +666,19 @@ export default function Create() {
                         </div>
                         <div className="row">
                             <div className="col-md-6 mb-3">
-                                <FieldLabel optional>Luminosidade</FieldLabel>
+                                <FieldLabel>Luminosidade</FieldLabel>
                                 <SelectField campo="light" placeholder="Necessidade de luz..." />
                             </div>
                             <div className="col-md-6 mb-3">
-                                <FieldLabel optional>Água</FieldLabel>
+                                <FieldLabel>Água</FieldLabel>
                                 <SelectField campo="water" placeholder="Necessidade de água..." />
                             </div>
                             <div className="col-md-6 mb-3">
-                                <FieldLabel optional>Solo</FieldLabel>
+                                <FieldLabel>Solo</FieldLabel>
                                 <SelectField campo="soil" placeholder="Tipo de solo..." />
                             </div>
                             <div className="col-md-6 mb-3">
-                                <FieldLabel optional>Tamanho</FieldLabel>
+                                <FieldLabel>Tamanho</FieldLabel>
                                 <SelectField campo="size" placeholder="Tamanho recomendado..." />
                             </div>
                         </div>
@@ -697,17 +697,17 @@ export default function Create() {
                         <div className="row">
                             <div className="col-12 mb-3">
                                 <div className="d-flex justify-content-between align-items-end">
-                                    <FieldLabel optional>Rega</FieldLabel>
+                                    <FieldLabel>Rega</FieldLabel>
                                     <CharacterCounter value={form.watering || ""} max={TEXT_LIMITS.watering} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.watering} placeholder="Como regar esta planta..." value={form.watering} onChange={e => updateForm({ watering: e.target.value })} />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Melhor Horário</FieldLabel>
+                                <FieldLabel>Melhor Horário</FieldLabel>
                                 <SelectField campo="manha" placeholder="Horário ideal..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Quantidade</FieldLabel>
+                                <FieldLabel>Quantidade</FieldLabel>
                                 <SelectField campo="amount" placeholder="Quantidade..." />
                             </div>
                         </div>
@@ -716,17 +716,17 @@ export default function Create() {
                         <div className="row">
                             <div className="col-12 mb-3">
                                 <div className="d-flex justify-content-between align-items-end">
-                                    <FieldLabel optional>Poda</FieldLabel>
+                                    <FieldLabel>Poda</FieldLabel>
                                     <CharacterCounter value={form.pruning || ""} max={TEXT_LIMITS.pruning} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.pruning} placeholder="Como podar..." value={form.pruning} onChange={e => updateForm({ pruning: e.target.value })} />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Época</FieldLabel>
+                                <FieldLabel>Época</FieldLabel>
                                 <SelectField campo="season" placeholder="Época da poda..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Ferramentas</FieldLabel>
+                                <FieldLabel>Ferramentas</FieldLabel>
                                 <SelectField campo="tools" placeholder="Ferramentas..." />
                             </div>
                         </div>
@@ -735,17 +735,17 @@ export default function Create() {
                         <div className="row">
                             <div className="col-12 mb-3">
                                 <div className="d-flex justify-content-between align-items-end">
-                                    <FieldLabel optional>Pragas e Doenças</FieldLabel>
+                                    <FieldLabel>Pragas e Doenças</FieldLabel>
                                     <CharacterCounter value={form.pests || ""} max={TEXT_LIMITS.pests} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.pests} placeholder="Pragas comuns e tratamento..." value={form.pests} onChange={e => updateForm({ pests: e.target.value })} />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Prevenção</FieldLabel>
+                                <FieldLabel>Prevenção</FieldLabel>
                                 <SelectField campo="prevention" placeholder="Nível de prevenção..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Monitoramento</FieldLabel>
+                                <FieldLabel>Monitoramento</FieldLabel>
                                 <SelectField campo="monitoring" placeholder="Monitoramento..." />
                             </div>
                         </div>
@@ -764,17 +764,17 @@ export default function Create() {
                         <div className="row">
                             <div className="col-12 mb-3">
                                 <div className="d-flex justify-content-between align-items-end">
-                                    <FieldLabel optional>Plantio</FieldLabel>
+                                    <FieldLabel>Plantio</FieldLabel>
                                     <CharacterCounter value={form.planting || ""} max={TEXT_LIMITS.planting} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.planting} placeholder="Como plantar..." value={form.planting} onChange={e => updateForm({ planting: e.target.value })} />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Estação</FieldLabel>
+                                <FieldLabel>Estação</FieldLabel>
                                 <SelectField campo="station" placeholder="Estação de plantio..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Espaçamento</FieldLabel>
+                                <FieldLabel>Espaçamento</FieldLabel>
                                 <SelectField campo="spacing" placeholder="Espaçamento entre mudas..." />
                             </div>
                         </div>
@@ -783,17 +783,17 @@ export default function Create() {
                         <div className="row">
                             <div className="col-12 mb-3">
                                 <div className="d-flex justify-content-between align-items-end">
-                                    <FieldLabel optional>Exposição Solar</FieldLabel>
+                                    <FieldLabel>Exposição Solar</FieldLabel>
                                     <CharacterCounter value={form.exhibition || ""} max={TEXT_LIMITS.exhibition} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.exhibition} placeholder="Condições de exposição solar..." value={form.exhibition} onChange={e => updateForm({ exhibition: e.target.value })} />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Horas de Sol</FieldLabel>
+                                <FieldLabel>Horas de Sol</FieldLabel>
                                 <SelectField campo="iluminosity" placeholder="Horas diárias..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Proteção</FieldLabel>
+                                <FieldLabel>Proteção</FieldLabel>
                                 <SelectField campo="protection" placeholder="Proteção climática..." />
                             </div>
                         </div>
@@ -802,17 +802,17 @@ export default function Create() {
                         <div className="row">
                             <div className="col-12 mb-3">
                                 <div className="d-flex justify-content-between align-items-end">
-                                    <FieldLabel optional>Manutenção</FieldLabel>
+                                    <FieldLabel>Manutenção</FieldLabel>
                                     <CharacterCounter value={form.maintenance || ""} max={TEXT_LIMITS.maintenance} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.maintenance} placeholder="Práticas de manutenção..." value={form.maintenance} onChange={e => updateForm({ maintenance: e.target.value })} />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Temperatura Ideal</FieldLabel>
+                                <FieldLabel>Temperatura Ideal</FieldLabel>
                                 <SelectField campo="idealTemperature" placeholder="Temperatura..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Tolerância</FieldLabel>
+                                <FieldLabel>Tolerância</FieldLabel>
                                 <SelectField campo="tolerance" placeholder="Tolerância..." />
                             </div>
                         </div>
