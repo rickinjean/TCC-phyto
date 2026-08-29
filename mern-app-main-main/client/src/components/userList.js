@@ -97,7 +97,7 @@ export default function UserList() {
                 <table className="admin-table table table-striped">
                     <thead>
                         <tr>
-                            <th>Name</th>
+                            <th>Nome</th>
                             <th>Login</th>
                             <th>E-mail</th>
                             <th>Função</th>

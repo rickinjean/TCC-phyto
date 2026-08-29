@@ -51,7 +51,7 @@ function SectionCard({ title, icon, children, className = "" }) {
   );
 }
 
-function TaxonomyStep({ label, value }) {
+function TaxonomyStep({ label, value, arrow = true }) {
   if (!value) return null;
   return (
     <>
@@ -59,7 +59,7 @@ function TaxonomyStep({ label, value }) {
         <span className="plant-details-taxonomy__step-label">{label}</span>
         <span className="plant-details-taxonomy__step-value">{value}</span>
       </span>
-      <span className="plant-details-taxonomy__arrow" aria-hidden="true">→</span>
+      {arrow && <span className="plant-details-taxonomy__arrow" aria-hidden="true">→</span>}
     </>
   );
 }
@@ -252,7 +252,7 @@ export default function PlantDetails({ onFavChange }) {
           {/* ── IMAGEM ── */}
           {hasAnyImage ? (
             hasImages ? (
-              <div id="plantImagesCarousel" className="carousel slide plant-details-carousel mb-4" data-bs-ride="carousel">
+              <div id="plantImagesCarousel" className="carousel slide plant-details-carousel mb-4" data-bs-interval="false">
                 <div className="carousel-indicators">
                   {plant.imagesPath.map((_, i) => (
                     <button type="button" key={i} data-bs-target="#plantImagesCarousel"
@@ -367,7 +367,7 @@ export default function PlantDetails({ onFavChange }) {
               <TaxonomyStep label="Ordem" value={v("Ordem")} />
               <TaxonomyStep label="Família" value={v("Family")} />
               <TaxonomyStep label="Gênero" value={v("Genero")} />
-              <TaxonomyStep label="Espécie" value={v("Especie")} />
+              <TaxonomyStep label="Espécie" value={v("Especie")} arrow={false} />
             </div>
           </SectionCard>
 

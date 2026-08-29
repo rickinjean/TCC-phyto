@@ -696,7 +696,8 @@ export default function Create() {
                         <h5 className="wizard-subtitle">💧 Rega</h5>
                         <div className="row">
                             <div className="col-12 mb-3">
-                                <div className="d-flex justify-content-end">
+                                <div className="d-flex justify-content-between align-items-end">
+                                    <FieldLabel optional>Rega</FieldLabel>
                                     <CharacterCounter value={form.watering || ""} max={TEXT_LIMITS.watering} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.watering} placeholder="Como regar esta planta..." value={form.watering} onChange={e => updateForm({ watering: e.target.value })} />
@@ -714,7 +715,8 @@ export default function Create() {
                         <h5 className="wizard-subtitle">✂️ Poda</h5>
                         <div className="row">
                             <div className="col-12 mb-3">
-                                <div className="d-flex justify-content-end">
+                                <div className="d-flex justify-content-between align-items-end">
+                                    <FieldLabel optional>Poda</FieldLabel>
                                     <CharacterCounter value={form.pruning || ""} max={TEXT_LIMITS.pruning} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.pruning} placeholder="Como podar..." value={form.pruning} onChange={e => updateForm({ pruning: e.target.value })} />
@@ -732,7 +734,8 @@ export default function Create() {
                         <h5 className="wizard-subtitle">🐛 Pragas e Doenças</h5>
                         <div className="row">
                             <div className="col-12 mb-3">
-                                <div className="d-flex justify-content-end">
+                                <div className="d-flex justify-content-between align-items-end">
+                                    <FieldLabel optional>Pragas e Doenças</FieldLabel>
                                     <CharacterCounter value={form.pests || ""} max={TEXT_LIMITS.pests} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.pests} placeholder="Pragas comuns e tratamento..." value={form.pests} onChange={e => updateForm({ pests: e.target.value })} />
@@ -760,7 +763,8 @@ export default function Create() {
                         <h5 className="wizard-subtitle">🌱 Plantio</h5>
                         <div className="row">
                             <div className="col-12 mb-3">
-                                <div className="d-flex justify-content-end">
+                                <div className="d-flex justify-content-between align-items-end">
+                                    <FieldLabel optional>Plantio</FieldLabel>
                                     <CharacterCounter value={form.planting || ""} max={TEXT_LIMITS.planting} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.planting} placeholder="Como plantar..." value={form.planting} onChange={e => updateForm({ planting: e.target.value })} />
@@ -778,7 +782,8 @@ export default function Create() {
                         <h5 className="wizard-subtitle">☀️ Exposição Solar</h5>
                         <div className="row">
                             <div className="col-12 mb-3">
-                                <div className="d-flex justify-content-end">
+                                <div className="d-flex justify-content-between align-items-end">
+                                    <FieldLabel optional>Exposição Solar</FieldLabel>
                                     <CharacterCounter value={form.exhibition || ""} max={TEXT_LIMITS.exhibition} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.exhibition} placeholder="Condições de exposição solar..." value={form.exhibition} onChange={e => updateForm({ exhibition: e.target.value })} />
@@ -796,7 +801,8 @@ export default function Create() {
                         <h5 className="wizard-subtitle">🔧 Manutenção</h5>
                         <div className="row">
                             <div className="col-12 mb-3">
-                                <div className="d-flex justify-content-end">
+                                <div className="d-flex justify-content-between align-items-end">
+                                    <FieldLabel optional>Manutenção</FieldLabel>
                                     <CharacterCounter value={form.maintenance || ""} max={TEXT_LIMITS.maintenance} />
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.maintenance} placeholder="Práticas de manutenção..." value={form.maintenance} onChange={e => updateForm({ maintenance: e.target.value })} />

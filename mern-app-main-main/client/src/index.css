@@ -1560,6 +1560,7 @@ textarea:focus {
 
 .plant-list-card__details,
 .plant-list-card__edit,
+.plant-list-card__clone,
 .plant-list-card__delete {
   border-radius: 9px !important;
   font-size: 0.8rem;
@@ -1577,7 +1578,8 @@ textarea:focus {
   color: #fff;
 }
 
-.plant-list-card__edit {
+.plant-list-card__edit,
+.plant-list-card__clone {
   border: 1px solid var(--phyto-border);
   background: var(--phyto-green-100);
   color: var(--phyto-green-900);
@@ -2240,7 +2242,8 @@ html[data-theme="dark"] .plant-list-card__details:hover {
   color: #061b12;
 }
 
-html[data-theme="dark"] .plant-list-card__edit {
+html[data-theme="dark"] .plant-list-card__edit,
+html[data-theme="dark"] .plant-list-card__clone {
   border-color: rgba(133, 214, 158, 0.25);
   background: rgba(77, 187, 120, 0.14);
   color: #d9f2e1;
