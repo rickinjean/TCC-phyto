@@ -4,6 +4,7 @@ import API_URL from "../config"
 import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
 import { decodeId } from "../idCodec"
+import SearchableSelect from "./SearchableSelect"
 
 const STEPS = [
     { key: "basicos", label: "Dados Básicos", icon: "🌱" },
@@ -154,7 +155,6 @@ export default function Edit() {
     const [novoValorInput, setNovoValorInput] = useState("")
     const [modalSearch, setModalSearch] = useState("")
     const [toast, setToast] = useState(null)
-    const [pasteValues, setPasteValues] = useState("")
     const params = useParams()
     const navigate = useNavigate()
     const realId = decodeId(params.id)
@@ -239,36 +239,36 @@ export default function Edit() {
         }
     }
 
-    async function deletarItem(idItem) {
+    async function deletarItemDoCampo(campo, idItem) {
+        const colecaoMongo = mapeamentoColecoes[campo].colecao
+        const nomeItem = (opcoesBanco[campo] || []).find(item => item._id === idItem)?.name || "este valor"
+        if (!window.confirm(`Excluir "${nomeItem}" do banco de dados?\nEssa ação não pode ser desfeita.`)) return
         try {
-            const response = await authFetch(`${API_URL}/collections/${modalConfig.colecaoMongo}/${idItem}`, { method: "DELETE" })
-            if (response?.ok) {
-                setOpcoesBanco(prev => ({
-                    ...prev,
-                    [modalConfig.campoForm]: (prev[modalConfig.campoForm] || []).filter(item => item._id !== idItem)
-                }))
-                if (form[modalConfig.campoForm] === idItem) {
-                    updateForm({ [modalConfig.campoForm]: "" })
-                }
-                showToast("Item removido!")
+            const response = await authFetch(`${API_URL}/collections/${colecaoMongo}/${idItem}`, { method: "DELETE" })
+            if (response === null) {
+                showToast("Sessão expirada. Faça login novamente.", "error")
+                return
             }
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}))
+                showToast(err.message || "Erro ao excluir", "error")
+                return
+            }
+            setOpcoesBanco(prev => ({
+                ...prev,
+                [campo]: (prev[campo] || []).filter(item => item._id !== idItem)
+            }))
+            if (form[campo] === idItem) {
+                updateForm({ [campo]: "" })
+            }
+            showToast("Item removido!")
         } catch {
-            showToast("Erro ao deletar", "error")
+            showToast("Erro ao conectar ao servidor", "error")
         }
     }
 
-    function handlePasteValues() {
-        const lines = pasteValues.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean)
-        const targets = ["Filo", "Classe", "Ordem", "Family", "Genero", "Especie"]
-        if (lines.length === 0) return
-        const update = {}
-        lines.slice(0, targets.length).forEach((val, i) => {
-            update[targets[i]] = val
-        })
-        updateForm(update)
-        showToast("Valores distribuídos!")
-        const btn = document.querySelector('#modalPaste [data-bs-dismiss="modal"]')
-        if (btn) btn.click()
+    function deletarItem(idItem) {
+        return deletarItemDoCampo(modalConfig.campoForm, idItem)
     }
 
     async function onSubmit(e) {
@@ -312,33 +312,16 @@ export default function Edit() {
     }
 
     function SelectField({ campo, placeholder }) {
-        const filtered = modalSearch && modalConfig.campoForm === campo
-            ? (opcoesBanco[campo] || []).filter(i => i.name.toLowerCase().includes(modalSearch.toLowerCase()))
-            : (opcoesBanco[campo] || [])
-
         return (
-            <div className="wizard-select-group">
-                <select
-                    className="form-control"
-                    value={form[campo]}
-                    onChange={e => updateForm({ [campo]: e.target.value })}
-                >
-                    <option value="">{placeholder}</option>
-                    {filtered.map(item => (
-                        <option key={item._id} value={item._id}>{item.name}</option>
-                    ))}
-                </select>
-                <button
-                    type="button"
-                    className="wizard-select-plus"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalDinamico"
-                    onClick={() => abrirModalPara(campo)}
-                    title="Gerenciar valores"
-                >
-                    +
-                </button>
-            </div>
+            <SearchableSelect
+                campo={campo}
+                placeholder={placeholder}
+                value={form[campo]}
+                options={opcoesBanco[campo] || []}
+                onChange={id => updateForm({ [campo]: id })}
+                onManage={() => abrirModalPara(campo)}
+                onDelete={id => deletarItemDoCampo(campo, id)}
+            />
         )
     }
 

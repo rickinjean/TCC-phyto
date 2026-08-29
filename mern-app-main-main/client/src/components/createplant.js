@@ -180,7 +180,6 @@ export default function Create() {
     const [modalSearch, setModalSearch] = useState("")
     const [toast, setToast] = useState(null)
     const [hasDraft, setHasDraft] = useState(false)
-    const [pasteValues, setPasteValues] = useState("")
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const autoSaveTimer = useRef(null)
@@ -276,6 +275,16 @@ export default function Create() {
         setForm(prev => ({ ...prev, ...value }))
     }
 
+    function abrirModalPara(campo) {
+        setModalConfig({
+            campoForm: campo,
+            colecaoMongo: mapeamentoColecoes[campo].colecao,
+            labelAmigavel: mapeamentoColecoes[campo].label
+        })
+        setNovoValorInput("")
+        setModalSearch("")
+    }
+
     async function salvarNovoItem() {
         if (!novoValorInput.trim()) return
         try {
@@ -304,36 +313,36 @@ export default function Create() {
         }
     }
 
-    async function deletarItem(idItem) {
+    async function deletarItemDoCampo(campo, idItem) {
+        const colecaoMongo = mapeamentoColecoes[campo].colecao
+        const nomeItem = (opcoesBanco[campo] || []).find(item => item._id === idItem)?.name || "este valor"
+        if (!window.confirm(`Excluir "${nomeItem}" do banco de dados?\nEssa ação não pode ser desfeita.`)) return
         try {
-            const response = await authFetch(`${API_URL}/collections/${modalConfig.colecaoMongo}/${idItem}`, { method: "DELETE" })
-            if (response?.ok) {
-                setOpcoesBanco(prev => ({
-                    ...prev,
-                    [modalConfig.campoForm]: (prev[modalConfig.campoForm] || []).filter(item => item._id !== idItem)
-                }))
-                if (form[modalConfig.campoForm] === idItem) {
-                    updateForm({ [modalConfig.campoForm]: "" })
-                }
-                showToast("Item removido!")
+            const response = await authFetch(`${API_URL}/collections/${colecaoMongo}/${idItem}`, { method: "DELETE" })
+            if (response === null) {
+                showToast("Sessão expirada. Faça login novamente.", "error")
+                return
             }
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}))
+                showToast(err.message || "Erro ao excluir", "error")
+                return
+            }
+            setOpcoesBanco(prev => ({
+                ...prev,
+                [campo]: (prev[campo] || []).filter(item => item._id !== idItem)
+            }))
+            if (form[campo] === idItem) {
+                updateForm({ [campo]: "" })
+            }
+            showToast("Item removido!")
         } catch {
-            showToast("Erro ao deletar", "error")
+            showToast("Erro ao conectar ao servidor", "error")
         }
     }
 
-    function applyPastedValues() {
-        const lines = pasteValues.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean)
-        const targets = ["Filo", "Classe", "Ordem", "Family", "Genero", "Especie"]
-        if (lines.length === 0) return
-        const update = {}
-        lines.slice(0, targets.length).forEach((val, i) => {
-            update[targets[i]] = val
-        })
-        updateForm(update)
-        showToast("Valores distribuídos!")
-        const btn = document.querySelector('#modalPaste [data-bs-dismiss="modal"]')
-        if (btn) btn.click()
+    function deletarItem(idItem) {
+        return deletarItemDoCampo(modalConfig.campoForm, idItem)
     }
 
     const onSubmit = useCallback(async (e) => {
@@ -420,6 +429,8 @@ export default function Create() {
                 value={form[campo]}
                 options={opcoesBanco[campo] || []}
                 onChange={id => updateForm({ [campo]: id })}
+                onManage={() => abrirModalPara(campo)}
+                onDelete={id => deletarItemDoCampo(campo, id)}
             />
         )
     }

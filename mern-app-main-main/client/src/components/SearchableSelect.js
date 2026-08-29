@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
 
-export default function SearchableSelect({ campo, placeholder, value, options, onChange, onManage }) {
+export default function SearchableSelect({ campo, placeholder, value, options, onChange, onManage, onDelete }) {
     const [open, setOpen] = useState(false)
     const [query, setQuery] = useState("")
     const ref = useRef(null)
@@ -53,7 +53,18 @@ export default function SearchableSelect({ campo, placeholder, value, options, o
                                 className={`wizard-searchable__option ${opt._id === value ? "wizard-searchable__option--active" : ""}`}
                                 onMouseDown={() => handleSelect(opt._id)}
                             >
-                                {opt.name}
+                                <span className="wizard-searchable__option-name">{opt.name}</span>
+                                {onDelete && (
+                                    <button
+                                        type="button"
+                                        className="wizard-searchable__delete"
+                                        title="Remover"
+                                        onMouseDown={e => e.stopPropagation()}
+                                        onClick={() => onDelete(opt._id)}
+                                    >
+                                        ×
+                                    </button>
+                                )}
                             </li>
                         ))}
                         {filtered.length === 0 && (

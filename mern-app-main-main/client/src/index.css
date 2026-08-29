@@ -3389,10 +3389,53 @@ html[data-theme="dark"] .custom-navbar__link--dropdown {
 }
 
 .wizard-searchable__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   font-size: 0.88rem;
   cursor: pointer;
   transition: background 100ms ease;
+}
+
+.wizard-searchable__option-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wizard-searchable__delete {
+  flex: 0 0 auto;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #dc3545;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.wizard-searchable__option:hover .wizard-searchable__delete {
+  display: flex;
+}
+
+.wizard-searchable__delete:hover {
+  background: rgba(220, 53, 69, 0.12);
+}
+
+.wizard-searchable__option--active .wizard-searchable__delete {
+  color: #fff;
+}
+
+.wizard-searchable__option--active .wizard-searchable__delete:hover {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .wizard-searchable__option:hover {
@@ -3489,6 +3532,10 @@ html[data-theme="dark"] .wizard-searchable__list {
 
 html[data-theme="dark"] .wizard-searchable__option:hover {
   background: rgba(61, 154, 104, 0.18);
+}
+
+html[data-theme="dark"] .wizard-searchable__delete:hover {
+  background: rgba(220, 53, 69, 0.28);
 }
 
 html[data-theme="dark"] .wizard-review__image-wrap,

@@ -380,12 +380,13 @@ plantRoutes.route("/collections/:name/:id").delete(authenticateToken, authorizeR
     const id = req.params.id
 
     try {
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).json({ message: "ID inválido" })
+        let filtro = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { _id: id }
+        let result = await db_connect.collection(colecaoAlvo).deleteOne(filtro)
+
+        if (result.deletedCount === 0 && ObjectId.isValid(id)) {
+            result = await db_connect.collection(colecaoAlvo).deleteOne({ _id: id })
         }
 
-        const result = await db_connect.collection(colecaoAlvo).deleteOne({ _id: new ObjectId(id) })
-        
         if (result.deletedCount === 0) {
             return res.status(404).json({ message: "Item não encontrado." })
         }
