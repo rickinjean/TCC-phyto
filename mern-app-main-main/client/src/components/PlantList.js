@@ -7,14 +7,13 @@ import { encodeId } from "../idCodec"
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' fill='%23dceee3'%3E%3Crect width='400' height='250'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='62%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E"
 
 const FILTER_FIELDS = [
-    { key: "origin", label: "Origem" },
-    { key: "flowercolor", label: "Cor da Flor" },
+    { key: "type", label: "Tipo" },
     { key: "light", label: "Luz" },
-    { key: "water", label: "Água" },
-    { key: "soil", label: "Solo" },
-    { key: "toxicity", label: "Toxicidade" },
+    { key: "height", label: "Altura" },
+    { key: "flowercolor", label: "Cor da Flor" },
     { key: "dificulty", label: "Dificuldade" },
-    { key: "type", label: "Função/Tipo" },
+    { key: "toxicity", label: "Toxicidade" },
+    { key: "origin", label: "Origem" },
 ]
 
 const PlantCard = (props) => {
@@ -229,6 +228,7 @@ export default function PlantList({ role }) {
     const searchFromURL = searchParams.get("search") || ""
     const [filters, setFilters] = useState(filtersFromURL)
     const [searchText, setSearchText] = useState(searchFromURL)
+    const [filtersOpen, setFiltersOpen] = useState(false)
 
     useEffect(() => {
         async function loadCollections() {
@@ -376,9 +376,38 @@ export default function PlantList({ role }) {
                 )}
             </div>
 
+            <form onSubmit={handleSearchSubmit} className="plant-search mb-3" role="search">
+                <div className="plant-search__box d-flex align-items-center">
+                    <i className="fas fa-magnifying-glass plant-search__icon" aria-hidden="true"></i>
+                    <input
+                        type="text"
+                        className="form-control plant-search__input"
+                        placeholder="Buscar planta por nome ou nome científico..."
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        aria-label="Buscar planta"
+                    />
+                    <button type="submit" className="btn plant-search__btn">
+                        Buscar
+                    </button>
+                </div>
+            </form>
+
             <div className="plant-filters mb-4">
-                <div className="plant-filters__header d-flex justify-content-between align-items-center mb-2">
-                    <h5 className="plant-filters__title mb-0">Filtros</h5>
+                <div className="plant-filters__header d-flex justify-content-between align-items-center gap-2">
+                    <button
+                        type="button"
+                        className={`plant-filters__toggle btn ${filtersOpen ? "is-open" : ""}`}
+                        onClick={() => setFiltersOpen(o => !o)}
+                        aria-expanded={filtersOpen}
+                        aria-controls="plant-filters-body"
+                    >
+                        <i className={`fas fa-chevron-${filtersOpen ? "up" : "down"} plant-filters__chevron`} aria-hidden="true"></i>
+                        Filtros
+                        {Object.keys(filters).length > 0 && (
+                            <span className="plant-filters__badge">{Object.keys(filters).length}</span>
+                        )}
+                    </button>
                     {hasActiveFilters && (
                         <button
                             className="plant-filters__clear btn btn-sm btn-outline-secondary"
@@ -389,34 +418,27 @@ export default function PlantList({ role }) {
                         </button>
                     )}
                 </div>
-                <form onSubmit={handleSearchSubmit} className="mb-3">
-                    <div className="input-group input-group-sm">
-                        <input
-                            type="text"
-                            className="form-control plant-filters__search"
-                            placeholder="Buscar por nome da planta..."
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
-                        />
-                        <button type="submit" className="btn btn-outline-primary">Buscar</button>
-                    </div>
-                </form>
-                <div className="row g-2">
-                    {FILTER_FIELDS.map(({ key, label }) => (
-                        <div key={key} className="col-6 col-md-4 col-lg-3">
-                            <select
-                                className="form-select form-select-sm plant-filters__select"
-                                value={filters[key] || ""}
-                                onChange={(e) => handleFilterChange(key, e.target.value)}
-                            >
-                                <option value="">{label}</option>
-                                {(collectionOptions[key] || []).map(opt => (
-                                    <option key={opt._id} value={opt._id}>{opt.name}</option>
-                                ))}
-                            </select>
+                {filtersOpen && (
+                    <div className="plant-filters__body mt-3" id="plant-filters-body">
+                        <div className="row g-2">
+                            {FILTER_FIELDS.map(({ key, label }) => (
+                                <div key={key} className="col-6 col-md-4 col-lg-3">
+                                    <select
+                                        className="form-select form-select-sm plant-filters__select"
+                                        value={filters[key] || ""}
+                                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                                        aria-label={label}
+                                    >
+                                        <option value="">{label}</option>
+                                        {(collectionOptions[key] || []).map(opt => (
+                                            <option key={opt._id} value={opt._id}>{opt.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </div>
+                )}
             </div>
 
             {fetchError && (

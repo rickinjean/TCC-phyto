@@ -581,8 +581,8 @@ export default function Create() {
                                 <SelectField campo="origin" placeholder="Origem geográfica..." />
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel>Função / Tipo</FieldLabel>
-                                <SelectField campo="type" placeholder="Função da planta..." />
+                                <FieldLabel>Tipo</FieldLabel>
+                                <SelectField campo="type" placeholder="Tipo de planta..." />
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Propagação</FieldLabel>

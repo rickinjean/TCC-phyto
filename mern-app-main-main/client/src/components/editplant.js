@@ -458,7 +458,7 @@ export default function Edit() {
                         <div className="row">
                             <div className="col-md-4 mb-3"><FieldLabel>Fruto</FieldLabel><SelectField campo="fruit" placeholder="Tipo de fruto..." /></div>
                             <div className="col-md-4 mb-3"><FieldLabel>Origem</FieldLabel><SelectField campo="origin" placeholder="Origem geográfica..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Função / Tipo</FieldLabel><SelectField campo="type" placeholder="Função da planta..." /></div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Tipo</FieldLabel><SelectField campo="type" placeholder="Tipo de planta..." /></div>
                             <div className="col-md-4 mb-3"><FieldLabel>Propagação</FieldLabel><SelectField campo="propagation" placeholder="Como se propaga..." /></div>
                             <div className="col-md-4 mb-3"><FieldLabel>Toxicidade</FieldLabel><SelectField campo="toxicity" placeholder="Grau de toxicidade..." /></div>
                             <div className="col-md-4 mb-3"><FieldLabel>Dificuldade</FieldLabel><SelectField campo="dificulty" placeholder="Nível de cuidado..." /></div>

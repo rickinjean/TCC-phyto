@@ -85,7 +85,7 @@ plantRoutes.route("/plant/:id/clone").get(authenticateToken, authorizeRoles("ADM
 plantRoutes.route("/plant").get(async function (req, res) {
     const db_connect = dbo.getDb()
     try {
-        const { origin, flowercolor, light, water, soil, toxicity, dificulty, type, search } = req.query
+        const { origin, flowercolor, light, water, soil, toxicity, dificulty, type, height, search } = req.query
         const filter = {}
         if (origin) filter.origin = origin
         if (flowercolor) filter.flowercolor = flowercolor
@@ -95,6 +95,7 @@ plantRoutes.route("/plant").get(async function (req, res) {
         if (toxicity) filter.toxicity = toxicity
         if (dificulty) filter.dificulty = dificulty
         if (type) filter.type = type
+        if (height) filter.height = height
         if (search) {
             const safeRegex = new RegExp(escapeRegex(search), "i")
             filter.$or = [

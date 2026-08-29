@@ -2270,6 +2270,26 @@ html[data-theme="dark"] .home-search {
   background: rgba(12, 42, 26, 0.5);
 }
 
+html[data-theme="dark"] .plant-search__box {
+  border-color: rgba(158, 235, 180, 0.26);
+  background: rgba(20, 44, 31, 0.92);
+}
+
+html[data-theme="dark"] .plant-search__btn {
+  color: #061b12;
+}
+
+html[data-theme="dark"] .plant-search__btn:hover,
+html[data-theme="dark"] .plant-search__btn:focus {
+  background: #75d99a;
+  color: #061b12;
+}
+
+html[data-theme="dark"] .plant-filters__toggle:hover {
+  border-color: rgba(133, 214, 158, 0.5);
+  color: #d9f2e1;
+}
+
 html[data-theme="dark"] .quick-card,
 html[data-theme="dark"] .plant-feature-card,
 html[data-theme="dark"] .plant-list-card,
@@ -2830,13 +2850,57 @@ html[data-theme="dark"] .about-section .alert-success {
   background: var(--phyto-card-bg, #fff);
   border: 1px solid var(--phyto-border, #e2e8f0);
   border-radius: 0.75rem;
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 1rem;
 }
 
-.plant-filters__title {
-  font-size: 0.95rem;
-  font-weight: 600;
+.plant-filters__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--phyto-border, #e2e8f0);
+  border-radius: 999px;
+  background: var(--phyto-card-bg, #fff);
   color: var(--phyto-ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 200ms ease;
+}
+
+.plant-filters__toggle:hover {
+  border-color: var(--phyto-green-600, #2d7a4f);
+  color: var(--phyto-green-700, #1d6a45);
+}
+
+.plant-filters__toggle.is-open {
+  border-color: var(--phyto-green-600, #2d7a4f);
+  background: var(--phyto-green-100, #e6f3eb);
+  color: var(--phyto-green-900, #0a3b26);
+}
+
+.plant-filters__chevron {
+  font-size: 0.7rem;
+  color: var(--phyto-ink-soft, #64748b);
+  transition: transform 200ms ease;
+}
+
+.plant-filters__toggle.is-open .plant-filters__chevron {
+  color: var(--phyto-green-700, #1d6a45);
+}
+
+.plant-filters__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--phyto-green-600, #2d7a4f);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .plant-filters__clear {
@@ -2855,6 +2919,70 @@ html[data-theme="dark"] .about-section .alert-success {
 .plant-filters__select:focus {
   border-color: var(--phyto-green-600, #2d7a4f);
   box-shadow: 0 0 0 0.15rem rgba(45, 122, 79, 0.15);
+}
+
+/* =====================================================
+   PLANT LIST – BUSCA
+   ===================================================== */
+
+.plant-search__box {
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.35rem 0.35rem 0.35rem 1rem;
+  border: 1px solid var(--phyto-border, #e2e8f0);
+  border-radius: 999px;
+  background: var(--phyto-card-bg, #fff);
+  box-shadow: var(--phyto-shadow);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.plant-search__box:focus-within {
+  border-color: var(--phyto-green-600, #2d7a4f);
+  box-shadow: 0 0 0 0.2rem rgba(45, 122, 79, 0.12);
+}
+
+.plant-search__icon {
+  color: var(--phyto-green-600, #2d7a4f);
+  font-size: 0.95rem;
+}
+
+.plant-search__input {
+  border: 0;
+  background: transparent;
+  box-shadow: none !important;
+  flex: 1;
+  min-width: 0;
+  color: var(--phyto-ink);
+}
+
+.plant-search__input::placeholder {
+  color: var(--phyto-ink-soft, #71827a);
+}
+
+.plant-search__input:focus {
+  border: 0;
+  background: transparent;
+  box-shadow: none !important;
+  color: var(--phyto-ink);
+}
+
+.plant-search__btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.4rem 1.4rem;
+  background: linear-gradient(135deg, var(--phyto-green-600, #2d7a4f), var(--phyto-green-600, #2d7a4f));
+  background-color: var(--phyto-green-600, #2d7a4f);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: all 200ms ease;
+}
+
+.plant-search__btn:hover,
+.plant-search__btn:focus {
+  background: var(--phyto-green-900, #0a3b26);
+  color: #fff;
 }
 
 /* =====================================================
