@@ -271,8 +271,6 @@ export default function Edit() {
         if (btn) btn.click()
     }
 
-    async function onSubmit
-
     async function onSubmit(e) {
         e.preventDefault()
         setSubmitting(true)
@@ -610,5 +608,6 @@ export default function Edit() {
                     </div>
                 </div>
             </div>
-
-            
+            </div>
+        )
+    }
