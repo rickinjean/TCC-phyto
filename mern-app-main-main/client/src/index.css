@@ -1374,7 +1374,13 @@ html[data-theme="dark"] .btn-primary:focus {
 
 .home-search .btn {
   min-width: 100px;
-  margin: 0.1rem;
+  margin: 0.12rem 0.12rem 0.12rem 0.6rem;
+  padding: 0 1.25rem;
+  border-radius: 999px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 @media (max-width: 479.98px) {
