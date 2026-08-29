@@ -76,6 +76,8 @@ export default function SearchableSelect({ campo, placeholder, value, options, o
             <button
                 type="button"
                 className="wizard-select-plus"
+                data-bs-toggle="modal"
+                data-bs-target="#modalDinamico"
                 onClick={onManage}
                 title="Gerenciar valores"
             >
