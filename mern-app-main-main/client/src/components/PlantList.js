@@ -393,8 +393,8 @@ export default function PlantList({ role }) {
                 </div>
             </form>
 
-            <div className="plant-filters mb-4">
-                <div className="plant-filters__header d-flex justify-content-between align-items-center gap-2">
+            <div className="plant-filters-toolbar mb-4">
+                <div className="d-flex justify-content-between align-items-center gap-2">
                     <button
                         type="button"
                         className={`plant-filters__toggle btn ${filtersOpen ? "is-open" : ""}`}
@@ -419,7 +419,7 @@ export default function PlantList({ role }) {
                     )}
                 </div>
                 {filtersOpen && (
-                    <div className="plant-filters__body mt-3" id="plant-filters-body">
+                    <div className="plant-filters mt-2" id="plant-filters-body">
                         <div className="row g-2">
                             {FILTER_FIELDS.map(({ key, label }) => (
                                 <div key={key} className="col-6 col-md-4 col-lg-3">
