@@ -752,24 +752,6 @@ export default function Create() {
                             </div>
                         </div>
 
-                        <h5 className="wizard-subtitle">🧪 Fertilização</h5>
-                        <div className="row">
-                            <div className="col-12 mb-3">
-                                <div className="d-flex justify-content-end">
-                                    <CharacterCounter value={form.fertilizing || ""} max={TEXT_LIMITS.fertilizing} />
-                                </div>
-                                <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.fertilizing} placeholder="Como adubar..." value={form.fertilizing} onChange={e => updateForm({ fertilizing: e.target.value })} />
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel optional>Frequência</FieldLabel>
-                                <SelectField campo="frequency" placeholder="Frequência..." />
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel optional>NPK</FieldLabel>
-                                <SelectField campo="NPK" placeholder="Tipo de NPK..." />
-                            </div>
-                        </div>
-
                         <h5 className="wizard-subtitle">✂️ Poda</h5>
                         <div className="row">
                             <div className="col-12 mb-3">

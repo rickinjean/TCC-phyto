@@ -538,12 +538,6 @@ export default function Edit() {
                             <div className="col-md-4 mb-3"><label className="wizard-label">Melhor Horário</label><SelectField campo="manha" placeholder="Horário ideal..." /></div>
                             <div className="col-md-4 mb-3"><label className="wizard-label">Quantidade</label><SelectField campo="amount" placeholder="Quantidade..." /></div>
                         </div>
-                        <h5 className="wizard-subtitle">🧪 Fertilização</h5>
-                        <div className="row">
-                            <div className="col-12 mb-3"><textarea className="form-control" rows="2" value={form.fertilizing} onChange={e => updateForm({ fertilizing: e.target.value })} /></div>
-                            <div className="col-md-4 mb-3"><label className="wizard-label">Frequência</label><SelectField campo="frequency" placeholder="Frequência..." /></div>
-                            <div className="col-md-4 mb-3"><label className="wizard-label">NPK</label><SelectField campo="NPK" placeholder="Tipo de NPK..." /></div>
-                        </div>
                         <h5 className="wizard-subtitle">✂️ Poda</h5>
                         <div className="row">
                             <div className="col-12 mb-3"><textarea className="form-control" rows="2" value={form.pruning} onChange={e => updateForm({ pruning: e.target.value })} /></div>
