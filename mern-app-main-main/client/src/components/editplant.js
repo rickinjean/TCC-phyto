@@ -271,36 +271,7 @@ export default function Edit() {
         if (btn) btn.click()
     }
 
-    // Autocomplete da classificação taxonômica a partir do gênero
-    async function handleGenusSuggest() {
-        const genero = (form.Genero || "").trim()
-        if (!genero) return
-        try {
-            const search = new URLSearchParams({ search: genero })
-            const res = await fetch(`${API_URL}/plant/?${search.toString()}`)
-            if (!res.ok) return
-            const plants = await res.json()
-            const match = plants.find(p =>
-                p.Genero && p.Genero.trim().toLowerCase() === genero.toLowerCase()
-            )
-            if (match) {
-                const update = {}
-                if (!form.Filo) update.Filo = match.Filo || ""
-                if (!form.Classe) update.Classe = match.Classe || ""
-                if (!form.Ordem) update.Ordem = match.Ordem || ""
-                if (!form.Family) update.Family = match.Family || ""
-                if (!form.Especie) update.Especie = match.Especie || ""
-                if (Object.keys(update).length > 0) {
-                    updateForm(update)
-                    showToast(`Dados taxonômicos de "${match.name}" preenchidos.`)
-                }
-            } else {
-                showToast("Nenhuma planta com esse gênero foi encontrada.", "error")
-            }
-        } catch {
-            showToast("Erro ao buscar dados do gênero.", "error")
-        }
-    }
+    async function onSubmit
 
     async function onSubmit(e) {
         e.preventDefault()
@@ -477,17 +448,12 @@ export default function Edit() {
                             <div className="col-md-4 mb-3"><label className="wizard-label">Dificuldade</label><SelectField campo="dificulty" placeholder="Nível de cuidado..." /></div>
                         </div>
                         <h5 className="wizard-subtitle">Classificação Taxonômica</h5>
-                        <div className="d-flex justify-content-end mb-2">
-                            <button type="button" className="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalPaste">
-                                📋 Colar valores
-                            </button>
-                        </div>
                         <div className="row">
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Filo</label><input type="text" className="form-control" value={form.Filo} onChange={e => updateForm({ Filo: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Classe</label><input type="text" className="form-control" value={form.Classe} onChange={e => updateForm({ Classe: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Ordem</label><input type="text" className="form-control" value={form.Ordem} onChange={e => updateForm({ Ordem: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Família</label><input type="text" className="form-control" value={form.Family} onChange={e => updateForm({ Family: e.target.value })} /></div>
-                            <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Gênero</label><input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} onBlur={handleGenusSuggest} /></div>
+                            <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Gênero</label><input type="text" className="form-control" value={form.Genero} onChange={e => updateForm({ Genero: e.target.value })} /></div>
                             <div className="col-md-2 col-4 mb-3"><label className="wizard-label">Espécie</label><input type="text" className="form-control" value={form.Especie} onChange={e => updateForm({ Especie: e.target.value })} /></div>
                         </div>
                     </div>
@@ -645,31 +611,4 @@ export default function Edit() {
                 </div>
             </div>
 
-            {/* ── MODAL: COLAR VALORES ── */}
-            <div className="modal fade" id="modalPaste" tabIndex="-1" aria-hidden="true">
-                <div className="modal-dialog">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title">Colar valores da classificação</h5>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                        </div>
-                        <div className="modal-body">
-                            <p className="text-muted small mb-2">Cole os valores na ordem: Filo, Classe, Ordem, Família, Gênero, Espécie (um por linha ou separados por vírgula/ponto e vírgula).</p>
-                            <textarea
-                                className="form-control"
-                                rows="6"
-                                placeholder={"Magnoliophyta\nMagnoliopsida\nRosales\nRosaceae\nFragaria\nFragaria × ananassa"}
-                                value={pasteValues}
-                                onChange={e => setPasteValues(e.target.value)}
-                            />
-                        </div>
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" className="btn btn-primary" onClick={handlePasteValues}>Distribuir</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
+            
