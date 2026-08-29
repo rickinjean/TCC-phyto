@@ -433,12 +433,12 @@ export default function Edit() {
                         </div>
                         <div className="row">
                             <div className="col-md-6 mb-3">
-                                <label className="wizard-label">Nome Popular <span className="text-danger">*</span></label>
-                                <input type="text" className="form-control" value={form.name} onChange={e => updateForm({ name: e.target.value })} required />
+                                <label className="wizard-label">Nome Popular</label>
+                                <input type="text" className="form-control" value={form.name} onChange={e => updateForm({ name: e.target.value })} />
                             </div>
                             <div className="col-md-6 mb-3">
-                                <label className="wizard-label">Nome Científico <span className="text-danger">*</span></label>
-                                <input type="text" className="form-control" value={form.scientificName} onChange={e => updateForm({ scientificName: e.target.value })} required />
+                                <label className="wizard-label">Nome Científico</label>
+                                <input type="text" className="form-control" value={form.scientificName} onChange={e => updateForm({ scientificName: e.target.value })} />
                             </div>
                             <div className="col-12 mb-3">
                                 <label className="wizard-label">Imagens</label>

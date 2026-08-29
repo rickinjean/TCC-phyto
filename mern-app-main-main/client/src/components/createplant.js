@@ -18,7 +18,7 @@ const STEPS = [
 
 // Campos obrigatórios por step (índice do step -> lista de campos de formulário)
 const REQUIRED_BY_STEP = {
-    0: ["name", "scientificName"],
+    0: [],
 }
 
 // Todos os campos do formulário (para cálculo de progresso)
@@ -542,25 +542,23 @@ export default function Create() {
                         </div>
                         <div className="row">
                             <div className="col-md-6 mb-3">
-                                <label className="wizard-label">Nome Popular <span className="text-danger">*</span></label>
+                                <label className="wizard-label">Nome Popular</label>
                                 <input
                                     type="text"
                                     className={`form-control ${!form.name ? "is-invalid-mild" : ""}`}
                                     placeholder="Ex: Espada-de-São-Jorge"
                                     value={form.name}
                                     onChange={e => updateForm({ name: e.target.value })}
-                                    required
                                 />
                             </div>
                             <div className="col-md-6 mb-3">
-                                <label className="wizard-label">Nome Científico <span className="text-danger">*</span></label>
+                                <label className="wizard-label">Nome Científico</label>
                                 <input
                                     type="text"
                                     className={`form-control ${!form.scientificName ? "is-invalid-mild" : ""}`}
                                     placeholder="Ex: Acorus calamus"
                                     value={form.scientificName}
                                     onChange={e => updateForm({ scientificName: e.target.value })}
-                                    required
                                 />
                             </div>
                             <div className="col-12 mb-3">
