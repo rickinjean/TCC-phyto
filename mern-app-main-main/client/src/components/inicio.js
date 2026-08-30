@@ -297,7 +297,7 @@ export default function Home() {
                             label="Plantas com Imagem"
                             loading={loadingPlants}
                         />
-                        <StatBox value={stats.messageCount || 0} label="Mensagens Recebidas" loading={loadingStats} />
+                        <StatBox value={stats.favoriteCount || 0} label="Favoritos no Sistema" loading={loadingStats} />
                     </div>
                 </div>
             </section>
