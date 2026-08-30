@@ -1145,6 +1145,7 @@ html[data-theme="dark"] .plant-details-taxonomy__arrow {
 html[data-theme="dark"] .plant-details-simple-desc {
   background: rgba(20, 44, 31, 0.5);
   border-color: rgba(133, 214, 158, 0.18);
+  border-left-color: #72d095;
 }
 
 html[data-theme="dark"] .plant-details-skeleton .skeleton-pulse {
@@ -3350,10 +3351,30 @@ html[data-theme="dark"] .about-section .alert-success {
 
 .plant-details-simple-desc {
   position: relative;
+  overflow: hidden;
   padding: clamp(1rem, 2vw, 1.5rem);
   border: 1px solid rgba(47, 138, 93, 0.15);
+  border-left: 5px solid var(--phyto-green-600);
   border-radius: var(--phyto-radius-md);
-  background: rgba(230, 243, 235, 0.3);
+  background: linear-gradient(135deg, rgba(230, 243, 235, 0.6), rgba(230, 243, 235, 0.25));
+  box-shadow: 0 6px 18px rgba(18, 60, 43, 0.05);
+}
+
+.plant-details-simple-desc .plant-details-section-title {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--phyto-green-700);
+}
+
+.plant-details-simple-desc .plant-details-description-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--phyto-ink);
 }
 
 /* =====================================================

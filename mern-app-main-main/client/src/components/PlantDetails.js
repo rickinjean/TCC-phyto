@@ -289,13 +289,12 @@ export default function PlantDetails({ onFavChange }) {
             </div>
           )}
 
-          {/* ── DESCRIÇÃO ── */}
-          {plant.description && (
-            <section className="plant-details-description mb-4">
-              <h2 className="plant-details-section-title">Descrição</h2>
-              <p className="plant-details-description-text">{plant.description}</p>
-            </section>
-          )}
+          {/* ── BADGES RÁPIDOS ── */}
+          <div className="plant-details-quick-badges mb-4">
+            <QuickBadge icon="🌍" label="Origem" value={v("origin")} />
+            <QuickBadge icon="⚠️" label="Toxicidade" value={v("toxicity")} />
+            <QuickBadge icon="🎯" label="Dificuldade" value={v("dificulty")} />
+          </div>
 
           {plant.simpleDescription && (
             <section className="plant-details-simple-desc mb-4">
@@ -304,12 +303,13 @@ export default function PlantDetails({ onFavChange }) {
             </section>
           )}
 
-          {/* ── BADGES RÁPIDOS ── */}
-          <div className="plant-details-quick-badges mb-4">
-            <QuickBadge icon="🌍" label="Origem" value={v("origin")} />
-            <QuickBadge icon="⚠️" label="Toxicidade" value={v("toxicity")} />
-            <QuickBadge icon="🎯" label="Dificuldade" value={v("dificulty")} />
-          </div>
+          {/* ── DESCRIÇÃO ── */}
+          {plant.description && (
+            <section className="plant-details-description mb-4">
+              <h2 className="plant-details-section-title">Descrição</h2>
+              <p className="plant-details-description-text">{plant.description}</p>
+            </section>
+          )}
         </div>
 
         <div className="container plant-details-info-shell">
