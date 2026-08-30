@@ -784,6 +784,20 @@ html[data-theme="dark"] .custom-navbar__logout:hover {
   border-bottom: 1px dashed rgba(31, 107, 73, 0.16);
 }
 
+/* Grid aninhada dentro da lista de cuidados (ex.: Época/Ferramenta de Poda) */
+.plant-details-flow-list .plant-details-data-grid {
+  margin-top: 1rem;
+}
+
+.plant-details-flow-list .plant-details-data-grid .plant-details-label {
+  margin-top: 0;
+}
+
+.plant-details-flow-list .plant-details-data-grid .plant-details-value {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
 @media (max-width: 767.98px) {
   .custom-navbar__inner {
     justify-content: space-between;
@@ -3025,7 +3039,7 @@ html[data-theme="dark"] .about-section .alert-success {
 
 .plant-details-quick-badges {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
 }
 
@@ -3120,8 +3134,10 @@ html[data-theme="dark"] .about-section .alert-success {
 
 .plant-details-taxonomy__step {
   display: inline-flex;
+  flex: 1 1 0;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.2rem;
   padding: 0.6rem 0.85rem;
   border: 1px solid var(--phyto-border);
@@ -3158,6 +3174,10 @@ html[data-theme="dark"] .about-section .alert-success {
 
 .plant-details-data-grid--4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.plant-details-data-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 /* =====================================================

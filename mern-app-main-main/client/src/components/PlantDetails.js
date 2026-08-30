@@ -306,7 +306,6 @@ export default function PlantDetails({ onFavChange }) {
 
           {/* ── BADGES RÁPIDOS ── */}
           <div className="plant-details-quick-badges mb-4">
-            <QuickBadge icon="🌱" label="Tipo" value={v("type")} />
             <QuickBadge icon="🌍" label="Origem" value={v("origin")} />
             <QuickBadge icon="⚠️" label="Toxicidade" value={v("toxicity")} />
             <QuickBadge icon="🎯" label="Dificuldade" value={v("dificulty")} />
@@ -318,6 +317,7 @@ export default function PlantDetails({ onFavChange }) {
           {/* ── CARACTERÍSTICAS FÍSICAS ── */}
           <SectionCard title="Características Físicas" icon="🌿">
             <div className="plant-details-data-grid plant-details-data-grid--4">
+              <InfoItem label="Tipo" value={v("type")} />
               <InfoItem label="Altura" value={v("height")} />
               <InfoItem label="Cor da Flor" value={v("flowercolor")} />
               <InfoItem label="Folhagem" value={v("foliage")} />
@@ -352,7 +352,7 @@ export default function PlantDetails({ onFavChange }) {
                 <span className="plant-details-env-item__value">{v("idealTemperature") || "—"}</span>
               </div>
             </div>
-            <div className="plant-details-data-grid plant-details-data-grid--4 mt-3">
+            <div className="plant-details-data-grid plant-details-data-grid--3 mt-3">
               <InfoItem label="Horas de Sol" value={v("iluminosity")} />
               <InfoItem label="Tolerância" value={v("tolerance")} />
               <InfoItem label="Proteção Climática" value={v("protection")} />
@@ -382,10 +382,12 @@ export default function PlantDetails({ onFavChange }) {
                   <p className="plant-details-value">{v("manha") || "—"}</p>
                   <p className="plant-details-label">Quantidade de Rega</p>
                   <p className="plant-details-value">{v("amount") || "—"}</p>
-                  <p className="plant-details-label">Fertilização</p>
-                  <p className="plant-details-value">{v("fertilizing") || "—"}</p>
                   <p className="plant-details-label">Poda</p>
                   <p className="plant-details-value">{v("pruning") || "—"}</p>
+                  <div className="plant-details-data-grid mt-3">
+                    <InfoItem label="Época de Poda" value={v("season")} />
+                    <InfoItem label="Ferramenta de Poda" value={v("tools")} />
+                  </div>
                 </div>
               </SectionCard>
             </div>
@@ -406,16 +408,6 @@ export default function PlantDetails({ onFavChange }) {
               </SectionCard>
             </div>
           </div>
-
-          {/* ── ADUBAÇÃO ── */}
-          <SectionCard title="Adubação" icon="🧪">
-            <div className="plant-details-data-grid plant-details-data-grid--4">
-              <InfoItem label="Frequência" value={v("frequency")} />
-              <InfoItem label="Tipo NPK" value={v("NPK")} />
-              <InfoItem label="Época" value={v("season")} />
-              <InfoItem label="Ferramenta" value={v("tools")} />
-            </div>
-          </SectionCard>
 
           {/* ── PRAGAS E MONITORAMENTO ── */}
           <SectionCard title="Pragas e Monitoramento" icon="🐛">
