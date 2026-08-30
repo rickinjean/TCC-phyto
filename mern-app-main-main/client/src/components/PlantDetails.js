@@ -359,6 +359,17 @@ export default function PlantDetails({ onFavChange }) {
 
   const temLuminosidade = sunScore != null || v("light");
 
+  const essenciais = [
+    { icon: "📏", label: "Altura", value: v("height") },
+    { icon: "☀️", label: "Luz", value: v("light") },
+    { icon: "💧", label: "Água", value: v("water") },
+    { icon: "🌡️", label: "Temperatura", value: v("idealTemperature") },
+    { icon: "🪴", label: "Solo", value: v("soil") },
+    { icon: "🌸", label: "Floração", value: v("flowering") },
+    { icon: "🛡️", label: "Tolerância", value: v("tolerance") },
+    { icon: "🌤️", label: "Proteção", value: v("protection") },
+  ].filter(item => item.value);
+
   return (
     <div className="plant-details-page">
       {/* ── HEADER ── */}
@@ -481,19 +492,16 @@ export default function PlantDetails({ onFavChange }) {
                   </blockquote>
                 )}
 
-                <div className="phyto-spec__section">
-                  <h3 className="phyto-spec__title">📌 Ficha essencial</h3>
-                  <div className="phyto-spec__essenciais">
-                    <OverviewCard icon="📏" label="Altura" value={v("height")} />
-                    <OverviewCard icon="☀️" label="Luz" value={v("light")} />
-                    <OverviewCard icon="💧" label="Água" value={v("water")} />
-                    <OverviewCard icon="🌡️" label="Temperatura" value={v("idealTemperature")} />
-                    <OverviewCard icon="🪴" label="Solo" value={v("soil")} />
-                    <OverviewCard icon="🌸" label="Floração" value={v("flowering")} />
-                    <OverviewCard icon="🛡️" label="Tolerância" value={v("tolerance")} />
-                    <OverviewCard icon="🌤️" label="Proteção" value={v("protection")} />
+                {essenciais.length > 0 && (
+                  <div className="phyto-spec__section">
+                    <h3 className="phyto-spec__title">📌 Ficha essencial</h3>
+                    <div className="phyto-spec__essenciais">
+                      {essenciais.map(item => (
+                        <OverviewCard key={item.label} {...item} />
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {(temLuminosidade || waterPosition != null) && (
                   <div className="phyto-spec__meters">

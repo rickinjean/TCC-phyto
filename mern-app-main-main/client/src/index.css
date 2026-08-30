@@ -4058,9 +4058,9 @@ html[data-theme="dark"] .plant-suggest-bar__chip {
   align-items: center;
   gap: 0.45rem;
   margin: 0 0 0.55rem;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--phyto-green-700);
 }
@@ -4077,35 +4077,72 @@ html[data-theme="dark"] .plant-suggest-bar__chip {
   gap: 0.6rem;
 }
 
+/* Pills em grade preenchendo a largura (escala acessível) */
+.phyto-spec .plant-details-pills {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.phyto-spec .phyto-pill {
+  width: 100%;
+  justify-content: center;
+  padding: 0.6rem 0.6rem;
+  font-size: 0.95rem;
+}
+
+.phyto-spec .phyto-pill__icon {
+  font-size: 1.15rem;
+}
+
+.phyto-spec .plant-details-quote,
+.phyto-spec .phyto-spec__section,
+.phyto-spec .phyto-spec__meters {
+  border-top: 1px solid var(--phyto-border);
+  padding-top: 1.1rem;
+}
+
+.phyto-spec .phyto-spec__meters {
+  margin-top: auto;
+}
+
 .phyto-spec .phyto-overview-card {
-  padding: 0.65rem 0.35rem;
-  gap: 0.25rem;
+  padding: 0.85rem 0.35rem;
+  gap: 0.3rem;
   border-radius: var(--phyto-radius-sm);
   box-shadow: none;
 }
 
 .phyto-spec .phyto-overview-card__icon {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
 }
 
 .phyto-spec .phyto-overview-card__label {
-  font-size: 0.6rem;
+  font-size: 0.72rem;
 }
 
 .phyto-spec .phyto-overview-card__value {
-  font-size: 0.86rem;
+  font-size: 1.02rem;
 }
 
 .phyto-spec .phyto-meter {
   margin-bottom: 0;
-  padding: 0.95rem 0.6rem;
-  gap: 0.35rem;
+  padding: 1.05rem 0.5rem;
+  gap: 0.4rem;
   border-radius: var(--phyto-radius-sm);
   box-shadow: none;
 }
 
+.phyto-spec .phyto-meter__label {
+  font-size: 0.74rem;
+}
+
+.phyto-spec .phyto-meter__hint {
+  font-size: 0.9rem;
+}
+
 .phyto-spec .phyto-sun-meter__sun {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .phyto-spec .phyto-water-scale {
@@ -4192,9 +4229,9 @@ html[data-theme="dark"] .plant-details-quote {
   align-items: center;
   gap: 0.6rem;
   margin: 0 0 1.4rem;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--phyto-green-700);
 }
@@ -4243,9 +4280,9 @@ html[data-theme="dark"] .plant-details-quote {
 }
 
 .phyto-overview-card__label {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #71827a;
 }
@@ -4283,9 +4320,9 @@ html[data-theme="dark"] .plant-details-quote {
 
 .phyto-data-item__label {
   margin: 0;
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #71827a;
 }
@@ -4313,9 +4350,9 @@ html[data-theme="dark"] .plant-details-quote {
 }
 
 .phyto-meter__label {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #71827a;
 }
@@ -4366,13 +4403,13 @@ html[data-theme="dark"] .plant-details-quote {
 }
 
 .phyto-water-scale__labels span {
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: #71827a;
 }
 
 .phyto-water-scale__labels .phyto-water-scale__value {
-  font-size: 0.98rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--phyto-ink);
 }
@@ -4421,9 +4458,9 @@ html[data-theme="dark"] .plant-details-quote {
 }
 
 .phyto-taxo-node__label {
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #71827a;
 }
@@ -4522,9 +4559,9 @@ html[data-theme="dark"] .plant-details-quote {
 }
 
 .phyto-chip__label {
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #71827a;
   margin-right: 0.1rem;
@@ -4568,9 +4605,9 @@ html[data-theme="dark"] .plant-details-quote {
 }
 
 .phyto-timeline__title {
-  font-size: 0.68rem;
+  font-size: 0.76rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #71827a;
 }
