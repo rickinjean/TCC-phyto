@@ -37,7 +37,7 @@ export default function Footer() {
             <p className="site-footer__text">Professor Matheus Lorenzato Braga</p>
             <p className="site-footer__text site-footer__text--location">
               <i className="fas fa-map-marker-alt" aria-hidden="true"></i>{" "}
-              Unesc — Criciúma, SC, Brasil
+              IFC — Campus Sombrio, SC, Brasil
             </p>
             <div className="site-footer__links">
               <a
