@@ -299,7 +299,6 @@ export default function About() {
                                 {[
                                     { icon: 'fa-envelope',       titulo: 'Email',       detalhe: 'Entre em contato pelo formulário ao lado' },
                                     { icon: 'fa-university',     titulo: 'Instituição', detalhe: 'IFC — Instituto Federal Catarinense, Campus Sombrio' },
-                                    { icon: 'fa-map-marker-alt', titulo: 'Localização', detalhe: 'Unesc — Criciúma, SC, Brasil' },
                                 ].map((m, i) => (
                                     <div className="about-info-item d-flex align-items-center gap-3 p-3 rounded shadow-sm" key={i}>
                                         <div className="about-contact-icon d-flex align-items-center justify-content-center rounded-circle">
