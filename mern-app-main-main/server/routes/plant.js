@@ -5,6 +5,7 @@ const ObjectId = require("mongodb").ObjectId
 
 // Importar o multer para gerir o upload de ficheiros
 const multer = require("multer")
+const sharp = require("sharp")
 const { getBucket } = require("../gridfs")
 const { authenticateToken, authorizeRoles } = require("../middleware/auth")
 
@@ -30,14 +31,43 @@ async function salvarImagensGridFS(files) {
     const bucket = getBucket()
     const paths = []
     for (const file of files) {
+        let buffer = file.buffer
+        let contentType = file.mimetype
+
+        // Redimensiona e otimiza para a web (exceto GIF/animações), mantendo a proporção
+        let animated = false
+        try {
+            const meta = await sharp(buffer).metadata()
+            animated = (meta.pages || 1) > 1
+        } catch {
+            // não é um formato de imagem suportado — salva o original
+        }
+        if (file.mimetype !== "image/gif" && !animated) {
+            try {
+                buffer = await sharp(buffer)
+                    .rotate()
+                    .resize({
+                        width: 1600,
+                        height: 1600,
+                        fit: "inside",
+                        withoutEnlargement: true
+                    })
+                    .toFormat("webp", { quality: 82 })
+                    .toBuffer()
+                contentType = "image/webp"
+            } catch {
+                // falha inesperada ao processar — salva o original
+            }
+        }
+
         const id = await new Promise((resolve, reject) => {
             const stream = bucket.openUploadStream(file.originalname, {
-                contentType: file.mimetype,
+                contentType,
                 metadata: { originalname: file.originalname }
             })
             stream.on("error", reject)
             stream.on("finish", () => resolve(stream.id))
-            stream.end(file.buffer)
+            stream.end(buffer)
         })
         paths.push(`/uploads/${id}`)
     }
