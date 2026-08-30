@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import API_URL from "../config";
 import authFetch from "../authFetch";
 import { decodeId } from "../idCodec";
@@ -18,154 +18,66 @@ function ImgWithFallback({ src, alt, className }) {
   );
 }
 
-function Pill({ icon, children }) {
-  if (!children) return null;
+function QuickBadge({ icon, label, value }) {
+  if (!value || value === "—") return null;
   return (
-    <span className="phyto-pill">
-      <span className="phyto-pill__icon" aria-hidden="true">{icon}</span>
-      <span className="phyto-pill__value">{children}</span>
-    </span>
-  );
-}
-
-function SectionTitle({ icon, children }) {
-  return (
-    <h2 className="phyto-section-title">
-      {icon && <span className="phyto-section-title__icon" aria-hidden="true">{icon}</span>}
-      {children}
-    </h2>
+    <div className="plant-details-badge">
+      <span className="plant-details-badge__icon">{icon}</span>
+      <span className="plant-details-badge__label">{label}</span>
+      <span className="plant-details-badge__value">{value}</span>
+    </div>
   );
 }
 
 function InfoItem({ label, value }) {
   if (!value || value === "—") return null;
   return (
-    <div className="phyto-data-item">
-      <p className="phyto-data-item__label">{label}</p>
-      <p className="phyto-data-item__value">{value}</p>
+    <div className="plant-details-data-item">
+      <p className="plant-details-label">{label}</p>
+      <p className="plant-details-value">{value}</p>
     </div>
   );
 }
 
-function OverviewCard({ icon, label, value }) {
-  if (!value || value === "—") return null;
+function SectionCard({ title, icon, children, className = "" }) {
   return (
-    <div className="phyto-overview-card">
-      <span className="phyto-overview-card__icon" aria-hidden="true">{icon}</span>
-      <span className="phyto-overview-card__label">{label}</span>
-      <span className="phyto-overview-card__value">{value}</span>
-    </div>
+    <section className={`plant-details-card mb-4 ${className}`}>
+      <h2 className="plant-details-card-title">
+        {icon && <span className="plant-details-card-icon">{icon}</span>}
+        {title}
+      </h2>
+      {children}
+    </section>
   );
 }
 
-function SunMeter({ score }) {
-  const level = score || 0;
-  return (
-    <div className="phyto-sun-meter" aria-label={`Nível de luminosidade ${level} de 5`}>
-      {[1, 2, 3, 4, 5].map(n => (
-        <span key={n} className={`phyto-sun-meter__sun ${n <= level ? "is-on" : ""}`} aria-hidden="true">☀️</span>
-      ))}
-    </div>
-  );
-}
-
-function WaterScale({ position, value }) {
-  if (position == null) return null;
-  return (
-    <div className="phyto-water-scale">
-      <div className="phyto-water-scale__labels">
-        <span>Baixa</span>
-        <span className="phyto-water-scale__value">{value}</span>
-        <span>Alta</span>
-      </div>
-      <div className="phyto-water-scale__track">
-        <span className="phyto-water-scale__fill" />
-        <span className="phyto-water-scale__marker" style={{ left: `${position}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function TaxoNode({ label, value, isSpecies = false }) {
+function TaxonomyStep({ label, value, arrow = true }) {
   if (!value) return null;
   return (
-    <div className="phyto-taxo-node">
-      <span className="phyto-taxo-node__label">{label}</span>
-      <span className={`phyto-taxo-node__value ${isSpecies ? "is-species" : ""}`}>{value}</span>
-    </div>
+    <>
+      <span className="plant-details-taxonomy__step">
+        <span className="plant-details-taxonomy__step-label">{label}</span>
+        <span className="plant-details-taxonomy__step-value">{value}</span>
+      </span>
+      {arrow && <span className="plant-details-taxonomy__arrow" aria-hidden="true">→</span>}
+    </>
   );
-}
-
-function TaxoConnector() {
-  return (
-    <div className="phyto-taxo-connector" aria-hidden="true">
-      <span className="phyto-taxo-connector__line" />
-      <span className="phyto-taxo-connector__arrow">▼</span>
-    </div>
-  );
-}
-
-function CareCard({ icon, title, text, chips = [] }) {
-  const hasText = !!(text && text !== "—");
-  const visibleChips = chips.filter(c => c.value && c.value !== "—");
-  if (!hasText && visibleChips.length === 0) return null;
-  return (
-    <div className="phyto-care-card">
-      <header className="phyto-care-card__header">
-        <span className="phyto-care-card__icon" aria-hidden="true">{icon}</span>
-        <h3 className="phyto-care-card__title">{title}</h3>
-      </header>
-      {hasText && <p className="phyto-care-card__text">{text}</p>}
-      {visibleChips.length > 0 && (
-        <div className="phyto-care-card__chips">
-          {visibleChips.map((c, i) => (
-            <span className="phyto-chip" key={i}>
-              <span className="phyto-chip__icon" aria-hidden="true">{c.icon}</span>
-              <span className="phyto-chip__label">{c.label}</span>
-              {c.value}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function TimelineStep({ icon, title, text, chip, chipLabel }) {
-  return (
-    <div className="phyto-timeline__step">
-      <div className="phyto-timeline__node">
-        <span className="phyto-timeline__icon" aria-hidden="true">{icon}</span>
-        <div className="phyto-timeline__content">
-          <span className="phyto-timeline__title">{title}</span>
-          {text && <p className="phyto-timeline__text">{text}</p>}
-          {chip && chip !== "—" && (
-            <span className="phyto-chip mt-2">
-              <span className="phyto-chip__icon" aria-hidden="true">↔️</span>
-              <span className="phyto-chip__label">{chipLabel}</span>
-              {chip}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TimelineConnector() {
-  return <div className="phyto-timeline__connector" aria-hidden="true" />;
 }
 
 function SkeletonLoader() {
   return (
     <div className="plant-details-skeleton">
-      <div className="plant-details-skeleton__header skeleton-pulse" />
-      <div className="container">
+      <div className="plant-details-skeleton__header">
+        <div className="plant-details-skeleton__back skeleton-pulse" />
+        <div className="plant-details-skeleton__title skeleton-pulse" />
+        <div className="plant-details-skeleton__subtitle skeleton-pulse" />
+      </div>
+      <div className="container plant-details-media-shell">
         <div className="plant-details-skeleton__image skeleton-pulse" />
         <div className="plant-details-skeleton__badges">
-          {[1, 2, 3].map(i => <div key={i} className="plant-details-skeleton__badge skeleton-pulse" />)}
+          {[1,2,3,4].map(i => <div key={i} className="plant-details-skeleton__badge skeleton-pulse" />)}
         </div>
-        {[1, 2, 3].map(i => (
+        {[1,2].map(i => (
           <div key={i} className="plant-details-skeleton__card skeleton-pulse" />
         ))}
       </div>
@@ -193,25 +105,6 @@ const TEXT_FIELDS = [
   "Filo", "Classe", "Ordem", "Family", "Genero", "Especie",
 ];
 
-// Mapeamentos para os indicadores visuais (valores dos dicionários)
-const SUN_BY_ILUMINOSITY = {
-  "Até 3 horas": 1,
-  "4-6 horas": 2,
-  "6-8 horas": 3,
-  "Mais de 8 horas": 4,
-  "Luz indireta o dia todo": 3,
-};
-const SUN_BY_LIGHT = {
-  "Sombra": 1,
-  "Meia-sombra": 3,
-  "Sol pleno": 5,
-};
-const WATER_POS = {
-  "Baixa": 0,
-  "Moderada": 50,
-  "Alta": 100,
-};
-
 export default function PlantDetails({ onFavChange }) {
   const [plant, setPlant] = useState(null);
   const [notFound, setNotFound] = useState(false);
@@ -227,7 +120,6 @@ export default function PlantDetails({ onFavChange }) {
 
     async function load() {
       setLoading(true);
-      setActiveIndex(0);
       try {
         const response = await fetch(`${API_URL}/plant/${realId}`);
         if (!response.ok) { if (!cancelled) setNotFound(true); return; }
@@ -332,44 +224,6 @@ export default function PlantDetails({ onFavChange }) {
   const goPrev = () => setActiveIndex(a => (a - 1 + total) % total);
   const goNext = () => setActiveIndex(a => (a + 1) % total);
 
-  // Indicadores visuais
-  const sunScore = (() => {
-    const a = SUN_BY_ILUMINOSITY[v("iluminosity")];
-    const b = SUN_BY_LIGHT[v("light")];
-    if (a && b) return Math.round((a + b) / 2);
-    return a || b || null;
-  })();
-  const waterPosition = WATER_POS[v("water")] ?? null;
-
-  const detalheTecnicoItems = [
-    { label: "Tipo", value: v("type") },
-    { label: "Cor da Flor", value: v("flowercolor") },
-    { label: "Folhagem", value: v("foliage") },
-    { label: "Tamanho", value: v("size") },
-    { label: "Fruto", value: v("fruit") },
-    { label: "Propagação", value: v("propagation") },
-  ];
-  const temDetalheTecnico = detalheTecnicoItems.some(i => i.value);
-
-  const cultivoSteps = [];
-  if (v("station")) cultivoSteps.push({ icon: "📅", title: "Estação de plantio", text: null, chip: v("station"), chipLabel: "Melhor época" });
-  if (v("planting")) cultivoSteps.push({ icon: "🌱", title: "Plantio", text: v("planting"), chip: v("spacing"), chipLabel: "Espaçamento" });
-  if (v("exhibition")) cultivoSteps.push({ icon: "☀️", title: "Exposição", text: v("exhibition"), chip: null, chipLabel: null });
-  if (v("maintenance")) cultivoSteps.push({ icon: "🌿", title: "Manutenção", text: v("maintenance"), chip: null, chipLabel: null });
-
-  const temLuminosidade = sunScore != null || v("light");
-
-  const essenciais = [
-    { icon: "📏", label: "Altura", value: v("height") },
-    { icon: "☀️", label: "Luz", value: v("light") },
-    { icon: "💧", label: "Água", value: v("water") },
-    { icon: "🌡️", label: "Temperatura", value: v("idealTemperature") },
-    { icon: "🪴", label: "Solo", value: v("soil") },
-    { icon: "🌸", label: "Floração", value: v("flowering") },
-    { icon: "🛡️", label: "Tolerância", value: v("tolerance") },
-    { icon: "🌤️", label: "Proteção", value: v("protection") },
-  ].filter(item => item.value);
-
   return (
     <div className="plant-details-page">
       {/* ── HEADER ── */}
@@ -378,21 +232,10 @@ export default function PlantDetails({ onFavChange }) {
           <button className="btn plant-details-back" onClick={() => navigate(-1)} type="button">
             <span aria-hidden="true">←</span> Voltar
           </button>
-
-          <nav className="plant-details-breadcrumb" aria-label="Trilha de navegação">
-            <Link to="/plantlist">Catálogo</Link>
-            <span className="plant-details-breadcrumb__sep" aria-hidden="true">/</span>
-            {v("type") && <span className="plant-details-breadcrumb__type">{v("type")}</span>}
-            <span className="plant-details-breadcrumb__sep" aria-hidden="true">/</span>
-            <span className="plant-details-breadcrumb__current">{plant.name}</span>
-          </nav>
-
           <div className="plant-details-header__title-row">
             <div>
               <h1 className="plant-details-title">{plant.name}</h1>
-              {plant.scientificName && (
-                <p className="plant-details-scientific-name">{plant.scientificName}</p>
-              )}
+              <p className="plant-details-scientific-name">{plant.scientificName}</p>
             </div>
             <button
               className={`plant-details-favorite-btn ${isFavorite ? "is-favorite" : ""}`}
@@ -409,11 +252,11 @@ export default function PlantDetails({ onFavChange }) {
       </header>
 
       <main>
-        <div className="container plant-details-hero-shell">
+        <div className="container plant-details-media-shell">
 
-          {/* ── FICHA EM 2 COLUNAS ── */}
-          <div className="phyto-sheet">
-            <div className="phyto-sheet__main">
+          <div className="row g-4 g-lg-5 mb-4 align-items-stretch">
+            {/* ── IMAGEM + SOBRE ── */}
+            <div className="col-12 col-lg-7">
               {hasAnyImage ? (
                 hasImages ? (
                   <>
@@ -466,156 +309,151 @@ export default function PlantDetails({ onFavChange }) {
                   </div>
                 </div>
               )}
+
+              {/* ── SOBRE A PLANTA ── */}
+              {plant.description && (
+                <section className="phyto-section mt-4">
+                  <h2 className="phyto-section-title">
+                    <span className="phyto-section-title__icon" aria-hidden="true">📖</span>
+                    Sobre a Planta
+                  </h2>
+                  <p className="phyto-description">{plant.description}</p>
+                </section>
+              )}
             </div>
 
-            {/* ── SOBRE NA COLUNA ESQUERDA ── */}
-            {plant.description && (
-              <section className="phyto-section mt-4">
-                <SectionTitle icon="📖">Sobre a Planta</SectionTitle>
-                <p className="phyto-description">{plant.description}</p>
-              </section>
-            )}
-          </div>
-
-          {/* ── FICHA RÁPIDA (sidebar sticky) ── */}
-          <div className="phyto-sheet__aside">
-            <aside className="phyto-spec">
-              <div className="plant-details-pills">
-                  <Pill icon="🌍">{v("origin")}</Pill>
-                  <Pill icon="⚠️">{v("toxicity")}</Pill>
-                  <Pill icon="🎯">{v("dificulty")}</Pill>
+            {/* ── FICHA RÁPIDA ── */}
+            <div className="col-12 col-lg-5">
+              <div className="plant-details-aside d-flex flex-column h-100">
+                <div className="plant-details-quick-badges mb-3">
+                  <QuickBadge icon="🌍" label="Origem" value={v("origin")} />
+                  <QuickBadge icon="⚠️" label="Toxicidade" value={v("toxicity")} />
+                  <QuickBadge icon="🎯" label="Dificuldade" value={v("dificulty")} />
                 </div>
 
                 {plant.simpleDescription && (
-                  <blockquote className="plant-details-quote">
-                    <p>{plant.simpleDescription}</p>
-                  </blockquote>
+                  <section className="plant-details-simple-desc flex-grow-1">
+                    <h2 className="plant-details-section-title">Resumo Rápido</h2>
+                    <p className="plant-details-description-text">{plant.simpleDescription}</p>
+                  </section>
                 )}
-
-                {essenciais.length > 0 && (
-                  <div className="phyto-spec__section">
-                    <h3 className="phyto-spec__title">📌 Ficha essencial</h3>
-                    <div className="phyto-spec__essenciais">
-                      {essenciais.map(item => (
-                        <OverviewCard key={item.label} {...item} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {(temLuminosidade || waterPosition != null) && (
-                  <div className="phyto-spec__meters">
-                    {temLuminosidade && (
-                      <div className="phyto-meter">
-                        <span className="phyto-meter__label">Luminosidade</span>
-                        <SunMeter score={sunScore} />
-                        {v("light") && <span className="phyto-meter__value">{v("light")}</span>}
-                        {v("iluminosity") && (
-                          <span className="phyto-meter__hint">{v("iluminosity")}</span>
-                        )}
-                      </div>
-                    )}
-                    {waterPosition != null && (
-                      <div className="phyto-meter">
-                        <span className="phyto-meter__label">Água</span>
-                        <WaterScale position={waterPosition} value={v("water")} />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </aside>
+              </div>
             </div>
           </div>
 
+        </div>
+
         <div className="container plant-details-info-shell">
 
-          {/* ── CARACTERÍSTICAS ── */}
-          {temDetalheTecnico && (
-            <section className="phyto-section mb-5">
-              <SectionTitle icon="🌿">Características</SectionTitle>
-              <div className="phyto-data-grid--3">
-                {detalheTecnicoItems.map(item => (
-                  <InfoItem key={item.label} label={item.label} value={item.value} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ── TAXONOMIA ── */}
-          {(v("Filo") || v("Classe") || v("Ordem") || v("Family") || v("Genero") || v("Especie")) && (
-            <section className="phyto-section mb-5">
-              <SectionTitle icon="🧬">Classificação Taxonômica</SectionTitle>
-              <div className="phyto-taxo">
-                <TaxoNode label="Filo" value={v("Filo")} />
-                {v("Filo") && <TaxoConnector />}
-                <TaxoNode label="Classe" value={v("Classe")} />
-                {v("Classe") && <TaxoConnector />}
-                <TaxoNode label="Ordem" value={v("Ordem")} />
-                {v("Ordem") && <TaxoConnector />}
-                <TaxoNode label="Família" value={v("Family")} />
-                {v("Family") && <TaxoConnector />}
-                <TaxoNode label="Gênero" value={v("Genero")} />
-              </div>
-            </section>
-          )}
-
-          {/* ── CUIDADOS ── */}
-          {(v("watering") || v("pruning")) && (
-            <section className="phyto-section mb-5">
-              <SectionTitle icon="🤲">Cuidados da Planta</SectionTitle>
-              <div className="row g-4">
-                <div className="col-lg-6">
-                  <CareCard
-                    icon="💧"
-                    title="Rega"
-                    text={v("watering")}
-                    chips={[
-                      { icon: "🕐", label: "Horário ideal", value: v("manha") },
-                      { icon: "💦", label: "Quantidade", value: v("amount") },
-                    ]}
-                  />
+          <div className="row g-4 mb-4">
+            {/* ── CARACTERÍSTICAS FÍSICAS ── */}
+            <div className="col-lg-6">
+              <SectionCard title="Características Físicas" icon="🌿">
+                <div className="plant-details-data-grid plant-details-data-grid--4">
+                  <InfoItem label="Tipo" value={v("type")} />
+                  <InfoItem label="Altura" value={v("height")} />
+                  <InfoItem label="Cor da Flor" value={v("flowercolor")} />
+                  <InfoItem label="Folhagem" value={v("foliage")} />
+                  <InfoItem label="Floração" value={v("flowering")} />
+                  <InfoItem label="Tamanho" value={v("size")} />
+                  <InfoItem label="Fruto" value={v("fruit")} />
+                  <InfoItem label="Propagação" value={v("propagation")} />
                 </div>
-                <div className="col-lg-6">
-                  <CareCard
-                    icon="✂️"
-                    title="Poda"
-                    text={v("pruning")}
-                    chips={[
-                      { icon: "📅", label: "Época", value: v("season") },
-                      { icon: "🔧", label: "Ferramenta", value: v("tools") },
-                    ]}
-                  />
-                </div>
-              </div>
-            </section>
-          )}
+              </SectionCard>
+            </div>
 
-          {/* ── CULTIVO ── */}
-          {cultivoSteps.length > 0 && (
-            <section className="phyto-section mb-5">
-              <SectionTitle icon="🌱">Cultivo</SectionTitle>
-              <div className="phyto-timeline">
-                {cultivoSteps.map((step, i) => (
-                  <div key={i}>
-                    <TimelineStep {...step} />
-                    {i < cultivoSteps.length - 1 && <TimelineConnector />}
+            {/* ── NECESSIDADES AMBIENTAIS ── */}
+            <div className="col-lg-6">
+              <SectionCard title="Necessidades Ambientais" icon="☀️">
+                <div className="plant-details-env-row">
+                  <div className="plant-details-env-item">
+                    <span className="plant-details-env-item__icon">☀️</span>
+                    <span className="plant-details-env-item__label">Luz</span>
+                    <span className="plant-details-env-item__value">{v("light") || "—"}</span>
                   </div>
-                ))}
-              </div>
-            </section>
-          )}
+                  <div className="plant-details-env-item">
+                    <span className="plant-details-env-item__icon">💧</span>
+                    <span className="plant-details-env-item__label">Água</span>
+                    <span className="plant-details-env-item__value">{v("water") || "—"}</span>
+                  </div>
+                  <div className="plant-details-env-item">
+                    <span className="plant-details-env-item__icon">🪴</span>
+                    <span className="plant-details-env-item__label">Solo</span>
+                    <span className="plant-details-env-item__value">{v("soil") || "—"}</span>
+                  </div>
+                  <div className="plant-details-env-item">
+                    <span className="plant-details-env-item__icon">🌡️</span>
+                    <span className="plant-details-env-item__label">Temperatura</span>
+                    <span className="plant-details-env-item__value">{v("idealTemperature") || "—"}</span>
+                  </div>
+                </div>
+                <div className="plant-details-data-grid plant-details-data-grid--3 mt-3">
+                  <InfoItem label="Horas de Sol" value={v("iluminosity")} />
+                  <InfoItem label="Tolerância" value={v("tolerance")} />
+                  <InfoItem label="Proteção Climática" value={v("protection")} />
+                </div>
+              </SectionCard>
+            </div>
+          </div>
+
+          {/* ── CLASSIFICAÇÃO TAXONÔMICA ── */}
+          <SectionCard title="Classificação Taxonômica" icon="🧬">
+            <div className="plant-details-taxonomy">
+              <TaxonomyStep label="Filo" value={v("Filo")} />
+              <TaxonomyStep label="Classe" value={v("Classe")} />
+              <TaxonomyStep label="Ordem" value={v("Ordem")} />
+              <TaxonomyStep label="Família" value={v("Family")} />
+              <TaxonomyStep label="Gênero" value={v("Genero")} />
+              <TaxonomyStep label="Espécie" value={v("Especie")} arrow={false} />
+            </div>
+          </SectionCard>
+
+          {/* ── CUIDADOS + CULTIVO ── */}
+          <div className="row g-4 mb-4">
+            <div className="col-lg-6">
+              <SectionCard title="Cuidados da Planta" icon="🤲" className="h-100">
+                <div className="plant-details-flow-list">
+                  <p className="plant-details-label">Rega</p>
+                  <p className="plant-details-value">{v("watering") || "—"}</p>
+                  <p className="plant-details-label">Horário Ideal de Rega</p>
+                  <p className="plant-details-value">{v("manha") || "—"}</p>
+                  <p className="plant-details-label">Quantidade de Rega</p>
+                  <p className="plant-details-value">{v("amount") || "—"}</p>
+                  <p className="plant-details-label">Poda</p>
+                  <p className="plant-details-value">{v("pruning") || "—"}</p>
+                  <div className="plant-details-data-grid mt-3">
+                    <InfoItem label="Época de Poda" value={v("season")} />
+                    <InfoItem label="Ferramenta de Poda" value={v("tools")} />
+                  </div>
+                </div>
+              </SectionCard>
+            </div>
+            <div className="col-lg-6">
+              <SectionCard title="Cultivo da Planta" icon="🌱" className="h-100">
+                <div className="plant-details-flow-list">
+                  <p className="plant-details-label">Plantio</p>
+                  <p className="plant-details-value">{v("planting") || "—"}</p>
+                  <p className="plant-details-label">Estação</p>
+                  <p className="plant-details-value">{v("station") || "—"}</p>
+                  <p className="plant-details-label">Espaçamento</p>
+                  <p className="plant-details-value">{v("spacing") || "—"}</p>
+                  <p className="plant-details-label">Exposição</p>
+                  <p className="plant-details-value">{v("exhibition") || "—"}</p>
+                  <p className="plant-details-label">Manutenção</p>
+                  <p className="plant-details-value">{v("maintenance") || "—"}</p>
+                </div>
+              </SectionCard>
+            </div>
+          </div>
 
           {/* ── PRAGAS E MONITORAMENTO ── */}
-          {(v("pests") || v("prevention") || v("monitoring")) && (
-            <section className="phyto-section mb-5">
-              <SectionTitle icon="🐛">Pragas e Monitoramento</SectionTitle>
-              <div className="phyto-data-grid--3">
-                <InfoItem label="⚠️ Pragas Comuns" value={v("pests")} />
-                <InfoItem label="🛡️ Prevenção" value={v("prevention")} />
-                <InfoItem label="📊 Monitoramento" value={v("monitoring")} />
-              </div>
-            </section>
-          )}
+          <SectionCard title="Pragas e Monitoramento" icon="🐛">
+            <div className="plant-details-data-grid plant-details-data-grid--3">
+              <InfoItem label="Pragas Comuns" value={v("pests")} />
+              <InfoItem label="Prevenção" value={v("prevention")} />
+              <InfoItem label="Monitoramento" value={v("monitoring")} />
+            </div>
+          </SectionCard>
 
         </div>
       </main>
