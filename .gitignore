@@ -20,3 +20,6 @@
 .env
 .env.*
 !.env.example
+
+# Dependências
+node_modules/
