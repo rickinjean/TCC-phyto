@@ -35,6 +35,10 @@ export default function Footer() {
           <div className="site-footer__col">
             <h4 className="site-footer__heading">Contato</h4>
             <p className="site-footer__text">Professor Matheus Lorenzato Braga</p>
+            <p className="site-footer__text site-footer__text--location">
+              <i className="fas fa-map-marker-alt" aria-hidden="true"></i>{" "}
+              Unesc — Criciúma, SC, Brasil
+            </p>
             <div className="site-footer__links">
               <a
                 href="mailto:matheus.braga@ifc.edu.br"

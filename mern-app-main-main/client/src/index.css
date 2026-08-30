@@ -748,6 +748,18 @@ html[data-theme="dark"] .custom-navbar__user-panel-action:hover {
   color: rgba(226, 241, 232, 0.6);
 }
 
+.site-footer__text--location {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  color: rgba(226, 241, 232, 0.9);
+}
+
+.site-footer__text--location .fa-map-marker-alt {
+  margin-top: 0.28rem;
+  color: #a6dfba;
+}
+
 /* ==========================================================================
    Tela de detalhes da planta
    ========================================================================== */
