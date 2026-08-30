@@ -329,6 +329,7 @@ export default function PlantDetails({ onFavChange }) {
             <div className="col-12 col-lg-5">
               <div className="plant-details-aside d-flex flex-column h-100">
                 <div className="plant-details-quick-badges mb-3">
+                  <QuickBadge icon="🌿" label="Tipo" value={v("type")} />
                   <QuickBadge icon="🌍" label="Origem" value={v("origin")} />
                   <QuickBadge icon="⚠️" label="Toxicidade" value={v("toxicity")} />
                   <QuickBadge icon="🎯" label="Dificuldade" value={v("dificulty")} />
