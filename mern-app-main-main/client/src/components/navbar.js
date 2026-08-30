@@ -16,6 +16,7 @@ const getInitialTheme = () => {
 
 export default function Navbar({ token, role, userName, userAvatar, onLogout }) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [theme, setTheme] = useState(getInitialTheme);
 
     useEffect(() => {
@@ -31,6 +32,25 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
     const toggleTheme = () => setTheme((currentTheme) => currentTheme === "dark" ? "light" : "dark");
 
     const closeMenu = () => setMenuOpen(false);
+    const closeUserMenu = () => setUserMenuOpen(false);
+
+    useEffect(() => {
+        if (!userMenuOpen) return;
+        const handlePointerDown = (event) => {
+            if (!event.target.closest(".custom-navbar__user-menu")) {
+                setUserMenuOpen(false);
+            }
+        };
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") setUserMenuOpen(false);
+        };
+        document.addEventListener("mousedown", handlePointerDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", handlePointerDown);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [userMenuOpen]);
 
     return (
         <nav className="custom-navbar">
@@ -52,63 +72,109 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                             <NavLink className="custom-navbar__link" to="/favoritos">Favoritos</NavLink>
                         </li>
                     )}
-                    <li className="nav-item">
+<li className="nav-item">
                         <NavLink className="custom-navbar__link" to="/Sobre">Sobre</NavLink>
                     </li>
-                    {token && role === "ADM" && (
-                        <>
-                            <li className="nav-item dropdown">
-                                <span className="custom-navbar__link custom-navbar__link--dropdown" style={{cursor: "default"}}>
-                                    ADM
-                                </span>
-                                <ul className="custom-navbar__dropdown">
-                                    <li><NavLink className="custom-navbar__dropdown-link" to="/create">C. Usuários</NavLink></li>
-                                    <li><NavLink className="custom-navbar__dropdown-link" to="/userlist">L. Usuários</NavLink></li>
-                                    <li><NavLink className="custom-navbar__dropdown-link" to="/createplant">C. Plantas</NavLink></li>
-                                </ul>
-                            </li>
-                        </>
-                    )}
                 </ul>
 
-                {token && (
-                    <div className="custom-navbar__user d-flex align-items-center gap-2 me-2">
-                        {userAvatar ? (
-                            <img src={userAvatar} alt="" style={{width: 28, height: 28, borderRadius: "50%", objectFit: "cover"}} />
-                        ) : (
-                            <span style={{width: 28, height: 28, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 600, color: "#fff"}}>
-                                {userName ? userName.charAt(0).toUpperCase() : "?"}
-                            </span>
-                        )}
-                        <span className="small fw-semibold d-none d-lg-inline" style={{maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
-                            {userName || "Usuário"}
-                        </span>
+                {token ? (
+                    <div className="custom-navbar__user-menu">
                         <button
                             type="button"
-                            className="custom-navbar__logout"
-                            aria-label="Sair da conta"
-                            title="Sair"
-                            onClick={onLogout}
+                            className={`custom-navbar__user-button ${userMenuOpen ? "is-open" : ""}`}
+                            aria-expanded={userMenuOpen}
+                            aria-haspopup="true"
+                            aria-label="Menu do usuário"
+                            onClick={() => setUserMenuOpen((prev) => !prev)}
                         >
-                            Sair
+                            {userAvatar ? (
+                                <img className="custom-navbar__user-avatar" src={userAvatar} alt="" />
+                            ) : (
+                                <span className="custom-navbar__user-avatar custom-navbar__user-avatar--fallback">
+                                    {userName ? userName.charAt(0).toUpperCase() : "?"}
+                                </span>
+                            )}
+                            <span className="custom-navbar__user-name">{userName || "Usuário"}</span>
+                            {role === "ADM" && (
+                                <span className="custom-navbar__user-role">ADM</span>
+                            )}
+                            <svg className={`custom-navbar__user-caret ${userMenuOpen ? "is-open" : ""}`} viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
                         </button>
-                    </div>
-                )}
 
+                        <div className={`custom-navbar__user-panel ${userMenuOpen ? "is-open" : ""}`}>
+                            <div className="custom-navbar__user-panel-header">
+                                {userAvatar ? (
+                                    <img className="custom-navbar__user-panel-avatar" src={userAvatar} alt="" />
+                                ) : (
+                                    <span className="custom-navbar__user-panel-avatar custom-navbar__user-panel-avatar--fallback">
+                                        {userName ? userName.charAt(0).toUpperCase() : "?"}
+                                    </span>
+                                )}
+                                <div className="custom-navbar__user-panel-meta">
+                                    <strong className="custom-navbar__user-panel-name">{userName || "Usuário"}</strong>
+                                    <small className="custom-navbar__user-panel-role">
+                                        {role === "ADM" ? "Administrador" : "Usuário"}
+                                    </small>
+                                </div>
+                            </div>
+
+                            {role === "ADM" && (
+                                <div className="custom-navbar__user-panel-section">
+                                    <span className="custom-navbar__user-panel-caption">Administração</span>
+                                    <NavLink className="custom-navbar__user-panel-link" to="/create" onClick={closeUserMenu}>
+                                        👤 Cadastrar Usuário
+                                    </NavLink>
+                                    <NavLink className="custom-navbar__user-panel-link" to="/userlist" onClick={closeUserMenu}>
+                                        📋 Lista de Usuários
+                                    </NavLink>
+                                    <NavLink className="custom-navbar__user-panel-link" to="/createplant" onClick={closeUserMenu}>
+                                        🌱 Cadastrar Planta
+                                    </NavLink>
+                                </div>
+                            )}
+
+                            <div className="custom-navbar__user-panel-section">
+                                <span className="custom-navbar__user-panel-caption">Preferências</span>
                                 <button
-                    className="custom-navbar__theme-toggle"
-                    type="button"
-                    aria-pressed={theme === "dark"}
-                    aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
-                    onClick={toggleTheme}
-                >
-                    <span className="custom-navbar__theme-icon" aria-hidden="true">
-                        {theme === "dark" ? "☀" : "☾"}
-                    </span>
-                    <span className="custom-navbar__theme-label">
-                        {theme === "dark" ? "Claro" : "Escuro"}
-                    </span>
-                </button>
+                                    type="button"
+                                    className="custom-navbar__user-panel-action"
+                                    onClick={toggleTheme}
+                                >
+                                    <span aria-hidden="true">{theme === "dark" ? "☀" : "☾"}</span>
+                                    Tema: {theme === "dark" ? "Claro" : "Escuro"}
+                                </button>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="custom-navbar__user-panel-logout"
+                                onClick={() => {
+                                    closeUserMenu();
+                                    onLogout();
+                                }}
+                            >
+                                Sair
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <button
+                        className="custom-navbar__theme-toggle"
+                        type="button"
+                        aria-pressed={theme === "dark"}
+                        aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+                        onClick={toggleTheme}
+                    >
+                        <span className="custom-navbar__theme-icon" aria-hidden="true">
+                            {theme === "dark" ? "☀" : "☾"}
+                        </span>
+                        <span className="custom-navbar__theme-label">
+                            {theme === "dark" ? "Claro" : "Escuro"}
+                        </span>
+                    </button>
+                )}
 
                 <button
                     className="custom-navbar__toggle navbar-toggler"
