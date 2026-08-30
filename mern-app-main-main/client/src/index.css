@@ -1851,6 +1851,13 @@ html[data-theme="dark"] .btn-primary:focus {
   object-position: center;
 }
 
+.plant-list-card__image.is-small,
+.plant-feature-card__img.is-small,
+.plant-details-image.is-small,
+.plant-details-gallery__img.is-small {
+  object-fit: cover;
+}
+
 .plant-list-card__body {
   min-height: 190px;
   padding: 1.2rem !important;
@@ -3411,9 +3418,13 @@ html[data-theme="dark"] .about-section .alert-success {
   flex-direction: column;
 }
 
+.plant-details-taxonomy__arrow {
+  display: none;
+}
+
 .plant-details-taxonomy__item {
   display: grid;
-  grid-template-columns: minmax(5.5rem, 8.5rem) 1.5rem 1fr;
+  grid-template-columns: minmax(4.5rem, 5.5rem) 1.5rem auto;
   align-items: center;
   column-gap: 0.9rem;
   padding: 0.55rem 0;
@@ -3471,6 +3482,62 @@ html[data-theme="dark"] .about-section .alert-success {
   font-size: 0.98rem;
   font-weight: 700;
   line-height: 1.4;
+}
+
+/* Desktop (>=768px): estilo antigo em blocos com setas */
+@media (min-width: 768px) {
+  .plant-details-taxonomy {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .plant-details-taxonomy__arrow {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.4rem;
+    color: var(--phyto-green-600);
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .plant-details-taxonomy__item {
+    display: inline-flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--phyto-border);
+    border-radius: var(--phyto-radius-sm);
+    background: rgba(230, 243, 235, 0.4);
+  }
+
+  .plant-details-taxonomy__spine {
+    display: none;
+  }
+
+  .plant-details-taxonomy__rank {
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+  }
+
+  .plant-details-taxonomy__value {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 0.85rem;
+  }
+
+  html[data-theme="dark"] .plant-details-taxonomy__item {
+    background: rgba(77, 187, 120, 0.08);
+    border-color: rgba(133, 214, 158, 0.2);
+  }
+
+  html[data-theme="dark"] .plant-details-taxonomy__arrow {
+    color: #72d095;
+  }
 }
 
 /* =====================================================
