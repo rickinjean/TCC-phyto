@@ -1,11 +1,1 @@
-node_modules
-**/.env
-**/.env.*
-!.env.example
-uploads/*
-!uploads/.gitkeep
-**/uploads/*
-!**/uploads/.gitkeep
-*.log
-build/
-.DS_Store
+_guia-cadastro.md
