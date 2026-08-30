@@ -227,8 +227,16 @@ export default function PlantList({ role }) {
     })
     const searchFromURL = searchParams.get("search") || ""
     const [filters, setFilters] = useState(filtersFromURL)
+    const [searchInput, setSearchInput] = useState(searchFromURL)
     const [searchText, setSearchText] = useState(searchFromURL)
     const [filtersOpen, setFiltersOpen] = useState(false)
+
+    const updateUrl = useCallback((nextFilters, nextSearch) => {
+        const params = new URLSearchParams()
+        Object.entries(nextFilters).forEach(([k, v]) => { if (v) params.append(k, v) })
+        if (nextSearch) params.append("search", nextSearch)
+        setSearchParams(params, { replace: true })
+    }, [setSearchParams])
 
     useEffect(() => {
         async function loadCollections() {
@@ -305,10 +313,7 @@ export default function PlantList({ role }) {
             } else {
                 delete next[key]
             }
-            const params = new URLSearchParams()
-            Object.entries(next).forEach(([k, v]) => { if (v) params.append(k, v) })
-            if (searchText) params.append("search", searchText)
-            setSearchParams(params, { replace: true })
+            updateUrl(next, searchText)
             return next
         })
     }
@@ -316,19 +321,31 @@ export default function PlantList({ role }) {
     function clearFilters() {
         setFilters({})
         setSearchText("")
+        setSearchInput("")
         setSearchParams({}, { replace: true })
     }
 
+    // Debounce: buscas são disparadas só quando o campo para de mudar (350ms)
+    // ou no submit (Enter/Buscar).
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchInput !== searchText) {
+                const next = searchInput.trim()
+                setSearchText(next)
+                updateUrl(filters, next)
+            }
+        }, 350)
+        return () => clearTimeout(timer)
+    }, [searchInput, searchText, filters, updateUrl])
+
     function handleSearchSubmit(e) {
         e.preventDefault()
-        const params = new URLSearchParams()
-        Object.entries(filters).forEach(([k, v]) => { if (v) params.append(k, v) })
-        if (searchText) params.append("search", searchText)
-        else params.delete("search")
-        setSearchParams(params, { replace: true })
+        const next = searchInput.trim()
+        setSearchText(next)
+        updateUrl(filters, next)
     }
 
-    const hasActiveFilters = Object.keys(filters).length > 0 || searchText.length > 0
+    const hasActiveFilters = Object.keys(filters).length > 0 || searchInput.trim().length > 0
 
     function handleFavoriteToggle(plantId, added) {
         setFavoriteIds(prev => {
@@ -383,8 +400,8 @@ export default function PlantList({ role }) {
                         type="text"
                         className="form-control plant-search__input"
                         placeholder="Buscar planta por nome ou nome científico..."
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
                         aria-label="Buscar planta"
                     />
                     <button type="submit" className="btn plant-search__btn">

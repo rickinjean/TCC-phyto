@@ -27,12 +27,22 @@ if (oauthError) {
     window.history.replaceState({}, '', window.location.pathname)
 }
 
+function base64UrlDecode(str) {
+    const b64 = str.replace(/-/g, "+").replace(/_/g, "/")
+    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4)
+    const binary = atob(padded)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i) & 0xff
+    }
+    return new TextDecoder().decode(bytes)
+}
+
 function parseJwt(token) {
     if (!token) return null
     try {
         const payload = token.split('.')[1]
-        const decoded = atob(payload)
-        return JSON.parse(decoded)
+        return JSON.parse(base64UrlDecode(payload))
     } catch {
         return null
     }

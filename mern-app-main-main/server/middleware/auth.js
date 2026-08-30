@@ -1,6 +1,9 @@
 const jwt = require("jsonwebtoken")
 
-const JWT_SECRET = process.env.JWT_SECRET || "change-this-in-production"
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET não está definida no ambiente. Configure server/.env antes de subir o servidor.")
+}
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"]

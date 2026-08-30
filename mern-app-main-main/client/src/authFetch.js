@@ -13,7 +13,9 @@ export default async function authFetch(url, options = {}) {
 
     const res = await fetch(url, { ...options, headers })
 
-    if (res.status === 403 || res.status === 401) {
+    // 401 = sessão expirada/inválida -> logout. 403 (ex.: acesso negado a rota
+    // ADM) NÃO encerra a sessão: o chamador lida com res.ok === false.
+    if (res.status === 401) {
         localStorage.removeItem("token")
         window.dispatchEvent(new Event("auth:logout"))
         return null
