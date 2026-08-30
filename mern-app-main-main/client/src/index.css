@@ -4028,13 +4028,98 @@ html[data-theme="dark"] .plant-suggest-bar__chip {
   object-position: center;
 }
 
-/* Aside do hero: pills + citação */
-.plant-details-hero-aside {
+/* Ficha em 2 colunas */
+.phyto-sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.phyto-sheet__main,
+.phyto-sheet__aside {
+  min-width: 0;
+}
+
+.phyto-spec {
+  position: sticky;
+  top: 1.5rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 1rem;
-  height: 100%;
+  gap: 1.1rem;
+  padding: clamp(1.1rem, 2vw, 1.5rem);
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-md);
+  background: var(--phyto-surface);
+  box-shadow: 0 10px 26px rgba(18, 60, 43, 0.08);
+}
+
+.phyto-spec__title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--phyto-green-700);
+}
+
+.phyto-spec__essenciais {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.phyto-spec__meters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.phyto-spec .phyto-overview-card {
+  padding: 0.65rem 0.35rem;
+  gap: 0.25rem;
+  border-radius: var(--phyto-radius-sm);
+  box-shadow: none;
+}
+
+.phyto-spec .phyto-overview-card__icon {
+  font-size: 1.2rem;
+}
+
+.phyto-spec .phyto-overview-card__label {
+  font-size: 0.6rem;
+}
+
+.phyto-spec .phyto-overview-card__value {
+  font-size: 0.86rem;
+}
+
+.phyto-spec .phyto-meter {
+  margin-bottom: 0;
+  padding: 0.95rem 0.6rem;
+  gap: 0.35rem;
+  border-radius: var(--phyto-radius-sm);
+  box-shadow: none;
+}
+
+.phyto-spec .phyto-sun-meter__sun {
+  font-size: 1.1rem;
+}
+
+.phyto-spec .phyto-water-scale {
+  padding: 0;
+}
+
+@media (max-width: 991.98px) {
+  .phyto-sheet {
+    grid-template-columns: 1fr;
+  }
+
+  .phyto-spec {
+    position: static;
+  }
 }
 
 .plant-details-pills {
@@ -4138,12 +4223,6 @@ html[data-theme="dark"] .plant-details-quote {
 }
 
 /* Visão Geral */
-.phyto-overview-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-
 .phyto-overview-card {
   display: flex;
   flex-direction: column;
@@ -4316,33 +4395,6 @@ html[data-theme="dark"] .plant-details-quote {
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 2px 8px rgba(18, 60, 43, 0.3);
-}
-
-.phyto-soil-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.8rem 1rem;
-  border-radius: var(--phyto-radius-sm);
-  background: var(--phyto-green-100);
-}
-
-.phyto-soil-row__icon {
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-.phyto-soil-row__label {
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #71827a;
-}
-
-.phyto-soil-row__value {
-  font-weight: 700;
-  color: var(--phyto-ink);
 }
 
 /* Taxonomia – árvore evolutiva */
@@ -4539,7 +4591,6 @@ html[data-theme="dark"] .plant-details-quote {
 
 /* Responsivo do novo layout */
 @media (max-width: 767.98px) {
-  .phyto-overview-grid,
   .phyto-data-grid--3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

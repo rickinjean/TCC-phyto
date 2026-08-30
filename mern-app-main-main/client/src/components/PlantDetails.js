@@ -343,22 +343,13 @@ export default function PlantDetails({ onFavChange }) {
 
   const detalheTecnicoItems = [
     { label: "Tipo", value: v("type") },
-    { label: "Altura", value: v("height") },
     { label: "Cor da Flor", value: v("flowercolor") },
     { label: "Folhagem", value: v("foliage") },
-    { label: "Floração", value: v("flowering") },
     { label: "Tamanho", value: v("size") },
     { label: "Fruto", value: v("fruit") },
     { label: "Propagação", value: v("propagation") },
   ];
   const temDetalheTecnico = detalheTecnicoItems.some(i => i.value);
-
-  const ambientalItems = [
-    { label: "Horas de Sol", value: v("iluminosity"), icon: "☀️" },
-    { label: "Tolerância", value: v("tolerance"), icon: "🛡️" },
-    { label: "Temperatura", value: v("idealTemperature"), icon: "🌡️" },
-    { label: "Proteção Climática", value: v("protection"), icon: "🌤️" },
-  ].filter(i => i.value);
 
   const cultivoSteps = [];
   if (v("station")) cultivoSteps.push({ icon: "📅", title: "Estação de plantio", text: null, chip: v("station"), chipLabel: "Melhor época" });
@@ -367,7 +358,6 @@ export default function PlantDetails({ onFavChange }) {
   if (v("maintenance")) cultivoSteps.push({ icon: "🌿", title: "Manutenção", text: v("maintenance"), chip: null, chipLabel: null });
 
   const temLuminosidade = sunScore != null || v("light");
-  const temAmbientais = temLuminosidade || waterPosition != null || ambientalItems.length > 0 || v("soil");
 
   return (
     <div className="plant-details-page">
@@ -410,9 +400,9 @@ export default function PlantDetails({ onFavChange }) {
       <main>
         <div className="container plant-details-hero-shell">
 
-          {/* ── HERO: FOTO + FICHA ── */}
-          <div className="row g-4 g-lg-5 align-items-stretch">
-            <div className="col-12 col-lg-7">
+          {/* ── FICHA EM 2 COLUNAS ── */}
+          <div className="phyto-sheet">
+            <div className="phyto-sheet__main">
               {hasAnyImage ? (
                 hasImages ? (
                   <>
@@ -467,9 +457,19 @@ export default function PlantDetails({ onFavChange }) {
               )}
             </div>
 
-            <div className="col-12 col-lg-5">
-              <aside className="plant-details-hero-aside">
-                <div className="plant-details-pills">
+            {/* ── SOBRE NA COLUNA ESQUERDA ── */}
+            {plant.description && (
+              <section className="phyto-section mt-4">
+                <SectionTitle icon="📖">Sobre a Planta</SectionTitle>
+                <p className="phyto-description">{plant.description}</p>
+              </section>
+            )}
+          </div>
+
+          {/* ── FICHA RÁPIDA (sidebar sticky) ── */}
+          <div className="phyto-sheet__aside">
+            <aside className="phyto-spec">
+              <div className="plant-details-pills">
                   <Pill icon="🌍">{v("origin")}</Pill>
                   <Pill icon="⚠️">{v("toxicity")}</Pill>
                   <Pill icon="🎯">{v("dificulty")}</Pill>
@@ -480,33 +480,46 @@ export default function PlantDetails({ onFavChange }) {
                     <p>{plant.simpleDescription}</p>
                   </blockquote>
                 )}
+
+                <div className="phyto-spec__section">
+                  <h3 className="phyto-spec__title">📌 Ficha essencial</h3>
+                  <div className="phyto-spec__essenciais">
+                    <OverviewCard icon="📏" label="Altura" value={v("height")} />
+                    <OverviewCard icon="☀️" label="Luz" value={v("light")} />
+                    <OverviewCard icon="💧" label="Água" value={v("water")} />
+                    <OverviewCard icon="🌡️" label="Temperatura" value={v("idealTemperature")} />
+                    <OverviewCard icon="🪴" label="Solo" value={v("soil")} />
+                    <OverviewCard icon="🌸" label="Floração" value={v("flowering")} />
+                    <OverviewCard icon="🛡️" label="Tolerância" value={v("tolerance")} />
+                    <OverviewCard icon="🌤️" label="Proteção" value={v("protection")} />
+                  </div>
+                </div>
+
+                {(temLuminosidade || waterPosition != null) && (
+                  <div className="phyto-spec__meters">
+                    {temLuminosidade && (
+                      <div className="phyto-meter">
+                        <span className="phyto-meter__label">Luminosidade</span>
+                        <SunMeter score={sunScore} />
+                        {v("light") && <span className="phyto-meter__value">{v("light")}</span>}
+                        {v("iluminosity") && (
+                          <span className="phyto-meter__hint">{v("iluminosity")}</span>
+                        )}
+                      </div>
+                    )}
+                    {waterPosition != null && (
+                      <div className="phyto-meter">
+                        <span className="phyto-meter__label">Água</span>
+                        <WaterScale position={waterPosition} value={v("water")} />
+                      </div>
+                    )}
+                  </div>
+                )}
               </aside>
             </div>
           </div>
-        </div>
 
         <div className="container plant-details-info-shell">
-
-          {/* ── VISÃO GERAL ── */}
-          <section className="phyto-section mb-5">
-            <SectionTitle icon="👁️">Visão Geral</SectionTitle>
-            <div className="phyto-overview-grid">
-              <OverviewCard icon="📏" label="Altura" value={v("height")} />
-              <OverviewCard icon="☀️" label="Luminosidade" value={v("light")} />
-              <OverviewCard icon="💧" label="Água" value={v("water")} />
-              <OverviewCard icon="🌡️" label="Temperatura" value={v("idealTemperature")} />
-              <OverviewCard icon="🪴" label="Solo" value={v("soil")} />
-              <OverviewCard icon="🌸" label="Floração" value={v("flowering")} />
-            </div>
-          </section>
-
-          {/* ── SOBRE ── */}
-          {plant.description && (
-            <section className="phyto-section phyto-section--narrow mb-5">
-              <SectionTitle icon="📖">Sobre a Planta</SectionTitle>
-              <p className="phyto-description">{plant.description}</p>
-            </section>
-          )}
 
           {/* ── CARACTERÍSTICAS ── */}
           {temDetalheTecnico && (
@@ -517,47 +530,6 @@ export default function PlantDetails({ onFavChange }) {
                   <InfoItem key={item.label} label={item.label} value={item.value} />
                 ))}
               </div>
-            </section>
-          )}
-
-          {/* ── NECESSIDADES AMBIENTAIS ── */}
-          {temAmbientais && (
-            <section className="phyto-section mb-5">
-              <SectionTitle icon="☀️">Necessidades Ambientais</SectionTitle>
-
-              {temLuminosidade && (
-                <div className="phyto-meter">
-                  <span className="phyto-meter__label">Luminosidade</span>
-                  <SunMeter score={sunScore} />
-                  <span className="phyto-meter__value">{v("light") || "—"}</span>
-                  {v("iluminosity") && (
-                    <span className="phyto-meter__hint">{v("iluminosity")}</span>
-                  )}
-                </div>
-              )}
-
-              {waterPosition != null && (
-                <div className="phyto-meter">
-                  <span className="phyto-meter__label">Necessidade de Água</span>
-                  <WaterScale position={waterPosition} value={v("water")} />
-                </div>
-              )}
-
-              {ambientalItems.length > 0 && (
-                <div className="phyto-data-grid--2 mt-4">
-                  {ambientalItems.map(item => (
-                    <InfoItem key={item.label} label={`${item.icon} ${item.label}`} value={item.value} />
-                  ))}
-                </div>
-              )}
-
-              {v("soil") && (
-                <div className="phyto-soil-row mt-3">
-                  <span className="phyto-soil-row__icon" aria-hidden="true">🪴</span>
-                  <span className="phyto-soil-row__label">Solo</span>
-                  <span className="phyto-soil-row__value">{v("soil")}</span>
-                </div>
-              )}
             </section>
           )}
 
@@ -575,8 +547,6 @@ export default function PlantDetails({ onFavChange }) {
                 <TaxoNode label="Família" value={v("Family")} />
                 {v("Family") && <TaxoConnector />}
                 <TaxoNode label="Gênero" value={v("Genero")} />
-                {v("Genero") && <TaxoConnector />}
-                <TaxoNode label="Espécie" value={v("Especie")} isSpecies />
               </div>
             </section>
           )}
