@@ -64,8 +64,7 @@ export default function About() {
                             </span>
                             <h1 className="about-hero__title display-5 fw-normal mb-3">Sobre o Phytografia</h1>
                             <p className="lead text-muted mb-4">
-                                Sistema completo de pesquisa botânica que combina ciência, 
-                                <br />tecnologia e educação para aproximar as pessoas do mundo das plantas.
+                                Sistema completo de pesquisa botânica que combina ciência, tecnologia e educação para aproximar as pessoas do mundo das plantas.
                             </p>
                             <div className="row text-center g-3">
                                 {[
