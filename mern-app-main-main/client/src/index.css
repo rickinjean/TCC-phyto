@@ -1851,13 +1851,6 @@ html[data-theme="dark"] .btn-primary:focus {
   object-position: center;
 }
 
-.plant-list-card__image.is-small,
-.plant-feature-card__img.is-small,
-.plant-details-image.is-small,
-.plant-details-gallery__img.is-small {
-  object-fit: cover;
-}
-
 .plant-list-card__body {
   min-height: 190px;
   padding: 1.2rem !important;
@@ -3478,12 +3471,6 @@ html[data-theme="dark"] .about-section .alert-success {
   font-size: 0.98rem;
   font-weight: 700;
   line-height: 1.4;
-}
-
-@media (min-width: 992px) {
-  .plant-details-taxonomy {
-    max-width: 58.33334%;
-  }
 }
 
 /* =====================================================
