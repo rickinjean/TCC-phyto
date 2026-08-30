@@ -411,13 +411,10 @@ export default function PlantDetails({ onFavChange }) {
 
           {/* ── PRAGAS E MONITORAMENTO ── */}
           <SectionCard title="Pragas e Monitoramento" icon="🐛">
-            <div className="plant-details-flow-list">
-              <p className="plant-details-label">Pragas Comuns</p>
-              <p className="plant-details-value">{v("pests") || "—"}</p>
-              <p className="plant-details-label">Prevenção</p>
-              <p className="plant-details-value">{v("prevention") || "—"}</p>
-              <p className="plant-details-label">Monitoramento</p>
-              <p className="plant-details-value">{v("monitoring") || "—"}</p>
+            <div className="plant-details-data-grid plant-details-data-grid--3">
+              <InfoItem label="Pragas Comuns" value={v("pests")} />
+              <InfoItem label="Prevenção" value={v("prevention")} />
+              <InfoItem label="Monitoramento" value={v("monitoring")} />
             </div>
           </SectionCard>
 
