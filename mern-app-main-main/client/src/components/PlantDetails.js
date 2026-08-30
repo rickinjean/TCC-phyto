@@ -8,6 +8,9 @@ const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000
 
 function ImgWithFallback({ src, alt, className }) {
   const [imgSrc, setImgSrc] = useState(src);
+  useEffect(() => {
+    setImgSrc(src);
+  }, [src]);
   return (
     <img
       src={imgSrc}
@@ -310,19 +313,19 @@ export default function PlantDetails({ onFavChange }) {
                 </div>
               )}
 
-              {/* ── SOBRE A PLANTA ── */}
-              {plant.description && (
+              {/* ── RESUMO RÁPIDO ── */}
+              {plant.simpleDescription && (
                 <section className="phyto-section mt-4">
                   <h2 className="phyto-section-title">
                     <span className="phyto-section-title__icon" aria-hidden="true">📖</span>
-                    Sobre a Planta
+                    Resumo Rápido
                   </h2>
-                  <p className="phyto-description">{plant.description}</p>
+                  <p className="phyto-description">{plant.simpleDescription}</p>
                 </section>
               )}
             </div>
 
-            {/* ── FICHA RÁPIDA ── */}
+            {/* ── SOBRE A PLANTA (texto completo) ── */}
             <div className="col-12 col-lg-5">
               <div className="plant-details-aside d-flex flex-column h-100">
                 <div className="plant-details-quick-badges mb-3">
@@ -331,10 +334,14 @@ export default function PlantDetails({ onFavChange }) {
                   <QuickBadge icon="🎯" label="Dificuldade" value={v("dificulty")} />
                 </div>
 
-                {plant.simpleDescription && (
+                {(plant.description || plant.simpleDescription) && (
                   <section className="plant-details-simple-desc flex-grow-1">
-                    <h2 className="plant-details-section-title">Resumo Rápido</h2>
-                    <p className="plant-details-description-text">{plant.simpleDescription}</p>
+                    <h2 className="plant-details-section-title">
+                      {plant.description ? "Sobre a Planta" : "Resumo Rápido"}
+                    </h2>
+                    <p className="plant-details-description-text">
+                      {plant.description || plant.simpleDescription}
+                    </p>
                   </section>
                 )}
               </div>
