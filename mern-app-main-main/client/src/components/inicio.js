@@ -5,6 +5,19 @@ import { encodeId } from "../idCodec"
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' fill='%23dceee3'%3E%3Crect width='400' height='250'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='62%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E"
 
+function seededShuffle(list, seed) {
+    const arr = [...list]
+    let s = seed
+    for (let i = arr.length - 1; i > 0; i--) {
+        s = (s * 1103515245 + 12345) % 2147483648
+        const j = s % (i + 1)
+        const tmp = arr[i]
+        arr[i] = arr[j]
+        arr[j] = tmp
+    }
+    return arr
+}
+
 function objectIdToTimestamp(id) {
     try {
         return typeof id === "string" ? parseInt(id.substring(0, 8), 16) * 1000 : 0
@@ -70,14 +83,6 @@ const StatBox = ({ value, label, loading }) => (
     </div>
 )
 
-function getEstacaoAtual() {
-    const mes = new Date().getMonth()
-    if (mes === 11 || mes === 0 || mes === 1) return "verão"
-    if (mes >= 2 && mes <= 4) return "outono"
-    if (mes >= 5 && mes <= 7) return "inverno"
-    return "primavera"
-}
-
 const QUICK_ACCESS_CARDS = [
     {
         title: "Explorar Catálogo",
@@ -100,10 +105,9 @@ const QUICK_ACCESS_CARDS = [
 ]
 
 const TABS = [
-    { key: "dia", label: "Planta do Dia" },
+    { key: "dia", label: "Plantas do Dia" },
     { key: "destaque", label: "Em Destaque" },
     { key: "recentes", label: "Recém Adicionadas" },
-    { key: "estacao", label: "Plantas da Estação" },
 ]
 
 export default function Home() {
@@ -159,22 +163,17 @@ export default function Home() {
         }
     }
 
-    const indiceDoDia = useMemo(() => {
-        if (plants.length === 0) return -1
+    const plantasDoDia = useCallback(() => {
+        if (plants.length === 0) return []
         const today = new Date()
         const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate()
-        return seed % plants.length
+        return seededShuffle(plants, seed).slice(0, 4)
     }, [plants])
 
-    const plantaDoDia = useCallback(() => {
-        return indiceDoDia === -1 ? [] : [plants[indiceDoDia]]
-    }, [plants, indiceDoDia])
-
     const emDestaque = useCallback(() => {
-        const withoutDay = plants.filter((_, i) => i !== indiceDoDia)
-        const shuffled = [...withoutDay].sort(() => 0.5 - Math.random())
+        const shuffled = [...plants].sort(() => 0.5 - Math.random())
         return shuffled.slice(0, 4)
-    }, [plants, indiceDoDia])
+    }, [plants])
 
     const recemAdicionadas = useCallback(() => {
         return [...plants]
@@ -182,21 +181,12 @@ export default function Home() {
             .slice(0, 4)
     }, [plants])
 
-    const plantasDaEstacao = useCallback(() => {
-        const estacaoAtual = getEstacaoAtual()
-        return plants.filter((p) => {
-            const stationName = (p.stationData?.name || p.station || "").toLowerCase()
-            return stationName.includes(estacaoAtual)
-        }).slice(0, 4)
-    }, [plants])
-
     const destaque = useMemo(() => {
-        if (activeTab === "dia") return plantaDoDia()
+        if (activeTab === "dia") return plantasDoDia()
         if (activeTab === "destaque") return emDestaque()
         if (activeTab === "recentes") return recemAdicionadas()
-        if (activeTab === "estacao") return plantasDaEstacao()
-        return plantaDoDia()
-    }, [activeTab, plantaDoDia, emDestaque, recemAdicionadas, plantasDaEstacao])
+        return plantasDoDia()
+    }, [activeTab, plantasDoDia, emDestaque, recemAdicionadas])
 
     return (
         <div className="home-page">
