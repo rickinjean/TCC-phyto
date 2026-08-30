@@ -45,9 +45,14 @@ const PlantCard = ({ plant }) => {
                 </div>
                 <div className="card-body d-flex flex-column">
                     <h5 className="card-title plant-feature-card__title">{plant.name}</h5>
-                    <p className="card-subtitle plant-feature-card__scientific fst-italic mb-3">
+                    <p className="card-subtitle plant-feature-card__scientific fst-italic mb-2">
                         {plant.scientificName}
                     </p>
+                    {plant.simpleDescription && (
+                        <p className="plant-feature-card__description card-text flex-grow-1 mb-3">
+                            {plant.simpleDescription}
+                        </p>
+                    )}
                     <Link
                         className="plant-feature-card__button mt-auto btn btn-primary rounded-pill btn-sm"
                         to={`/plantdetails/${encodeId(plant._id)}`}

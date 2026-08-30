@@ -54,16 +54,16 @@ function SectionCard({ title, icon, children, className = "" }) {
   );
 }
 
-function TaxonomyStep({ label, value, arrow = true }) {
+function TaxonomyStep({ label, value }) {
   if (!value) return null;
   return (
-    <>
-      <span className="plant-details-taxonomy__step">
-        <span className="plant-details-taxonomy__step-label">{label}</span>
-        <span className="plant-details-taxonomy__step-value">{value}</span>
-      </span>
-      {arrow && <span className="plant-details-taxonomy__arrow" aria-hidden="true">→</span>}
-    </>
+    <div className="plant-details-taxonomy__item">
+      <span className="plant-details-taxonomy__rank">{label}</span>
+      <div className="plant-details-taxonomy__spine" aria-hidden="true">
+        <span className="plant-details-taxonomy__node" />
+      </div>
+      <span className="plant-details-taxonomy__value">{value}</span>
+    </div>
   );
 }
 
@@ -312,17 +312,6 @@ export default function PlantDetails({ onFavChange }) {
                   </div>
                 </div>
               )}
-
-              {/* ── RESUMO RÁPIDO ── */}
-              {plant.simpleDescription && (
-                <section className="phyto-section mt-4">
-                  <h2 className="phyto-section-title">
-                    <span className="phyto-section-title__icon" aria-hidden="true">📖</span>
-                    Resumo Rápido
-                  </h2>
-                  <p className="phyto-description">{plant.simpleDescription}</p>
-                </section>
-              )}
             </div>
 
             {/* ── SOBRE A PLANTA (texto completo) ── */}
@@ -335,13 +324,11 @@ export default function PlantDetails({ onFavChange }) {
                   <QuickBadge icon="🎯" label="Dificuldade" value={v("dificulty")} />
                 </div>
 
-                {(plant.description || plant.simpleDescription) && (
+                {plant.description && (
                   <section className="plant-details-simple-desc flex-grow-1">
-                    <h2 className="plant-details-section-title">
-                      {plant.description ? "Sobre a Planta" : "Resumo Rápido"}
-                    </h2>
+                    <h2 className="plant-details-section-title">Sobre a Planta</h2>
                     <p className="plant-details-description-text">
-                      {plant.description || plant.simpleDescription}
+                      {plant.description}
                     </p>
                   </section>
                 )}
@@ -412,7 +399,7 @@ export default function PlantDetails({ onFavChange }) {
               <TaxonomyStep label="Ordem" value={v("Ordem")} />
               <TaxonomyStep label="Família" value={v("Family")} />
               <TaxonomyStep label="Gênero" value={v("Genero")} />
-              <TaxonomyStep label="Espécie" value={v("Especie")} arrow={false} />
+              <TaxonomyStep label="Espécie" value={v("Especie")} />
             </div>
           </SectionCard>
 
