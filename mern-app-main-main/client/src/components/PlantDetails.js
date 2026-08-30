@@ -249,59 +249,67 @@ export default function PlantDetails({ onFavChange }) {
       <main>
         <div className="container plant-details-media-shell">
 
-          {/* ── IMAGEM ── */}
-          {hasAnyImage ? (
-            hasImages ? (
-              <div id="plantImagesCarousel" className="carousel slide plant-details-carousel mb-4" data-bs-interval="false">
-                <div className="carousel-indicators">
-                  {plant.imagesPath.map((_, i) => (
-                    <button type="button" key={i} data-bs-target="#plantImagesCarousel"
-                      data-bs-slide-to={i} className={i === 0 ? "active" : ""}
-                      aria-current={i === 0 ? "true" : undefined} aria-label={`Imagem ${i + 1}`} />
-                  ))}
-                </div>
-                <div className="carousel-inner plant-details-carousel-inner">
-                  {plant.imagesPath.map((src, i) => (
-                    <div className={`carousel-item ${i === 0 ? "active" : ""}`} key={i}>
-                      <ImgWithFallback src={`${API_URL}${src}`} alt={`${plant.name} ${i + 1}`} className="d-block w-100 plant-details-image" />
+          <div className="row g-4 g-lg-5 mb-4 align-items-stretch">
+            {/* ── IMAGEM ── */}
+            <div className="col-12 col-lg-7">
+              {hasAnyImage ? (
+                hasImages ? (
+                  <div id="plantImagesCarousel" className="carousel slide plant-details-carousel" data-bs-interval="false">
+                    <div className="carousel-indicators">
+                      {plant.imagesPath.map((_, i) => (
+                        <button type="button" key={i} data-bs-target="#plantImagesCarousel"
+                          data-bs-slide-to={i} className={i === 0 ? "active" : ""}
+                          aria-current={i === 0 ? "true" : undefined} aria-label={`Imagem ${i + 1}`} />
+                      ))}
                     </div>
-                  ))}
+                    <div className="carousel-inner plant-details-carousel-inner">
+                      {plant.imagesPath.map((src, i) => (
+                        <div className={`carousel-item ${i === 0 ? "active" : ""}`} key={i}>
+                          <ImgWithFallback src={`${API_URL}${src}`} alt={`${plant.name} ${i + 1}`} className="d-block w-100 plant-details-image" />
+                        </div>
+                      ))}
+                    </div>
+                    {plant.imagesPath.length > 1 && (
+                      <>
+                        <button className="carousel-control-prev" type="button" data-bs-target="#plantImagesCarousel" data-bs-slide="prev" aria-label="Imagem anterior">
+                          <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+                        </button>
+                        <button className="carousel-control-next" type="button" data-bs-target="#plantImagesCarousel" data-bs-slide="next" aria-label="Próxima imagem">
+                          <span className="carousel-control-next-icon" aria-hidden="true"></span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="plant-details-single-image">
+                    <ImgWithFallback src={`${API_URL}${plant.imagePath}`} alt={plant.name} className="plant-details-image plant-details-image--single" />
+                  </div>
+                )
+              ) : (
+                <div className="plant-details-single-image">
+                  <img src={PLACEHOLDER_IMG} alt="Sem imagem disponível" className="plant-details-image plant-details-image--single" />
                 </div>
-                {plant.imagesPath.length > 1 && (
-                  <>
-                    <button className="carousel-control-prev" type="button" data-bs-target="#plantImagesCarousel" data-bs-slide="prev" aria-label="Imagem anterior">
-                      <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-                    </button>
-                    <button className="carousel-control-next" type="button" data-bs-target="#plantImagesCarousel" data-bs-slide="next" aria-label="Próxima imagem">
-                      <span className="carousel-control-next-icon" aria-hidden="true"></span>
-                    </button>
-                  </>
+              )}
+            </div>
+
+            {/* ── FICHA RÁPIDA ── */}
+            <div className="col-12 col-lg-5">
+              <div className="plant-details-aside d-flex flex-column h-100">
+                <div className="plant-details-quick-badges mb-3">
+                  <QuickBadge icon="🌍" label="Origem" value={v("origin")} />
+                  <QuickBadge icon="⚠️" label="Toxicidade" value={v("toxicity")} />
+                  <QuickBadge icon="🎯" label="Dificuldade" value={v("dificulty")} />
+                </div>
+
+                {plant.simpleDescription && (
+                  <section className="plant-details-simple-desc flex-grow-1">
+                    <h2 className="plant-details-section-title">Resumo Rápido</h2>
+                    <p className="plant-details-description-text">{plant.simpleDescription}</p>
+                  </section>
                 )}
               </div>
-            ) : (
-              <div className="plant-details-single-image mb-4">
-                <ImgWithFallback src={`${API_URL}${plant.imagePath}`} alt={plant.name} className="plant-details-image plant-details-image--single" />
-              </div>
-            )
-          ) : (
-            <div className="plant-details-single-image mb-4">
-              <img src={PLACEHOLDER_IMG} alt="Sem imagem disponível" className="plant-details-image plant-details-image--single" />
             </div>
-          )}
-
-          {/* ── BADGES RÁPIDOS ── */}
-          <div className="plant-details-quick-badges mb-4">
-            <QuickBadge icon="🌍" label="Origem" value={v("origin")} />
-            <QuickBadge icon="⚠️" label="Toxicidade" value={v("toxicity")} />
-            <QuickBadge icon="🎯" label="Dificuldade" value={v("dificulty")} />
           </div>
-
-          {plant.simpleDescription && (
-            <section className="plant-details-simple-desc mb-4">
-              <h2 className="plant-details-section-title">Resumo Rápido</h2>
-              <p className="plant-details-description-text">{plant.simpleDescription}</p>
-            </section>
-          )}
 
           {/* ── DESCRIÇÃO ── */}
           {plant.description && (
@@ -314,50 +322,56 @@ export default function PlantDetails({ onFavChange }) {
 
         <div className="container plant-details-info-shell">
 
-          {/* ── CARACTERÍSTICAS FÍSICAS ── */}
-          <SectionCard title="Características Físicas" icon="🌿">
-            <div className="plant-details-data-grid plant-details-data-grid--4">
-              <InfoItem label="Tipo" value={v("type")} />
-              <InfoItem label="Altura" value={v("height")} />
-              <InfoItem label="Cor da Flor" value={v("flowercolor")} />
-              <InfoItem label="Folhagem" value={v("foliage")} />
-              <InfoItem label="Floração" value={v("flowering")} />
-              <InfoItem label="Tamanho" value={v("size")} />
-              <InfoItem label="Fruto" value={v("fruit")} />
-              <InfoItem label="Propagação" value={v("propagation")} />
+          <div className="row g-4 mb-4">
+            {/* ── CARACTERÍSTICAS FÍSICAS ── */}
+            <div className="col-lg-6">
+              <SectionCard title="Características Físicas" icon="🌿">
+                <div className="plant-details-data-grid plant-details-data-grid--4">
+                  <InfoItem label="Tipo" value={v("type")} />
+                  <InfoItem label="Altura" value={v("height")} />
+                  <InfoItem label="Cor da Flor" value={v("flowercolor")} />
+                  <InfoItem label="Folhagem" value={v("foliage")} />
+                  <InfoItem label="Floração" value={v("flowering")} />
+                  <InfoItem label="Tamanho" value={v("size")} />
+                  <InfoItem label="Fruto" value={v("fruit")} />
+                  <InfoItem label="Propagação" value={v("propagation")} />
+                </div>
+              </SectionCard>
             </div>
-          </SectionCard>
 
-          {/* ── NECESSIDADES AMBIENTAIS ── */}
-          <SectionCard title="Necessidades Ambientais" icon="☀️">
-            <div className="plant-details-env-row">
-              <div className="plant-details-env-item">
-                <span className="plant-details-env-item__icon">☀️</span>
-                <span className="plant-details-env-item__label">Luz</span>
-                <span className="plant-details-env-item__value">{v("light") || "—"}</span>
-              </div>
-              <div className="plant-details-env-item">
-                <span className="plant-details-env-item__icon">💧</span>
-                <span className="plant-details-env-item__label">Água</span>
-                <span className="plant-details-env-item__value">{v("water") || "—"}</span>
-              </div>
-              <div className="plant-details-env-item">
-                <span className="plant-details-env-item__icon">🪴</span>
-                <span className="plant-details-env-item__label">Solo</span>
-                <span className="plant-details-env-item__value">{v("soil") || "—"}</span>
-              </div>
-              <div className="plant-details-env-item">
-                <span className="plant-details-env-item__icon">🌡️</span>
-                <span className="plant-details-env-item__label">Temperatura</span>
-                <span className="plant-details-env-item__value">{v("idealTemperature") || "—"}</span>
-              </div>
+            {/* ── NECESSIDADES AMBIENTAIS ── */}
+            <div className="col-lg-6">
+              <SectionCard title="Necessidades Ambientais" icon="☀️">
+                <div className="plant-details-env-row">
+                  <div className="plant-details-env-item">
+                    <span className="plant-details-env-item__icon">☀️</span>
+                    <span className="plant-details-env-item__label">Luz</span>
+                    <span className="plant-details-env-item__value">{v("light") || "—"}</span>
+                  </div>
+                  <div className="plant-details-env-item">
+                    <span className="plant-details-env-item__icon">💧</span>
+                    <span className="plant-details-env-item__label">Água</span>
+                    <span className="plant-details-env-item__value">{v("water") || "—"}</span>
+                  </div>
+                  <div className="plant-details-env-item">
+                    <span className="plant-details-env-item__icon">🪴</span>
+                    <span className="plant-details-env-item__label">Solo</span>
+                    <span className="plant-details-env-item__value">{v("soil") || "—"}</span>
+                  </div>
+                  <div className="plant-details-env-item">
+                    <span className="plant-details-env-item__icon">🌡️</span>
+                    <span className="plant-details-env-item__label">Temperatura</span>
+                    <span className="plant-details-env-item__value">{v("idealTemperature") || "—"}</span>
+                  </div>
+                </div>
+                <div className="plant-details-data-grid plant-details-data-grid--3 mt-3">
+                  <InfoItem label="Horas de Sol" value={v("iluminosity")} />
+                  <InfoItem label="Tolerância" value={v("tolerance")} />
+                  <InfoItem label="Proteção Climática" value={v("protection")} />
+                </div>
+              </SectionCard>
             </div>
-            <div className="plant-details-data-grid plant-details-data-grid--3 mt-3">
-              <InfoItem label="Horas de Sol" value={v("iluminosity")} />
-              <InfoItem label="Tolerância" value={v("tolerance")} />
-              <InfoItem label="Proteção Climática" value={v("protection")} />
-            </div>
-          </SectionCard>
+          </div>
 
           {/* ── CLASSIFICAÇÃO TAXONÔMICA ── */}
           <SectionCard title="Classificação Taxonômica" icon="🧬">
