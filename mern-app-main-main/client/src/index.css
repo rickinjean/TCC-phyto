@@ -113,9 +113,10 @@ button:focus-visible {
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 0.8rem 1.25rem;
+  padding: 0.8rem 1.5rem;
 }
 
 .custom-navbar__brand {
