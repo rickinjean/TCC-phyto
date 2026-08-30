@@ -4,6 +4,7 @@ const app = express()
 const path = require("path")
 const fs = require("fs")
 const cors = require("cors")
+const helmet = require("helmet")
 const rateLimit = require("express-rate-limit")
 const mongodb = require("mongodb")
 const { getBucket } = require("./gridfs")
@@ -16,6 +17,14 @@ if (!process.env.JWT_SECRET) {
 const port = process.env.PORT || 5050
 
 app.set('trust proxy', true)
+
+// Headers de segurança (helmet). CSP desabilitado por escolha para nao causar
+// regressao com os assets bundlados via npm; CORP liberado para o dev
+// (frontend em :3000 carrega imagens da API em :5050).
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+}))
 
 const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")
     .split(",")
@@ -55,27 +64,35 @@ app.use(cors({
 app.use(express.json())
 
 // Imagens: prioriza o GridFS (MongoDB) e cai para arquivos antigos salvos em disco
+const uploadsDir = path.join(__dirname, 'uploads')
+
 app.use('/uploads', function (req, res) {
     const nome = decodeURIComponent(req.path.replace(/^\//, ""))
 
-    const serveFallback = () => {
-        const caminhoDisco = path.join(__dirname, 'uploads', nome)
-        if (fs.existsSync(caminhoDisco)) return res.sendFile(caminhoDisco)
+    if (!nome) return res.status(404).json({ message: "Imagem não encontrada" })
+
+    // Proteção contra path traversal: o nome é um único segmento de URL e não
+    // deve conter separadores de caminho nem ".."
+    if (nome.includes("/") || nome.includes("\\") || nome.includes("..")) {
+        return res.status(404).json({ message: "Imagem não encontrada" })
+    }
+
+    if (mongodb.ObjectId.isValid(nome)) {
+        const stream = getBucket().openDownloadStream(new mongodb.ObjectId(nome))
+        stream.on("error", serveFallback)
+        stream.pipe(res)
+        return
+    }
+
+    serveFallback()
+
+    function serveFallback() {
+        const caminhoDisco = path.normalize(path.join(uploadsDir, nome))
+        if (caminhoDisco.startsWith(uploadsDir + path.sep) && fs.existsSync(caminhoDisco)) {
+            return res.sendFile(caminhoDisco)
+        }
         res.status(404).json({ message: "Imagem não encontrada" })
     }
-
-    if (!nome) return serveFallback()
-
-    let id = null
-    if (mongodb.ObjectId.isValid(nome)) {
-        id = new mongodb.ObjectId(nome)
-    } else {
-        return serveFallback()
-    }
-
-    const stream = getBucket().openDownloadStream(id)
-    stream.on("error", serveFallback)
-    stream.pipe(res)
 })
 
 const loginLimiter = rateLimit({
@@ -98,6 +115,10 @@ app.use(require("./routes/stats"))
 
 const dbo = require("./db/conn")
 
+app.get("/health", function(req, res) {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() })
+})
+
 if (process.env.NODE_ENV === "production" || process.env.RENDER) {
     const clientBuildPath = path.join(__dirname, "..", "client", "build")
     app.use(express.static(clientBuildPath))
@@ -109,10 +130,6 @@ if (process.env.NODE_ENV === "production" || process.env.RENDER) {
         res.send("App is running")
     })
 }
-
-app.get("/health", function(req, res) {
-    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() })
-})
 
 dbo.connectToMongoDB(function (error) {
     if (error) throw error

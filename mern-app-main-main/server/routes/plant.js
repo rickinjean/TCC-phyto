@@ -13,6 +13,45 @@ function escapeRegex(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
+// Coleções de dicionário permitidas — usada como whitelist para as rotas
+// dinâmicas /collections e para o cache de /collections/all
+const COLLECTIONS = [
+    "fruit", "origin", "type", "propagation", "toxicity", "dificulty",
+    "height", "flowercolor", "foliage", "flowering", "light", "water",
+    "size", "soil", "manha", "amount", "frequency", "NPK", "season",
+    "tools", "prevention", "monitoring", "station", "spacing",
+    "iluminosity", "protection", "idealTemperature", "tolerance",
+    "Filo", "Classe", "Ordem", "Family", "Genero", "Especie"
+]
+
+const COLLECTIONS_SET = new Set(COLLECTIONS)
+
+// Cache simples em memória para /collections/all (TTL 60s).
+// Invalidado a cada inserção/remoção de item de dicionário.
+let collectionsCache = { data: null, fetchedAt: 0 }
+const COLLECTIONS_TTL_MS = 60 * 1000
+
+function clearCollectionsCache() {
+    collectionsCache = { data: null, fetchedAt: 0 }
+}
+
+async function loadAllCollections() {
+    const db_connect = dbo.getDb()
+    const now = Date.now()
+    if (collectionsCache.data && now - collectionsCache.fetchedAt < COLLECTIONS_TTL_MS) {
+        return collectionsCache.data
+    }
+    const results = await Promise.all(
+        COLLECTIONS.map(name =>
+            db_connect.collection(name).find({}).toArray().catch(() => [])
+        )
+    )
+    const all = {}
+    COLLECTIONS.forEach((name, i) => { all[name] = results[i] })
+    collectionsCache = { data: all, fetchedAt: now }
+    return all
+}
+
 // Salvar diretamente em memória e gravar no GridFS (MongoDB), não no disco
 const upload = multer({
     storage: multer.memoryStorage(),
@@ -111,7 +150,16 @@ plantRoutes.route("/plant/:id/clone").get(authenticateToken, authorizeRoles("ADM
 
 /* ==================================================
    LISTAR PLANTAS (com filtros opcionais)
+   Projeção enxuta: só os campos usados pelo catálogo/cards.
+   Os detalhes completos vêm do GET /plant/:id.
 ================================================== */
+const LIST_PROJECTION = {
+    _id: 1, name: 1, scientificName: 1, simpleDescription: 1,
+    imagesPath: 1, imagePath: 1,
+    type: 1, light: 1, height: 1, flowercolor: 1, dificulty: 1,
+    toxicity: 1, origin: 1
+}
+
 plantRoutes.route("/plant").get(async function (req, res) {
     const db_connect = dbo.getDb()
     try {
@@ -134,7 +182,9 @@ plantRoutes.route("/plant").get(async function (req, res) {
             ]
         }
 
-        const result = await db_connect.collection("plants").find(filter).toArray()
+        const result = await db_connect.collection("plants")
+            .find(filter, { projection: LIST_PROJECTION })
+            .toArray()
         res.status(200).json(result)
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -343,6 +393,8 @@ plantRoutes.route("/plant/:id").delete(authenticateToken, authorizeRoles("ADM"),
             : (doc.imagePath ? [doc.imagePath] : [])
 
         await db_connect.collection("plants").deleteOne({ _id: new ObjectId(id) })
+        // Remove favoritos órfãos mantendo a contagem de favoritos fiel
+        await db_connect.collection("favorites").deleteMany({ plantId: new ObjectId(id) }).catch(() => {})
         await deletarImagensGridFS(imagens)
         res.status(200).json({ message: "Planta deletada com sucesso" })
     } catch (err) {
@@ -356,23 +408,8 @@ plantRoutes.route("/plant/:id").delete(authenticateToken, authorizeRoles("ADM"),
 
 // LISTAR TODAS AS COLEÇÕES DE UMA VEZ (evita N+1 no frontend)
 plantRoutes.route("/collections/all").get(async function (req, res) {
-    const db_connect = dbo.getDb()
-    const COLLECTIONS = [
-        "fruit", "origin", "type", "propagation", "toxicity", "dificulty",
-        "height", "flowercolor", "foliage", "flowering", "light", "water",
-        "size", "soil", "manha", "amount", "frequency", "NPK", "season",
-        "tools", "prevention", "monitoring", "station", "spacing",
-        "iluminosity", "protection", "idealTemperature", "tolerance",
-        "Filo", "Classe", "Ordem", "Family", "Genero", "Especie"
-    ]
     try {
-        const results = await Promise.all(
-            COLLECTIONS.map(name =>
-                db_connect.collection(name).find({}).toArray().catch(() => [])
-            )
-        )
-        const all = {}
-        COLLECTIONS.forEach((name, i) => { all[name] = results[i] })
+        const all = await loadAllCollections()
         res.status(200).json(all)
     } catch (error) {
         res.status(500).json({ message: "Erro ao buscar coleções: " + error.message })
@@ -381,8 +418,11 @@ plantRoutes.route("/collections/all").get(async function (req, res) {
 
 // LISTAR ELEMENTOS DE UMA COLEÇÃO DINAMICAMENTE
 plantRoutes.route("/collections/:name").get(async function (req, res) {
-    const db_connect = dbo.getDb()
     const colecaoAlvo = req.params.name
+    if (!COLLECTIONS_SET.has(colecaoAlvo)) {
+        return res.status(404).json({ message: "Coleção inválida" })
+    }
+    const db_connect = dbo.getDb()
     try {
         const result = await db_connect.collection(colecaoAlvo).find({}).toArray()
         res.status(200).json(result)
@@ -393,11 +433,15 @@ plantRoutes.route("/collections/:name").get(async function (req, res) {
 
 // ADICIONAR ELEMENTO EM UMA COLEÇÃO DINAMICAMENTE
 plantRoutes.route("/collections/:name/add").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
-    const db_connect = dbo.getDb()
     const colecaoAlvo = req.params.name
+    if (!COLLECTIONS_SET.has(colecaoAlvo)) {
+        return res.status(404).json({ message: "Coleção inválida" })
+    }
+    const db_connect = dbo.getDb()
     const novoItem = { name: req.body.name }
     try {
         const result = await db_connect.collection(colecaoAlvo).insertOne(novoItem)
+        clearCollectionsCache()
         res.status(201).json({ _id: result.insertedId, name: req.body.name })
     } catch (error) {
         res.status(500).json({ message: `Erro ao salvar em ${colecaoAlvo}: ` + error.message })
@@ -406,8 +450,11 @@ plantRoutes.route("/collections/:name/add").post(authenticateToken, authorizeRol
 
 // DELETAR ELEMENTO DE UMA COLEÇÃO DINAMICAMENTE
 plantRoutes.route("/collections/:name/:id").delete(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
-    const db_connect = dbo.getDb()
     const colecaoAlvo = req.params.name
+    if (!COLLECTIONS_SET.has(colecaoAlvo)) {
+        return res.status(404).json({ message: "Coleção inválida" })
+    }
+    const db_connect = dbo.getDb()
     const id = req.params.id
 
     try {
@@ -422,6 +469,7 @@ plantRoutes.route("/collections/:name/:id").delete(authenticateToken, authorizeR
             return res.status(404).json({ message: "Item não encontrado." })
         }
 
+        clearCollectionsCache()
         res.status(200).json({ message: "Item deletado com sucesso!" })
     } catch (error) {
         res.status(500).json({ message: `Erro ao deletar de ${colecaoAlvo}: ` + error.message })
