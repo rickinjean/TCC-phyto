@@ -431,17 +431,33 @@ export default function PlantDetails({ onFavChange }) {
             </div>
           </div>
 
-          {/* ── PRAGAS E MONITORAMENTO ── */}
-          <SectionCard title="Pragas e Monitoramento" icon="🐛">
-            <div className="plant-details-flow-list">
-              <p className="plant-details-label">Pragas Comuns</p>
-              <p className="plant-details-value">{v("pests") || "—"}</p>
-              <p className="plant-details-label">Prevenção</p>
-              <p className="plant-details-value">{v("prevention") || "—"}</p>
-              <p className="plant-details-label">Monitoramento</p>
-              <p className="plant-details-value">{v("monitoring") || "—"}</p>
+          {/* ── ADUBAÇÃO + PRAGAS E MONITORAMENTO ── */}
+          <div className="row g-4 mb-4">
+            <div className="col-lg-6">
+              <SectionCard title="Adubação" icon="🧪" className="h-100">
+                <div className="plant-details-flow-list">
+                  <p className="plant-details-label">Adubação</p>
+                  <p className="plant-details-value">{v("fertilizing") || "—"}</p>
+                  <p className="plant-details-label">Frequência de Adubação</p>
+                  <p className="plant-details-value">{v("frequency") || "—"}</p>
+                  <p className="plant-details-label">Tipo de NPK</p>
+                  <p className="plant-details-value">{v("NPK") || "—"}</p>
+                </div>
+              </SectionCard>
             </div>
-          </SectionCard>
+            <div className="col-lg-6">
+              <SectionCard title="Pragas e Monitoramento" icon="🐛" className="h-100">
+                <div className="plant-details-flow-list">
+                  <p className="plant-details-label">Pragas Comuns</p>
+                  <p className="plant-details-value">{v("pests") || "—"}</p>
+                  <p className="plant-details-label">Prevenção</p>
+                  <p className="plant-details-value">{v("prevention") || "—"}</p>
+                  <p className="plant-details-label">Monitoramento</p>
+                  <p className="plant-details-value">{v("monitoring") || "—"}</p>
+                </div>
+              </SectionCard>
+            </div>
+          </div>
 
         </div>
       </main>
