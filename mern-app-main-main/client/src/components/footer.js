@@ -39,32 +39,6 @@ export default function Footer() {
               <i className="fas fa-map-marker-alt" aria-hidden="true"></i>{" "}
               IFC — Campus Sombrio, SC, Brasil
             </p>
-            <div className="site-footer__links">
-              <a
-                href="mailto:matheus.braga@ifc.edu.br"
-                className="site-footer__link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                E-mail
-              </a>
-              <a
-                href="https://www.instagram.com/mathlbraga"
-                className="site-footer__link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Instagram
-              </a>
-              <a
-                href="https://www.linkedin.com/in/mathlbraga"
-                className="site-footer__link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                LinkedIn
-              </a>
-            </div>
           </div>
         </div>
 
