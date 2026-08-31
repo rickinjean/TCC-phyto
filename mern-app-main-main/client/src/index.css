@@ -2629,6 +2629,16 @@ html[data-theme="dark"] .plant-list-card__details:hover {
   color: #061b12;
 }
 
+html[data-theme="dark"] .plant-list-pagination__btn {
+  background: #3eae6d;
+  color: #061b12;
+}
+
+html[data-theme="dark"] .plant-list-pagination__btn:hover:not(:disabled) {
+  background: #75d99a;
+  color: #061b12;
+}
+
 html[data-theme="dark"] .plant-list-card__edit,
 html[data-theme="dark"] .plant-list-card__clone {
   border-color: rgba(133, 214, 158, 0.25);
@@ -3159,6 +3169,26 @@ html[data-theme="dark"] .about-section .alert-success {
 
 .plant-list-pagination__btn {
   min-width: 88px;
+  border-radius: 9px;
+  background: var(--phyto-green-700);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.plant-list-pagination__btn:hover {
+  background: var(--phyto-green-900);
+  color: #fff;
+}
+
+.plant-list-pagination__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.plant-list-size__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* =====================================================

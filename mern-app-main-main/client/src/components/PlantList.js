@@ -374,7 +374,8 @@ export default function PlantList({ role }) {
         setCurrentPage(1)
         setPageSize(prev => {
             const idx = PAGE_SIZES.indexOf(prev)
-            const next = PAGE_SIZES[(idx + delta + PAGE_SIZES.length) % PAGE_SIZES.length]
+            const nextIdx = Math.min(Math.max(idx + delta, 0), PAGE_SIZES.length - 1)
+            const next = PAGE_SIZES[nextIdx]
             localStorage.setItem(PAGE_SIZE_KEY, String(next))
             return next
         })
@@ -482,6 +483,7 @@ export default function PlantList({ role }) {
                             type="button"
                             className="btn btn-sm btn-outline-secondary plant-list-size__btn"
                             onClick={() => changePageSize(-1)}
+                            disabled={pageSize <= PAGE_SIZES[0]}
                             aria-label="Diminuir plantas por página"
                         >
                             −
@@ -491,6 +493,7 @@ export default function PlantList({ role }) {
                             type="button"
                             className="btn btn-sm btn-outline-secondary plant-list-size__btn"
                             onClick={() => changePageSize(1)}
+                            disabled={pageSize >= PAGE_SIZES[PAGE_SIZES.length - 1]}
                             aria-label="Aumentar plantas por página"
                         >
                             +
