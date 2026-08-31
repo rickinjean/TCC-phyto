@@ -3145,6 +3145,22 @@ html[data-theme="dark"] .about-section .alert-success {
   color: var(--phyto-green-600);
 }
 
+.plant-list-size__label,
+.plant-list-pagination__page,
+.plant-list-pagination__info {
+  color: var(--phyto-ink-soft);
+  white-space: nowrap;
+}
+
+.plant-list-pagination__page {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.plant-list-pagination__btn {
+  min-width: 88px;
+}
+
 /* =====================================================
    PLANT LIST – FILTROS
    ===================================================== */

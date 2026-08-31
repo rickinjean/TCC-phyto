@@ -13,6 +13,23 @@ function escapeRegex(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
+// Variantes com/sem acento para busca tolerante a diacríticos
+const DIACRITIC_VARIANTS = {
+    a: "aàáâãä", e: "eèéêë", i: "iìíîï", o: "oòóôõö",
+    u: "uùúûü", c: "cç", n: "nñ", y: "yýÿ"
+}
+
+// Regex de busca que aceita qualquer combinação de caixa e acentos,
+// ex.: "mamao", "Mamão" e "MAmÃO" encontram a mesma planta.
+function searchRegex(term) {
+    const pattern = escapeRegex(term).split("").map(ch => {
+        const base = ch.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+        const variants = DIACRITIC_VARIANTS[base]
+        return variants ? `[${variants}]` : ch
+    }).join("")
+    return new RegExp(pattern, "i")
+}
+
 // Coleções de dicionário permitidas — usada como whitelist para as rotas
 // dinâmicas /collections e para o cache de /collections/all
 const COLLECTIONS = [
@@ -175,7 +192,7 @@ plantRoutes.route("/plant").get(async function (req, res) {
         if (type) filter.type = type
         if (height) filter.height = height
         if (search) {
-            const safeRegex = new RegExp(escapeRegex(search), "i")
+            const safeRegex = searchRegex(search)
             filter.$or = [
                 { name: safeRegex },
                 { scientificName: safeRegex }

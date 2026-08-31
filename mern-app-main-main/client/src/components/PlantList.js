@@ -19,6 +19,10 @@ const FILTER_FIELDS = [
     { key: "soil", label: "Solo" },
 ]
 
+const PAGE_SIZES = [6, 12, 18, 24]
+const DEFAULT_PAGE_SIZE = 12
+const PAGE_SIZE_KEY = "phyto-plantlist-pagesize"
+
 const PlantCard = (props) => {
     const carouselRef = useRef(null)
     const carouselId = `plantImagesCarousel-${props.record._id}`
@@ -233,6 +237,11 @@ export default function PlantList({ role }) {
     const [searchInput, setSearchInput] = useState(searchFromURL)
     const [searchText, setSearchText] = useState(searchFromURL)
     const [filtersOpen, setFiltersOpen] = useState(false)
+    const [pageSize, setPageSize] = useState(() => {
+        const stored = Number(localStorage.getItem(PAGE_SIZE_KEY))
+        return PAGE_SIZES.includes(stored) ? stored : DEFAULT_PAGE_SIZE
+    })
+    const [currentPage, setCurrentPage] = useState(1)
 
     const updateUrl = useCallback((nextFilters, nextSearch) => {
         const params = new URLSearchParams()
@@ -350,6 +359,35 @@ export default function PlantList({ role }) {
 
     const hasActiveFilters = Object.keys(filters).length > 0 || searchInput.trim().length > 0
 
+    const totalPlants = plants.length
+    const totalPages = Math.max(1, Math.ceil(totalPlants / pageSize))
+    const safePage = Math.min(currentPage, totalPages)
+    const visiblePlants = plants.slice((safePage - 1) * pageSize, safePage * pageSize)
+    const startCount = totalPlants === 0 ? 0 : (safePage - 1) * pageSize + 1
+    const endCount = Math.min(safePage * pageSize, totalPlants)
+
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [filters, searchText])
+
+    function changePageSize(delta) {
+        setCurrentPage(1)
+        setPageSize(prev => {
+            const idx = PAGE_SIZES.indexOf(prev)
+            const next = PAGE_SIZES[(idx + delta + PAGE_SIZES.length) % PAGE_SIZES.length]
+            localStorage.setItem(PAGE_SIZE_KEY, String(next))
+            return next
+        })
+    }
+
+    function goToPage(page) {
+        const target = Math.max(1, Math.min(page, totalPages))
+        if (target !== safePage) {
+            setCurrentPage(target)
+            window.scrollTo({ top: 0, behavior: "smooth" })
+        }
+    }
+
     function handleFavoriteToggle(plantId, added) {
         setFavoriteIds(prev => {
             const next = new Set(prev)
@@ -414,29 +452,50 @@ export default function PlantList({ role }) {
             </form>
 
             <div className="plant-filters-toolbar mb-4">
-                <div className="d-flex justify-content-between align-items-center gap-2">
-                    <button
-                        type="button"
-                        className={`plant-filters__toggle btn ${filtersOpen ? "is-open" : ""}`}
-                        onClick={() => setFiltersOpen(o => !o)}
-                        aria-expanded={filtersOpen}
-                        aria-controls="plant-filters-body"
-                    >
-                        <i className={`fas fa-chevron-${filtersOpen ? "up" : "down"} plant-filters__chevron`} aria-hidden="true"></i>
-                        Filtros
-                        {Object.keys(filters).length > 0 && (
-                            <span className="plant-filters__badge">{Object.keys(filters).length}</span>
-                        )}
-                    </button>
-                    {hasActiveFilters && (
+                <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                    <div className="d-flex align-items-center gap-2">
                         <button
-                            className="plant-filters__clear btn btn-sm btn-outline-secondary"
-                            onClick={clearFilters}
                             type="button"
+                            className={`plant-filters__toggle btn ${filtersOpen ? "is-open" : ""}`}
+                            onClick={() => setFiltersOpen(o => !o)}
+                            aria-expanded={filtersOpen}
+                            aria-controls="plant-filters-body"
                         >
-                            Limpar Filtros
+                            <i className={`fas fa-chevron-${filtersOpen ? "up" : "down"} plant-filters__chevron`} aria-hidden="true"></i>
+                            Filtros
+                            {Object.keys(filters).length > 0 && (
+                                <span className="plant-filters__badge">{Object.keys(filters).length}</span>
+                            )}
                         </button>
-                    )}
+                        {hasActiveFilters && (
+                            <button
+                                className="plant-filters__clear btn btn-sm btn-outline-secondary"
+                                onClick={clearFilters}
+                                type="button"
+                            >
+                                Limpar Filtros
+                            </button>
+                        )}
+                    </div>
+                    <div className="plant-list-size d-inline-flex align-items-center gap-2">
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary plant-list-size__btn"
+                            onClick={() => changePageSize(-1)}
+                            aria-label="Diminuir plantas por página"
+                        >
+                            −
+                        </button>
+                        <span className="plant-list-size__label">{pageSize} por página</span>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary plant-list-size__btn"
+                            onClick={() => changePageSize(1)}
+                            aria-label="Aumentar plantas por página"
+                        >
+                            +
+                        </button>
+                    </div>
                 </div>
                 {filtersOpen && (
                     <div className="plant-filters mt-2" id="plant-filters-body">
@@ -475,7 +534,7 @@ export default function PlantList({ role }) {
                         Carregando plantas...
                     </div>
                 ) : plants.length > 0 ? (
-                    plants.map(record => (
+                    visiblePlants.map(record => (
                         <PlantCard
                             key={record._id}
                             record={record}
@@ -492,6 +551,33 @@ export default function PlantList({ role }) {
                     />
                 )}
             </div>
+
+            {!loading && totalPages > 1 && (
+                <nav className="plant-list-pagination d-flex align-items-center justify-content-between gap-2 flex-wrap mt-2" aria-label="Paginação">
+                    <span className="plant-list-pagination__info">
+                        Mostrando {startCount}–{endCount} de {totalPlants} {totalPlants === 1 ? "planta" : "plantas"}
+                    </span>
+                    <div className="d-flex align-items-center gap-2">
+                        <button
+                            type="button"
+                            className="btn btn-sm plant-list-pagination__btn"
+                            onClick={() => goToPage(safePage - 1)}
+                            disabled={safePage <= 1}
+                        >
+                            Anterior
+                        </button>
+                        <span className="plant-list-pagination__page">Página {safePage} de {totalPages}</span>
+                        <button
+                            type="button"
+                            className="btn btn-sm plant-list-pagination__btn"
+                            onClick={() => goToPage(safePage + 1)}
+                            disabled={safePage >= totalPages}
+                        >
+                            Próximo
+                        </button>
+                    </div>
+                </nav>
+            )}
         </div>
     )
 }
