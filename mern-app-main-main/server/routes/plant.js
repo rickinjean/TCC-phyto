@@ -343,18 +343,25 @@ plantRoutes.route("/plant/:id").put(authenticateToken, authorizeRoles("ADM"), up
         }
 
         const files = req.files?.images || []
+        const mantidasPaths = [...new Set(
+            [].concat(req.body.imagesPath || [])
+                .filter(p => typeof p === "string" && p.startsWith("/uploads/") && p.length > 10)
+        )]
         let novasPaths = []
         try {
             if (files.length > 0) {
                 novasPaths = await salvarImagensGridFS(files)
+                console.log(`[plant/:id PUT] recebido ${files.length} arquivo(s)`)
+            }
+            if (files.length > 0 || req.body.imagesPath !== undefined) {
+                const imagensFinal = [...mantidasPaths, ...novasPaths]
+                updateFields.imagesPath = imagensFinal
+                updateFields.imagePath = imagensFinal[0] || ""
                 const docAtual = await db_connect.collection("plants").findOne(myquery)
                 const antigasPaths = docAtual?.imagesPath?.length > 0
                     ? docAtual.imagesPath
                     : (docAtual?.imagePath ? [docAtual.imagePath] : [])
-                updateFields.imagesPath = novasPaths
-                updateFields.imagePath = novasPaths[0] || ""
-                console.log(`[plant/:id PUT] recebido ${files.length} arquivo(s)`)
-                await deletarImagensGridFS(antigasPaths.filter(p => !novasPaths.includes(p)))
+                await deletarImagensGridFS(antigasPaths.filter(p => !imagensFinal.includes(p)))
             }
         } catch (error) {
             if (novasPaths.length > 0) await deletarImagensGridFS(novasPaths)
