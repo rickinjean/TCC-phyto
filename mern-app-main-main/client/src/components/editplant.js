@@ -5,6 +5,7 @@ import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
 import { decodeId } from "../idCodec"
 import SearchableSelect from "./SearchableSelect"
+import sortPorNome from "../sortOptions"
 
 const STEPS = [
     { key: "basicos", label: "Dados Básicos", icon: "🌱" },
@@ -212,7 +213,7 @@ export default function Edit() {
                 const all = await collectionsRes.json()
                 const mapped = {}
                 for (const [key, meta] of Object.entries(mapeamentoColecoes)) {
-                    mapped[key] = all[meta.colecao] || []
+                    mapped[key] = sortPorNome(all[meta.colecao] || [])
                 }
                 setOpcoesBanco(mapped)
             }
@@ -256,7 +257,7 @@ export default function Edit() {
             const item = await response.json()
             setOpcoesBanco(prev => ({
                 ...prev,
-                [modalConfig.campoForm]: [...(prev[modalConfig.campoForm] || []), item]
+                [modalConfig.campoForm]: sortPorNome([...(prev[modalConfig.campoForm] || []), item])
             }))
             updateForm({ [modalConfig.campoForm]: item._id })
             setNovoValorInput("")
