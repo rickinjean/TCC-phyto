@@ -81,8 +81,8 @@ export default function About() {
                             </div>
                         </div>
                         <div className="col-md-6">
-                            <div className="about-hero__image img-fluid rounded shadow d-flex align-items-center justify-content-center" style={{background: "var(--surface-alt, #f5f0ed)", minHeight: 280}}>
-                                <i className="fas fa-leaf" style={{fontSize: 80, color: "var(--accent, #795548)", opacity: 0.3}}></i>
+                            <div className="about-hero__image img-fluid rounded shadow d-flex align-items-center justify-content-center" style={{background: "var(--surface-alt, #f0f4f0)", minHeight: 280}}>
+                                <i className="fas fa-leaf" style={{fontSize: 80, color: "var(--accent, #4a7c59)", opacity: 0.3}}></i>
                             </div>
                         </div>
                     </div>
@@ -150,8 +150,8 @@ export default function About() {
                             </div>
                         </div>
                         <div className="col-md-5">
-                            <div className="about-history__image img-fluid rounded shadow d-flex align-items-center justify-content-center" style={{background: "var(--surface-alt, #f5f0ed)", minHeight: 320}}>
-                                <i className="fas fa-history" style={{fontSize: 70, color: "var(--accent, #795548)", opacity: 0.3}}></i>
+                            <div className="about-history__image img-fluid rounded shadow d-flex align-items-center justify-content-center" style={{background: "var(--surface-alt, #f0f4f0)", minHeight: 320}}>
+                                <i className="fas fa-history" style={{fontSize: 70, color: "var(--accent, #4a7c59)", opacity: 0.3}}></i>
                             </div>
                         </div>
                     </div>
@@ -239,7 +239,7 @@ export default function About() {
                                     <div className="card-body">
                                         <div
                                             className="about-team__image rounded-circle mb-3 d-flex align-items-center justify-content-center mx-auto"
-                                            style={{width: 100, height: 100, background: "var(--accent, #795548)", color: "#fff", fontSize: 32, fontWeight: 600}}
+                                            style={{width: 100, height: 100, background: "var(--accent, #4a7c59)", color: "#fff", fontSize: 32, fontWeight: 600}}
                                         >
                                             {membro.nome.charAt(0)}
                                         </div>
