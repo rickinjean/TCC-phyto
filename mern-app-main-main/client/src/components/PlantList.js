@@ -261,7 +261,7 @@ export default function PlantList({ role }) {
                             return [key, []]
                         }
                         const data = await res.json()
-                        return [key, sortPorNome(data)]
+                        return [key, sortPorNome(data, key)]
                     } catch (err) {
                         console.error(`Erro ao buscar collection "${key}":`, err)
                         return [key, []]

@@ -227,7 +227,7 @@ export default function Create() {
                     const all = await res.json()
                     const mapped = {}
                     for (const [key, meta] of Object.entries(mapeamentoColecoes)) {
-                        mapped[key] = sortPorNome(all[meta.colecao] || [])
+                        mapped[key] = sortPorNome(all[meta.colecao] || [], key)
                     }
                     setOpcoesBanco(mapped)
                 }
@@ -310,7 +310,7 @@ export default function Create() {
             const item = await response.json()
             setOpcoesBanco(prev => ({
                 ...prev,
-                [modalConfig.campoForm]: sortPorNome([...(prev[modalConfig.campoForm] || []), item])
+                [modalConfig.campoForm]: sortPorNome([...(prev[modalConfig.campoForm] || []), item], modalConfig.campoForm)
             }))
             updateForm({ [modalConfig.campoForm]: item._id })
             setNovoValorInput("")
