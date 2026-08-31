@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import API_URL from "../config"
+import authFetch from "../authFetch"
 
 const Record = (props) => {
     return (
@@ -32,12 +33,15 @@ export default function UserList() {
     useEffect(() => {
         async function getUsers() {
             try {
-                const token = localStorage.getItem('token')
-                const headers = token ? { Authorization: `Bearer ${token}` } : {}
-                const response = await fetch(`${API_URL}/user/`, { headers })
+                const response = await authFetch(`${API_URL}/user/`)
+
+                if (response === null) {
+                    setError("Sessão expirada. Faça login novamente.")
+                    return
+                }
 
                 if (!response.ok) {
-                    setError(`Erro ao carregar usuários: ${response.statusText}`)
+                    setError(`Erro ao carregar usuários: ${response.status}`)
                     return
                 }
 
@@ -59,12 +63,13 @@ export default function UserList() {
             return
         }
 
-        const token = localStorage.getItem('token')
-        const headers = token ? { Authorization: `Bearer ${token}` } : {}
-        await fetch(`${API_URL}/user/${id}`, {
-            method: "DELETE",
-            headers
+        const res = await authFetch(`${API_URL}/user/${id}`, {
+            method: "DELETE"
         })
+        if (res === null) {
+            setError("Sessão expirada. Faça login novamente.")
+            return
+        }
 
         const newUsers = users.filter((record) => record._id !== id)
         setUsers(newUsers)

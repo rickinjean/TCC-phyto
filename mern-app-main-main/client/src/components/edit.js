@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import API_URL from "../config"
+import authFetch from "../authFetch"
 
 export default function Edit() {
     const [form, setForm] = useState({
@@ -18,11 +19,13 @@ export default function Edit() {
         async function fetchData() {
             try {
                 const id = params.id
-                const token = localStorage.getItem('token')
-                const headers = token ? { Authorization: `Bearer ${token}` } : {}
-                const response = await fetch(`${API_URL}/user/${id}`, { headers })
+                const response = await authFetch(`${API_URL}/user/${id}`)
+                if (response === null) {
+                    setError("Sessão expirada. Faça login novamente.")
+                    return
+                }
                 if (!response.ok) {
-                    setError(`Erro: ${response.statusText}`)
+                    setError(`Erro: ${response.status}`)
                     return
                 }
 
@@ -54,18 +57,18 @@ export default function Edit() {
         setError("")
 
         const editedPerson = { ...form }
-        const token = localStorage.getItem('token')
-        const headers = {
-            "Content-Type": "application/json"
-        }
-        if (token) headers.Authorization = `Bearer ${token}`
 
         try {
-            const response = await fetch(`${API_URL}/update/${params.id}`, {
+            const response = await authFetch(`${API_URL}/update/${params.id}`, {
                 method: "PUT",
-                headers,
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(editedPerson)
             })
+
+            if (response === null) {
+                setError("Sessão expirada. Faça login novamente.")
+                return
+            }
 
             if (!response.ok) {
                 const data = await response.json().catch(() => ({}))

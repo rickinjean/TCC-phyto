@@ -15,6 +15,7 @@ import PlantDetails from './components/PlantDetails';
 import Inicio from './components/inicio'
 import Sobre from './components/Sobre'
 import Favorites from './components/Favorites'
+import ErrorBoundary from './ErrorBoundary'
 
 const urlParams = new URLSearchParams(window.location.search)
 const oauthToken = urlParams.get('token')
@@ -121,26 +122,28 @@ const App = () => {
         <div className="d-flex flex-column min-vh-100">
             <Navbar token={token} role={role} userName={userName} userAvatar={userAvatar} onLogout={handleLogout} />
             <main className="app-main flex-fill">
-                <Routes>
-                    <Route path="/login" element={<Login onLogin={handleLogin} />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/verify" element={<Verify />} />
-                    <Route exact path="/" element={token ? (role === "ADM" ? <UserList /> : <Navigate to="/inicio" replace />) : <Navigate to="/login" replace />} />
-                    <Route path="/plantlist" element={token ? <PlantList role={role} favTick={favTick} /> : <Navigate to="/login" replace />} />
-                    <Route path="/userlist" element={token && role === "ADM" ? <UserList /> : <Navigate to={token ? "/" : "/login"} replace />} />
-                    <Route path="/edit/:id" element={token && role === "ADM" ? <Edit /> : <Navigate to={token ? "/" : "/login"} replace />} />
-                    <Route path="/editplant/:id" element={token && role === "ADM" ? <Editplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
-                    <Route path="/create" element={token && role === "ADM" ? <Create /> : <Navigate to={token ? "/" : "/login"} replace />} />
-                    <Route path="/createplant" element={token && role === "ADM" ? <Createplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
+                <ErrorBoundary>
+                    <Routes>
+                        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/verify" element={<Verify />} />
+                        <Route exact path="/" element={token ? (role === "ADM" ? <UserList /> : <Navigate to="/inicio" replace />) : <Navigate to="/login" replace />} />
+                        <Route path="/plantlist" element={token ? <PlantList role={role} favTick={favTick} /> : <Navigate to="/login" replace />} />
+                        <Route path="/userlist" element={token && role === "ADM" ? <UserList /> : <Navigate to={token ? "/" : "/login"} replace />} />
+                        <Route path="/edit/:id" element={token && role === "ADM" ? <Edit /> : <Navigate to={token ? "/" : "/login"} replace />} />
+                        <Route path="/editplant/:id" element={token && role === "ADM" ? <Editplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
+                        <Route path="/create" element={token && role === "ADM" ? <Create /> : <Navigate to={token ? "/" : "/login"} replace />} />
+                        <Route path="/createplant" element={token && role === "ADM" ? <Createplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
 
-                    <Route path="/plantdetails/:id" element={token ? <PlantDetails onFavChange={notifyFavChange} /> : <Navigate to="/login" replace />} />
-                    <Route path="/home" element={<Navigate to="/" replace />} />
-                    <Route path="/inicio" element={token ? <Inicio /> : <Navigate to="/login" replace />} />
-                    <Route path="/Sobre" element={token ? <Sobre /> : <Navigate to="/login" replace />} />
-                    <Route path="/sobre" element={<Navigate to="/Sobre" replace />} />
-                    <Route path="/favoritos" element={token ? <Favorites key={favTick} /> : <Navigate to="/login" replace />} />
-                    <Route path="*" element={<Navigate to={token ? (role === "ADM" ? "/" : "/inicio") : "/login"} replace />} />
-                </Routes>
+                        <Route path="/plantdetails/:id" element={token ? <PlantDetails onFavChange={notifyFavChange} /> : <Navigate to="/login" replace />} />
+                        <Route path="/home" element={<Navigate to="/" replace />} />
+                        <Route path="/inicio" element={token ? <Inicio /> : <Navigate to="/login" replace />} />
+                        <Route path="/Sobre" element={token ? <Sobre /> : <Navigate to="/login" replace />} />
+                        <Route path="/sobre" element={<Navigate to="/Sobre" replace />} />
+                        <Route path="/favoritos" element={token ? <Favorites key={favTick} /> : <Navigate to="/login" replace />} />
+                        <Route path="*" element={<Navigate to={token ? (role === "ADM" ? "/" : "/inicio") : "/login"} replace />} />
+                    </Routes>
+                </ErrorBoundary>
             </main>
             <Footer />
         </div>

@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import API_URL from "../config"
+import authFetch from "../authFetch"
 
 export default function Create() {
     const [form, setForm] = useState({
@@ -26,20 +27,18 @@ export default function Create() {
         setLoading(true)
 
         const newPerson = { ...form }
-        const token = localStorage.getItem('token')
-        const headers = {
-            "Content-Type": "application/json"
-        }
-        if (token) {
-            headers.Authorization = `Bearer ${token}`
-        }
 
         try {
-            const response = await fetch(`${API_URL}/user/add`, {
+            const response = await authFetch(`${API_URL}/user/add`, {
                 method: "POST",
-                headers,
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newPerson)
             })
+
+            if (response === null) {
+                setError("Sessão expirada. Faça login novamente.")
+                return
+            }
 
             if (!response.ok) {
                 const data = await response.json().catch(() => ({}))

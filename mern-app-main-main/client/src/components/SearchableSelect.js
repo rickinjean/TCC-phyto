@@ -31,18 +31,33 @@ export default function SearchableSelect({ campo, placeholder, value, options, o
             <div className="wizard-searchable">
                 <input
                     type="text"
+                    id={`select-${campo || "x"}`}
                     className="form-control wizard-searchable__input"
                     value={selected ? selected.name : query}
                     onChange={e => { setQuery(e.target.value); setOpen(true) }}
                     onFocus={() => setOpen(true)}
                     placeholder={placeholder}
                     autoComplete="off"
+                    role="combobox"
+                    aria-expanded={open}
+                    aria-controls={open ? `listbox-${campo || "x"}` : undefined}
+                    aria-autocomplete="list"
+                    aria-haspopup="listbox"
+                    aria-activedescendant={selected ? `option-${selected._id}` : undefined}
                 />
                 {open && (
-                    <ul className="wizard-searchable__list">
+                    <ul
+                        className="wizard-searchable__list"
+                        id={`listbox-${campo || "x"}`}
+                        role="listbox"
+                        aria-label={placeholder}
+                    >
                         <li
                             key="clear"
+                            id="option-clear"
+                            role="option"
                             className={`wizard-searchable__option ${!value ? "wizard-searchable__option--active" : ""}`}
+                            aria-selected={!value}
                             onMouseDown={() => handleSelect("")}
                         >
                             — {placeholder} —
@@ -50,7 +65,10 @@ export default function SearchableSelect({ campo, placeholder, value, options, o
                         {filtered.map(opt => (
                             <li
                                 key={opt._id}
+                                id={`option-${opt._id}`}
+                                role="option"
                                 className={`wizard-searchable__option ${opt._id === value ? "wizard-searchable__option--active" : ""}`}
+                                aria-selected={opt._id === value}
                                 onMouseDown={() => handleSelect(opt._id)}
                             >
                                 <span className="wizard-searchable__option-name">{opt.name}</span>
@@ -68,7 +86,7 @@ export default function SearchableSelect({ campo, placeholder, value, options, o
                             </li>
                         ))}
                         {filtered.length === 0 && (
-                            <li className="wizard-searchable__empty">Nenhum valor encontrado</li>
+                            <li className="wizard-searchable__empty" role="option" aria-disabled="true" aria-selected={false}>Nenhum valor encontrado</li>
                         )}
                     </ul>
                 )}

@@ -47,7 +47,7 @@ app.use(cors({
         const norm = normalizeOrigin(origin)
 
         // Requisições sem header Origin (server-to-server, health checks etc.) são liberadas
-        if (!origin || origin === "null" || corsOrigins.includes(norm)) {
+        if (!origin || corsOrigins.includes(norm)) {
             return callback(null, true)
         }
 
@@ -61,7 +61,7 @@ app.use(cors({
     },
     credentials: true
 }))
-app.use(express.json())
+app.use(express.json({ limit: "2mb" }))
 
 // Imagens: prioriza o GridFS (MongoDB) e cai para arquivos antigos salvos em disco
 const uploadsDir = path.join(__dirname, 'uploads')
@@ -105,6 +105,14 @@ const loginLimiter = rateLimit({
 
 app.use("/user/login", loginLimiter)
 app.use("/user/register", loginLimiter)
+
+process.on("unhandledRejection", (reason) => {
+    console.error("Rejeição não tratada:", reason)
+})
+
+process.on("uncaughtException", (error) => {
+    console.error("Exceção não tratada:", error)
+})
 
 app.use(require("./routes/auth"))
 app.use(require("./routes/user"))

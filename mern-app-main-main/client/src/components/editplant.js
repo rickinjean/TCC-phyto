@@ -58,6 +58,20 @@ function CharacterCounter({ value, max }) {
     )
 }
 
+function SelectField({ campo, placeholder, valor, opcoes, onChange, onManage, onDelete }) {
+    return (
+        <SearchableSelect
+            campo={campo}
+            placeholder={placeholder}
+            value={valor}
+            options={opcoes}
+            onChange={onChange}
+            onManage={onManage}
+            onDelete={onDelete}
+        />
+    )
+}
+
 function ImageDropZone({ imageFiles, setImageFiles, existingImages, setExistingImages }) {
     const [dragging, setDragging] = useState(false)
     const inputRef = useRef()
@@ -133,8 +147,15 @@ function ImageDropZone({ imageFiles, setImageFiles, existingImages, setExistingI
                     onDragLeave={() => setDragging(false)}
                     onDrop={handleDrop}
                     onClick={() => inputRef.current?.click()}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault()
+                            inputRef.current?.click()
+                        }
+                    }}
                     role="button"
                     tabIndex={0}
+                    aria-label="Adicionar imagens da planta"
                 >
                     <span className="wizard-dropzone__icon">📷</span>
                     <span className="wizard-dropzone__text">
@@ -341,13 +362,13 @@ export default function Edit() {
         }
     }
 
-    function SelectField({ campo, placeholder }) {
+    function Field(campo, placeholder) {
         return (
-            <SearchableSelect
+            <SelectField
                 campo={campo}
                 placeholder={placeholder}
-                value={form[campo]}
-                options={opcoesBanco[campo] || []}
+                valor={form[campo]}
+                opcoes={opcoesBanco[campo] || []}
                 onChange={id => updateForm({ [campo]: id })}
                 onManage={() => abrirModalPara(campo)}
                 onDelete={id => deletarItemDoCampo(campo, id)}
@@ -457,12 +478,12 @@ export default function Edit() {
                             <p>Classificação, origem e características gerais</p>
                         </div>
                         <div className="row">
-                            <div className="col-md-4 mb-3"><FieldLabel>Fruto</FieldLabel><SelectField campo="fruit" placeholder="Tipo de fruto..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Origem</FieldLabel><SelectField campo="origin" placeholder="Origem geográfica..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Tipo</FieldLabel><SelectField campo="type" placeholder="Tipo de planta..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Propagação</FieldLabel><SelectField campo="propagation" placeholder="Como se propaga..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Toxicidade</FieldLabel><SelectField campo="toxicity" placeholder="Grau de toxicidade..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Dificuldade</FieldLabel><SelectField campo="dificulty" placeholder="Nível de cuidado..." /></div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Fruto</FieldLabel>{ Field("fruit", "Tipo de fruto...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Origem</FieldLabel>{ Field("origin", "Origem geográfica...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Tipo</FieldLabel>{ Field("type", "Tipo de planta...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Propagação</FieldLabel>{ Field("propagation", "Como se propaga...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Toxicidade</FieldLabel>{ Field("toxicity", "Grau de toxicidade...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Dificuldade</FieldLabel>{ Field("dificulty", "Nível de cuidado...") }</div>
                         </div>
                         <h5 className="wizard-subtitle">Classificação Taxonômica</h5>
                         <div className="row">
@@ -484,10 +505,10 @@ export default function Edit() {
                             <p>Aparência visual da planta</p>
                         </div>
                         <div className="row">
-                            <div className="col-md-6 mb-3"><FieldLabel>Altura / Porte</FieldLabel><SelectField campo="height" placeholder="Porte da planta..." /></div>
-                            <div className="col-md-6 mb-3"><FieldLabel>Cor da Flor</FieldLabel><SelectField campo="flowercolor" placeholder="Cores das flores..." /></div>
-                            <div className="col-md-6 mb-3"><FieldLabel>Folhagem</FieldLabel><SelectField campo="foliage" placeholder="Tipo de folhagem..." /></div>
-                            <div className="col-md-6 mb-3"><FieldLabel>Época de Floração</FieldLabel><SelectField campo="flowering" placeholder="Quando floresce..." /></div>
+                            <div className="col-md-6 mb-3"><FieldLabel>Altura / Porte</FieldLabel>{ Field("height", "Porte da planta...") }</div>
+                            <div className="col-md-6 mb-3"><FieldLabel>Cor da Flor</FieldLabel>{ Field("flowercolor", "Cores das flores...") }</div>
+                            <div className="col-md-6 mb-3"><FieldLabel>Folhagem</FieldLabel>{ Field("foliage", "Tipo de folhagem...") }</div>
+                            <div className="col-md-6 mb-3"><FieldLabel>Época de Floração</FieldLabel>{ Field("flowering", "Quando floresce...") }</div>
                         </div>
                     </div>
                 )}
@@ -500,10 +521,10 @@ export default function Edit() {
                             <p>Condições ideais de cultivo</p>
                         </div>
                         <div className="row">
-                            <div className="col-md-6 mb-3"><FieldLabel>Luminosidade</FieldLabel><SelectField campo="light" placeholder="Necessidade de luz..." /></div>
-                            <div className="col-md-6 mb-3"><FieldLabel>Água</FieldLabel><SelectField campo="water" placeholder="Necessidade de água..." /></div>
-                            <div className="col-md-6 mb-3"><FieldLabel>Solo</FieldLabel><SelectField campo="soil" placeholder="Tipo de solo..." /></div>
-                            <div className="col-md-6 mb-3"><FieldLabel>Tamanho</FieldLabel><SelectField campo="size" placeholder="Tamanho recomendado..." /></div>
+                            <div className="col-md-6 mb-3"><FieldLabel>Luminosidade</FieldLabel>{ Field("light", "Necessidade de luz...") }</div>
+                            <div className="col-md-6 mb-3"><FieldLabel>Água</FieldLabel>{ Field("water", "Necessidade de água...") }</div>
+                            <div className="col-md-6 mb-3"><FieldLabel>Solo</FieldLabel>{ Field("soil", "Tipo de solo...") }</div>
+                            <div className="col-md-6 mb-3"><FieldLabel>Tamanho</FieldLabel>{ Field("size", "Tamanho recomendado...") }</div>
                         </div>
                     </div>
                 )}
@@ -524,8 +545,8 @@ export default function Edit() {
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.watering} placeholder="Como regar esta planta..." value={form.watering} onChange={e => updateForm({ watering: e.target.value })} />
                             </div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Melhor Horário</FieldLabel><SelectField campo="manha" placeholder="Horário ideal..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Quantidade</FieldLabel><SelectField campo="amount" placeholder="Quantidade..." /></div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Melhor Horário</FieldLabel>{ Field("manha", "Horário ideal...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Quantidade</FieldLabel>{ Field("amount", "Quantidade...") }</div>
                         </div>
                         <h5 className="wizard-subtitle">🧪 Adubação</h5>
                         <div className="row">
@@ -536,8 +557,8 @@ export default function Edit() {
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.fertilizing} placeholder="Como adubar esta planta..." value={form.fertilizing} onChange={e => updateForm({ fertilizing: e.target.value })} />
                             </div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Frequência de Adubação</FieldLabel><SelectField campo="frequency" placeholder="Frequência..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Tipo de NPK</FieldLabel><SelectField campo="NPK" placeholder="Tipo de NPK..." /></div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Frequência de Adubação</FieldLabel>{ Field("frequency", "Frequência...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Tipo de NPK</FieldLabel>{ Field("NPK", "Tipo de NPK...") }</div>
                         </div>
                         <h5 className="wizard-subtitle">✂️ Poda</h5>
                         <div className="row">
@@ -548,8 +569,8 @@ export default function Edit() {
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.pruning} placeholder="Como podar..." value={form.pruning} onChange={e => updateForm({ pruning: e.target.value })} />
                             </div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Época</FieldLabel><SelectField campo="season" placeholder="Época da poda..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Ferramentas</FieldLabel><SelectField campo="tools" placeholder="Ferramentas..." /></div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Época</FieldLabel>{ Field("season", "Época da poda...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Ferramentas</FieldLabel>{ Field("tools", "Ferramentas...") }</div>
                         </div>
                         <h5 className="wizard-subtitle">🐛 Pragas e Doenças</h5>
                         <div className="row">
@@ -560,8 +581,8 @@ export default function Edit() {
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.pests} placeholder="Pragas comuns e tratamento..." value={form.pests} onChange={e => updateForm({ pests: e.target.value })} />
                             </div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Prevenção</FieldLabel><SelectField campo="prevention" placeholder="Nível de prevenção..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Monitoramento</FieldLabel><SelectField campo="monitoring" placeholder="Monitoramento..." /></div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Prevenção</FieldLabel>{ Field("prevention", "Nível de prevenção...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Monitoramento</FieldLabel>{ Field("monitoring", "Monitoramento...") }</div>
                         </div>
                     </div>
                 )}
@@ -582,8 +603,8 @@ export default function Edit() {
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.planting} placeholder="Como plantar..." value={form.planting} onChange={e => updateForm({ planting: e.target.value })} />
                             </div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Estação</FieldLabel><SelectField campo="station" placeholder="Estação de plantio..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Espaçamento</FieldLabel><SelectField campo="spacing" placeholder="Espaçamento entre mudas..." /></div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Estação</FieldLabel>{ Field("station", "Estação de plantio...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Espaçamento</FieldLabel>{ Field("spacing", "Espaçamento entre mudas...") }</div>
                         </div>
                         <h5 className="wizard-subtitle">☀️ Exposição Solar</h5>
                         <div className="row">
@@ -594,8 +615,8 @@ export default function Edit() {
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.exhibition} placeholder="Condições de exposição solar..." value={form.exhibition} onChange={e => updateForm({ exhibition: e.target.value })} />
                             </div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Horas de Sol</FieldLabel><SelectField campo="iluminosity" placeholder="Horas diárias..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Proteção</FieldLabel><SelectField campo="protection" placeholder="Proteção climática..." /></div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Horas de Sol</FieldLabel>{ Field("iluminosity", "Horas diárias...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Proteção</FieldLabel>{ Field("protection", "Proteção climática...") }</div>
                         </div>
                         <h5 className="wizard-subtitle">🔧 Manutenção</h5>
                         <div className="row">
@@ -606,8 +627,8 @@ export default function Edit() {
                                 </div>
                                 <textarea className="form-control" rows="2" maxLength={TEXT_LIMITS.maintenance} placeholder="Práticas de manutenção..." value={form.maintenance} onChange={e => updateForm({ maintenance: e.target.value })} />
                             </div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Temperatura Ideal</FieldLabel><SelectField campo="idealTemperature" placeholder="Temperatura..." /></div>
-                            <div className="col-md-4 mb-3"><FieldLabel>Tolerância</FieldLabel><SelectField campo="tolerance" placeholder="Tolerância..." /></div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Temperatura Ideal</FieldLabel>{ Field("idealTemperature", "Temperatura...") }</div>
+                            <div className="col-md-4 mb-3"><FieldLabel>Tolerância</FieldLabel>{ Field("tolerance", "Tolerância...") }</div>
                         </div>
                     </div>
                 )}

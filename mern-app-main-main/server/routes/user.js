@@ -180,22 +180,30 @@ userRoutes.route("/user").get(authenticateToken, authorizeRoles("ADM"), async fu
     // console.log("ROUTE: /user")
 
     try {
-        const result = await db_connect.collection("users").find({}).toArray()
+        const result = await db_connect.collection("users")
+            .find({}, { projection: { senha: 0, verificationToken: 0, verificationExpires: 0 } })
+            .toArray()
         res.status(200).json(result)
     } catch (error) {
-        res.status(404).json({ message: error.message })
+        res.status(500).json({ message: "Erro ao listar usuários" })
     }
 })
 
 // This section will help you get a single user by id
 userRoutes.route("/user/:id").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
+    if (!ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ message: "ID inválido" })
+    }
     const myquery = { _id: new ObjectId(req.params.id) }
     try {
-        const result = await db_connect.collection("users").findOne(myquery)
+        const result = await db_connect.collection("users").findOne(myquery, { projection: { senha: 0, verificationToken: 0, verificationExpires: 0 } })
+        if (!result) {
+            return res.status(404).json({ message: "Usuário não encontrado" })
+        }
         res.status(200).json(result)
     } catch (error) {
-        res.status(404).json({ message: error.message })
+        res.status(500).json({ message: "Erro ao buscar usuário" })
     }
 })
 
@@ -203,9 +211,22 @@ userRoutes.route("/user/:id").get(authenticateToken, authorizeRoles("ADM"), asyn
 userRoutes.route("/user/add").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
     const { name, user, email, function: tipo, senha } = req.body
+    const ROLES_VALIDAS = ["User", "ADM"]
 
     if (!name || !email || !senha) {
         return res.status(400).json({ message: "Nome, email e senha são obrigatórios" })
+    }
+
+    if (tipo && !ROLES_VALIDAS.includes(tipo)) {
+        return res.status(400).json({ message: "Função inválida. Use 'User' ou 'ADM'" })
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ message: "Email inválido" })
+    }
+
+    if (typeof senha !== "string" || senha.length < 6) {
+        return res.status(400).json({ message: "A senha deve ter pelo menos 6 caracteres" })
     }
 
     try {
@@ -216,7 +237,8 @@ userRoutes.route("/user/add").post(authenticateToken, authorizeRoles("ADM"), asy
             user,
             email,
             senha: senhaHash,
-            function: tipo || "User"
+            function: tipo || "User",
+            emailVerified: true
         }
         const result = await db_connect.collection("users").insertOne(myobj)
         console.log("1 document created")
@@ -229,6 +251,16 @@ userRoutes.route("/user/add").post(authenticateToken, authorizeRoles("ADM"), asy
 // This section will help you update a user by id.
 userRoutes.route("/update/:id").put(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
+    const ROLES_VALIDAS = ["User", "ADM"]
+
+    if (!ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ message: "ID inválido" })
+    }
+
+    if (req.body.function && !ROLES_VALIDAS.includes(req.body.function)) {
+        return res.status(400).json({ message: "Função inválida. Use 'User' ou 'ADM'" })
+    }
+
     const myquery = { _id: new ObjectId(req.params.id) }
     const newvalues = {
         $set: {
@@ -250,6 +282,9 @@ userRoutes.route("/update/:id").put(authenticateToken, authorizeRoles("ADM"), as
 // This section will help you delete a user
 userRoutes.route("/user/:id").delete(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
+    if (!ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ message: "ID inválido" })
+    }
     const myquery = { _id: new ObjectId(req.params.id) }
     try {
         const result = await db_connect.collection("users").deleteOne(myquery)

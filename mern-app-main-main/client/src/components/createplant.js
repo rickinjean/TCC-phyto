@@ -99,8 +99,15 @@ function ImageDropZone({ imageFiles, setImageFiles }) {
                 onDragLeave={() => setDragging(false)}
                 onDrop={handleDrop}
                 onClick={() => inputRef.current?.click()}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault()
+                        inputRef.current?.click()
+                    }
+                }}
                 role="button"
                 tabIndex={0}
+                aria-label="Adicionar imagens da planta"
             >
                 <span className="wizard-dropzone__icon">📷</span>
                 <span className="wizard-dropzone__text">
@@ -156,6 +163,20 @@ function CharacterCounter({ value, max }) {
     )
 }
 
+function SelectField({ campo, placeholder, valor, opcoes, onChange, onManage, onDelete }) {
+    return (
+        <SearchableSelect
+            campo={campo}
+            placeholder={placeholder}
+            value={valor}
+            options={opcoes}
+            onChange={onChange}
+            onManage={onManage}
+            onDelete={onDelete}
+        />
+    )
+}
+
 export default function Create() {
     const [form, setForm] = useState(INITIAL_FORM)
     const [imageFiles, setImageFiles] = useState([])
@@ -173,10 +194,10 @@ export default function Create() {
     const autoSaveTimer = useRef(null)
 
     // Clonar planta: busca dados e pré-preenche o formulário
+    const cloneParam = searchParams.get("clone")
     useEffect(() => {
-        const cloneId = searchParams.get("clone")
-        if (!cloneId) return
-        const realId = decodeId(cloneId)
+        if (!cloneParam) return
+        const realId = decodeId(cloneParam)
         async function loadClone() {
             try {
                 const token = localStorage.getItem("token")
@@ -195,7 +216,7 @@ export default function Create() {
             }
         }
         loadClone()
-    }, [searchParams])
+    }, [cloneParam])
 
     useEffect(() => {
         async function load() {
@@ -395,13 +416,13 @@ export default function Create() {
         setCurrentStep(next)
     }
 
-    function SelectField({ campo, placeholder }) {
+    function Field(campo, placeholder) {
         return (
-            <SearchableSelect
+            <SelectField
                 campo={campo}
                 placeholder={placeholder}
-                value={form[campo]}
-                options={opcoesBanco[campo] || []}
+                valor={form[campo]}
+                opcoes={opcoesBanco[campo] || []}
                 onChange={id => updateForm({ [campo]: id })}
                 onManage={() => abrirModalPara(campo)}
                 onDelete={id => deletarItemDoCampo(campo, id)}
@@ -535,27 +556,27 @@ export default function Create() {
                         <div className="row">
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Fruto</FieldLabel>
-                                <SelectField campo="fruit" placeholder="Tipo de fruto..." />
+                                { Field("fruit", "Tipo de fruto...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Origem</FieldLabel>
-                                <SelectField campo="origin" placeholder="Origem geográfica..." />
+                                { Field("origin", "Origem geográfica...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Tipo</FieldLabel>
-                                <SelectField campo="type" placeholder="Tipo de planta..." />
+                                { Field("type", "Tipo de planta...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Propagação</FieldLabel>
-                                <SelectField campo="propagation" placeholder="Como se propaga..." />
+                                { Field("propagation", "Como se propaga...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Toxicidade</FieldLabel>
-                                <SelectField campo="toxicity" placeholder="Grau de toxicidade..." />
+                                { Field("toxicity", "Grau de toxicidade...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Dificuldade</FieldLabel>
-                                <SelectField campo="dificulty" placeholder="Nível de cuidado..." />
+                                { Field("dificulty", "Nível de cuidado...") }
                             </div>
                         </div>
                         <div className="d-flex justify-content-between align-items-center">
@@ -600,19 +621,19 @@ export default function Create() {
                         <div className="row">
                             <div className="col-md-6 mb-3">
                                 <FieldLabel>Altura / Porte</FieldLabel>
-                                <SelectField campo="height" placeholder="Porte da planta..." />
+                                { Field("height", "Porte da planta...") }
                             </div>
                             <div className="col-md-6 mb-3">
                                 <FieldLabel>Cor da Flor</FieldLabel>
-                                <SelectField campo="flowercolor" placeholder="Cores das flores..." />
+                                { Field("flowercolor", "Cores das flores...") }
                             </div>
                             <div className="col-md-6 mb-3">
                                 <FieldLabel>Folhagem</FieldLabel>
-                                <SelectField campo="foliage" placeholder="Tipo de folhagem..." />
+                                { Field("foliage", "Tipo de folhagem...") }
                             </div>
                             <div className="col-md-6 mb-3">
                                 <FieldLabel>Época de Floração</FieldLabel>
-                                <SelectField campo="flowering" placeholder="Quando floresce..." />
+                                { Field("flowering", "Quando floresce...") }
                             </div>
                         </div>
                     </div>
@@ -628,19 +649,19 @@ export default function Create() {
                         <div className="row">
                             <div className="col-md-6 mb-3">
                                 <FieldLabel>Luminosidade</FieldLabel>
-                                <SelectField campo="light" placeholder="Necessidade de luz..." />
+                                { Field("light", "Necessidade de luz...") }
                             </div>
                             <div className="col-md-6 mb-3">
                                 <FieldLabel>Água</FieldLabel>
-                                <SelectField campo="water" placeholder="Necessidade de água..." />
+                                { Field("water", "Necessidade de água...") }
                             </div>
                             <div className="col-md-6 mb-3">
                                 <FieldLabel>Solo</FieldLabel>
-                                <SelectField campo="soil" placeholder="Tipo de solo..." />
+                                { Field("soil", "Tipo de solo...") }
                             </div>
                             <div className="col-md-6 mb-3">
                                 <FieldLabel>Tamanho</FieldLabel>
-                                <SelectField campo="size" placeholder="Tamanho recomendado..." />
+                                { Field("size", "Tamanho recomendado...") }
                             </div>
                         </div>
                     </div>
@@ -665,11 +686,11 @@ export default function Create() {
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Melhor Horário</FieldLabel>
-                                <SelectField campo="manha" placeholder="Horário ideal..." />
+                                { Field("manha", "Horário ideal...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Quantidade</FieldLabel>
-                                <SelectField campo="amount" placeholder="Quantidade..." />
+                                { Field("amount", "Quantidade...") }
                             </div>
                         </div>
 
@@ -684,11 +705,11 @@ export default function Create() {
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Frequência de Adubação</FieldLabel>
-                                <SelectField campo="frequency" placeholder="Frequência..." />
+                                { Field("frequency", "Frequência...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Tipo de NPK</FieldLabel>
-                                <SelectField campo="NPK" placeholder="Tipo de NPK..." />
+                                { Field("NPK", "Tipo de NPK...") }
                             </div>
                         </div>
 
@@ -703,11 +724,11 @@ export default function Create() {
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Época</FieldLabel>
-                                <SelectField campo="season" placeholder="Época da poda..." />
+                                { Field("season", "Época da poda...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Ferramentas</FieldLabel>
-                                <SelectField campo="tools" placeholder="Ferramentas..." />
+                                { Field("tools", "Ferramentas...") }
                             </div>
                         </div>
 
@@ -722,11 +743,11 @@ export default function Create() {
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Prevenção</FieldLabel>
-                                <SelectField campo="prevention" placeholder="Nível de prevenção..." />
+                                { Field("prevention", "Nível de prevenção...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Monitoramento</FieldLabel>
-                                <SelectField campo="monitoring" placeholder="Monitoramento..." />
+                                { Field("monitoring", "Monitoramento...") }
                             </div>
                         </div>
                     </div>
@@ -751,11 +772,11 @@ export default function Create() {
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Estação</FieldLabel>
-                                <SelectField campo="station" placeholder="Estação de plantio..." />
+                                { Field("station", "Estação de plantio...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Espaçamento</FieldLabel>
-                                <SelectField campo="spacing" placeholder="Espaçamento entre mudas..." />
+                                { Field("spacing", "Espaçamento entre mudas...") }
                             </div>
                         </div>
 
@@ -770,11 +791,11 @@ export default function Create() {
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Horas de Sol</FieldLabel>
-                                <SelectField campo="iluminosity" placeholder="Horas diárias..." />
+                                { Field("iluminosity", "Horas diárias...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Proteção</FieldLabel>
-                                <SelectField campo="protection" placeholder="Proteção climática..." />
+                                { Field("protection", "Proteção climática...") }
                             </div>
                         </div>
 
@@ -789,11 +810,11 @@ export default function Create() {
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Temperatura Ideal</FieldLabel>
-                                <SelectField campo="idealTemperature" placeholder="Temperatura..." />
+                                { Field("idealTemperature", "Temperatura...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Tolerância</FieldLabel>
-                                <SelectField campo="tolerance" placeholder="Tolerância..." />
+                                { Field("tolerance", "Tolerância...") }
                             </div>
                         </div>
                     </div>

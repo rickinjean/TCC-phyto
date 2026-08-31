@@ -2813,10 +2813,31 @@ html[data-theme="dark"] .modal-footer {
 html[data-theme="dark"] .modal-title,
 html[data-theme="dark"] .list-group-item {
   color: #e8f3ec;
+}html[data-theme="dark"] .list-group-item {
+  border-color: rgba(133, 214, 158, 0.16);
 }
 
-html[data-theme="dark"] .list-group-item {
-  border-color: rgba(133, 214, 158, 0.16);
+/* ── Dark mode: modais (btn de fechar), toasts do wizard e campos obrigatórios ── */
+html[data-theme="dark"] .modal .btn-close,
+html[data-theme="dark"] .btn-close {
+  filter: invert(1) grayscale(1) brightness(1.8);
+}
+
+html[data-theme="dark"] .wizard-toast--success {
+  background: #0f2b1d;
+  color: #b8f0c9;
+  border-color: rgba(133, 214, 158, 0.35);
+}
+
+html[data-theme="dark"] .wizard-toast--error {
+  background: #331313;
+  color: #ffc9c9;
+  border-color: rgba(240, 128, 128, 0.35);
+}
+
+html[data-theme="dark"] .is-invalid-mild {
+  border-color: #d98b91 !important;
+  background-color: #2a1a1b !important;
 }
 
 @media (max-width: 767.98px) {

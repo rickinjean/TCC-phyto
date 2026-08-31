@@ -31,6 +31,9 @@ favoritesRoutes.route("/favorites").post(authenticateToken, async function (req,
     const db_connect = dbo.getDb()
     try {
         const userId = new ObjectId(req.user.userId)
+        if (!ObjectId.isValid(req.body.plantId)) {
+            return res.status(400).json({ message: "plantId inválido" })
+        }
         const plantId = new ObjectId(req.body.plantId)
 
         const existing = await db_connect.collection("favorites").findOne({ userId, plantId })
@@ -53,6 +56,9 @@ favoritesRoutes.route("/favorites/:plantId").delete(authenticateToken, async fun
     const db_connect = dbo.getDb()
     try {
         const userId = new ObjectId(req.user.userId)
+        if (!ObjectId.isValid(req.params.plantId)) {
+            return res.status(400).json({ message: "plantId inválido" })
+        }
         const plantId = new ObjectId(req.params.plantId)
 
         const result = await db_connect.collection("favorites").deleteOne({ userId, plantId })

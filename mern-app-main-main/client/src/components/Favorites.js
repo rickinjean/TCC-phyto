@@ -69,7 +69,7 @@ export default function Favorites() {
                 const res = await authFetch(`${API_URL}/favorites`)
                 if (res && res.ok) {
                     const data = await res.json()
-                    setFavorites(data)
+                    setFavorites(data.filter(f => f.plant))
                 } else if (res) {
                     console.warn("Falha ao carregar favoritos:", res.status)
                 }
