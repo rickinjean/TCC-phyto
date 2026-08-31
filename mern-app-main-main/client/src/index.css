@@ -1097,8 +1097,12 @@ html[data-theme="dark"] .custom-navbar__user-panel-action:hover {
 
 @media (max-width: 767.98px) {
   .site-footer__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
+  }
+
+  .site-footer__col:first-child {
+    grid-column: 1 / -1;
   }
 
   .site-footer__links {
