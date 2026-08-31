@@ -22,19 +22,6 @@ const REQUIRED_BY_STEP = {
     0: [],
 }
 
-// Todos os campos do formulário (para cálculo de progresso)
-const ALL_FIELDS = Object.keys({
-    name: "", scientificName: "", description: "", simpleDescription: "",
-    fruit: "", origin: "", type: "", propagation: "", toxicity: "", dificulty: "",
-    Filo: "", Classe: "", Ordem: "", Family: "", Genero: "", Especie: "",
-    height: "", flowercolor: "", foliage: "", flowering: "",
-    light: "", water: "", size: "", soil: "",
-    watering: "", fertilizing: "", pruning: "", pests: "",
-    manha: "", amount: "", frequency: "", NPK: "", season: "", tools: "", prevention: "", monitoring: "",
-    planting: "", exhibition: "", maintenance: "",
-    station: "", spacing: "", iluminosity: "", protection: "", idealTemperature: "", tolerance: "",
-})
-
 const INITIAL_FORM = {
     name: "", scientificName: "", description: "", simpleDescription: "",
     fruit: "", origin: "", type: "", propagation: "", toxicity: "", dificulty: "",
@@ -391,20 +378,6 @@ export default function Create() {
     // Disponível apenas quando não é o último step e não é o step de revisão
     // O botão "Próximo" é o avanço; o submit fica no step de revisão
 
-    // Percentual de campos preenchidos
-    const progress = useMemo(() => {
-        const filled = ALL_FIELDS.filter(k => form[k]).length
-        return Math.round((filled / ALL_FIELDS.length) * 100)
-    }, [form])
-
-    // Progresso por step obrigatório
-    const requiredProgress = useMemo(() => {
-        const totalRequired = Object.values(REQUIRED_BY_STEP).reduce((a, l) => a + l.length, 0)
-        const doneRequired = Object.values(REQUIRED_BY_STEP).reduce((acc, list) =>
-            acc + list.filter(f => form[f]).length, 0)
-        return totalRequired > 0 ? Math.round((doneRequired / totalRequired) * 100) : 100
-    }, [form])
-
     // URL estável para o preview da primeira imagem (evita vazamento de memória)
     const previewUrl = useMemo(() => {
         if (imageFiles.length === 0) return null
@@ -462,19 +435,6 @@ export default function Create() {
                         Limpar rascunho
                     </button>
                 )}
-            </div>
-
-            {/* ── SELEÇÃO DE TEMPLATE ── */}
-            <div className="wizard-progress mb-3">
-                <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="wizard-progress__label">
-                        {requiredProgress < 100 ? `Campos obrigatórios: ${requiredProgress}%` : "Campos obrigatórios completos ✓"} — Preenchimento geral: {progress}%
-                    </span>
-                    <span className="wizard-progress__pct">{progress}%</span>
-                </div>
-                <div className="wizard-progress__bar">
-                    <div className="wizard-progress__fill" style={{ width: `${progress}%` }} />
-                </div>
             </div>
 
             {/* ── STEPPER ── */}
