@@ -132,19 +132,6 @@ export default function Login({ onLogin }) {
                             </div>
                         </div>
 
-                        {/* Lembrar + esqueci */}
-                        <div className="d-flex justify-content-between align-items-center mb-4">
-                            <div className="form-check">
-                                <input type="checkbox" className="form-check-input" id="remember" />
-                                <label className="form-check-label small" htmlFor="remember">
-                                    Lembrar de mim
-                                </label>
-                            </div>
-                            {/* <a href="#" className="small text-decoration-none">
-                                Esqueceu a senha?
-                            </a> */}
-                        </div>
-
                         {/* Botão entrar */}
                         <button type="submit" className="btn btn-primary w-100 py-2" disabled={loading}>
                             {loading ? (
