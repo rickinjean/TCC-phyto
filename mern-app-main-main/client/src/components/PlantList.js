@@ -33,9 +33,14 @@ const PlantCard = (props) => {
     const isFav = props.favoriteIds?.has(props.record._id)
 
     function imgVariantProps(path) {
-        const v = getImageVariants(props.record.imagesMeta, path)
+        const v = getImageVariants(props.record.imagesMeta, path, API_URL)
         return {
-            avifSrc: v?.avifSrc ? `${API_URL}${v.avifSrc}` : undefined,
+            avifSrc: v?.avifSrc || undefined,
+            webpSrc: v?.webpSrc || undefined,
+            avifSrcset: v?.avifSrcset || undefined,
+            webpSrcset: v?.webpSrcset || undefined,
+            imgSrcset: v?.imgSrcset || undefined,
+            sizesAttr: "(max-width: 767px) 100vw, (max-width: 991px) 50vw, 33vw",
         }
     }
 

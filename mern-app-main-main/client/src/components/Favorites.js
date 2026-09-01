@@ -13,7 +13,7 @@ const FavoriteCard = ({ favorite, onRemove }) => {
     const plant = favorite.plant
     const images = plant.imagesPath?.length > 0 ? plant.imagesPath : plant.imagePath ? [plant.imagePath] : []
     const imageUrl = images.length > 0 ? `${API_URL}${images[0]}` : PLACEHOLDER_IMG
-    const variants = getImageVariants(plant.imagesMeta, images[0])
+    const variants = getImageVariants(plant.imagesMeta, images[0], API_URL)
 
     return (
         <div className="col-12 col-md-6 col-lg-4 mb-4">
@@ -24,7 +24,12 @@ const FavoriteCard = ({ favorite, onRemove }) => {
                         alt={plant.name}
                         className="plant-list-card__image d-block w-100"
                         fallback={PLACEHOLDER_IMG}
-                        avifSrc={variants?.avifSrc ? `${API_URL}${variants.avifSrc}` : undefined}
+                        avifSrc={variants?.avifSrc}
+                        webpSrc={variants?.webpSrc}
+                        avifSrcset={variants?.avifSrcset}
+                        webpSrcset={variants?.webpSrcset}
+                        imgSrcset={variants?.imgSrcset}
+                        sizesAttr="(max-width: 767px) 100vw, (max-width: 991px) 50vw, 33vw"
                     />
                     <button
                         className="plant-list-card__favorite is-favorite"

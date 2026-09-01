@@ -99,6 +99,8 @@ async function salvarImagensGridFS(files) {
         })
     }
 
+    const SIZES = [400, 800, 1200, 1600]
+
     const images = []
     for (const file of files) {
         // Redimensiona e otimiza para a web (exceto GIF/animações), mantendo a proporção
@@ -117,35 +119,48 @@ async function salvarImagensGridFS(files) {
         let avifPath = ""
         let webpPath = ""
 
-        if (file.mimetype !== "image/gif" && !animated) {
-            const resized = sharp(file.buffer)
-                .rotate()
-                .resize({
-                    width: 1600,
-                    height: 1600,
-                    fit: "inside",
-                    withoutEnlargement: true
-                })
+        // Mapa de variantes responsivas: { avif: {400: path,...}, webp: {400: path,...} }
+        let sizes = null
 
-            // AVIF é o formato principal (menor); WebP fica como fallback
-            let avatar = null
-            let webpbuf = null
+        if (file.mimetype !== "image/gif" && !animated) {
+            const base = sharp(file.buffer).rotate()
+
+            // Gera cada largura em AVIF (formato principal) e WebP (fallback)
+            const variants = {}
             try {
-                [avatar, webpbuf] = await Promise.all([
-                    resized.clone().toFormat("avif", { quality: 62 }).toBuffer(),
-                    resized.clone().toFormat("webp", { quality: 82 }).toBuffer(),
-                ])
+                for (const sizeW of SIZES) {
+                    const resized = base.clone().resize({
+                        width: sizeW,
+                        height: sizeW,
+                        fit: "inside",
+                        withoutEnlargement: true
+                    })
+                    const [avifBuf, webpBuf] = await Promise.all([
+                        resized.clone().toFormat("avif", { quality: 62 }).toBuffer(),
+                        resized.clone().toFormat("webp", { quality: 82 }).toBuffer(),
+                    ])
+                    const [avifId, webpId] = await Promise.all([
+                        uploadBuffer(avifBuf, "image/avif", file.originalname),
+                        uploadBuffer(webpBuf, "image/webp", file.originalname),
+                    ])
+                    variants[sizeW] = {
+                        avif: `/uploads/${avifId}`,
+                        webp: `/uploads/${webpId}`
+                    }
+                    // Usa o maior tamanho como referência principal da imagem
+                    avifPath = `/uploads/${avifId}`
+                    webpPath = `/uploads/${webpId}`
+                    finalBuffer = avifBuf
+                    finalContentType = "image/avif"
+                }
+                sizes = variants
             } catch {
                 // falha inesperada ao processar — salva o original abaixo
-            }
-
-            if (avatar && webpbuf) {
-                const avifId = await uploadBuffer(avatar, "image/avif", file.originalname)
-                const webpId = await uploadBuffer(webpbuf, "image/webp", file.originalname)
-                avifPath = `/uploads/${avifId}`
-                webpPath = `/uploads/${webpId}`
-                finalBuffer = avatar
-                finalContentType = "image/avif"
+                sizes = null
+                avifPath = ""
+                webpPath = ""
+                finalBuffer = file.buffer
+                finalContentType = file.mimetype
             }
         }
 
@@ -163,13 +178,13 @@ async function salvarImagensGridFS(files) {
             webpPath = `/uploads/${id}`
         }
 
-        images.push({ avifPath, webpPath, path: webpPath || avifPath, width, height })
+        images.push({ avifPath, webpPath, path: webpPath || avifPath, width, height, sizes })
     }
     return images
 }
 
 function objetoIdsDeImagem(item) {
-    // Aceita strings (paths) ou metas {avifPath, webpPath, path}
+    // Aceita strings (paths) ou metas {avifPath, webpPath, path, sizes}
     const paths = []
     if (typeof item === "string") {
         paths.push(item)
@@ -177,6 +192,13 @@ function objetoIdsDeImagem(item) {
         if (typeof item.avifPath === "string") paths.push(item.avifPath)
         if (typeof item.webpPath === "string") paths.push(item.webpPath)
         if (typeof item.path === "string") paths.push(item.path)
+        // Variantes responsivas (GridFS guarda cada largura como objeto separado)
+        if (item.sizes && typeof item.sizes === "object") {
+            for (const w of Object.values(item.sizes)) {
+                if (typeof w?.avif === "string") paths.push(w.avif)
+                if (typeof w?.webp === "string") paths.push(w.webp)
+            }
+        }
     }
     return paths
         .map(p => String(p).split("/").pop())

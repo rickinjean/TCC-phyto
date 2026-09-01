@@ -42,7 +42,7 @@ function getPlantImageUrl(plant) {
 
 const PlantCard = ({ plant }) => {
     const imgPath = getPlantImagePath(plant)
-    const variants = getImageVariants(plant.imagesMeta, imgPath)
+    const variants = getImageVariants(plant.imagesMeta, imgPath, API_URL)
     return (
         <div className="col-sm-6 col-md-3">
             <div className="plant-feature-card card h-100">
@@ -52,7 +52,12 @@ const PlantCard = ({ plant }) => {
                         alt={plant.name}
                         className="plant-feature-card__img"
                         fallback={PLACEHOLDER_IMG}
-                        avifSrc={variants?.avifSrc ? `${API_URL}${variants.avifSrc}` : undefined}
+                        avifSrc={variants?.avifSrc}
+                        webpSrc={variants?.webpSrc}
+                        avifSrcset={variants?.avifSrcset}
+                        webpSrcset={variants?.webpSrcset}
+                        imgSrcset={variants?.imgSrcset}
+                        sizesAttr="(max-width: 575px) 100vw, (max-width: 767px) 50vw, 33vw"
                     />
                 </div>
                 <div className="card-body d-flex flex-column">
