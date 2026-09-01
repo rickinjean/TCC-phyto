@@ -914,12 +914,79 @@ html[data-theme="dark"] .custom-navbar__user-panel-action:hover {
   border-radius: var(--phyto-radius-lg);
 }
 
+.plant-details-carousel .carousel-item {
+  background: #dceee3;
+}
+
+.plant-details-carousel .carousel-indicators {
+  z-index: 2;
+  margin-bottom: 1rem;
+}
+
+.plant-details-carousel .carousel-indicators button {
+  width: 2rem;
+  height: 0.25rem;
+  margin: 0 0.25rem;
+  border: 0;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.55);
+  opacity: 0.75;
+}
+
+.plant-details-carousel .carousel-indicators button.active {
+  background-color: #b8ebc9;
+  opacity: 1;
+}
+
+.plant-details-carousel .carousel-control-prev,
+.plant-details-carousel .carousel-control-next {
+  width: 10%;
+  opacity: 0.9;
+}
+
+.plant-details-description {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.35rem, 3vw, 2.2rem);
+  border: 1px solid var(--phyto-border);
+  border-left: 5px solid var(--phyto-green-600);
+  border-radius: var(--phyto-radius-md);
+  background: var(--phyto-surface);
+  box-shadow: 0 12px 30px rgba(18, 60, 43, 0.07);
+}
+
+.plant-details-description::after {
+  content: "";
+  position: absolute;
+  right: -4rem;
+  bottom: -5rem;
+  width: 12rem;
+  height: 12rem;
+  border: 1px solid rgba(47, 138, 93, 0.1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.plant-details-section-title,
 .plant-details-card-title {
   position: relative;
   margin: 0 0 0.8rem;
   color: var(--phyto-green-700);
   font-weight: 800;
   letter-spacing: -0.015em;
+}
+
+.plant-details-section-title {
+  font-size: 1.25rem;
+}
+
+.plant-details-description-text {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--phyto-ink-soft);
+  font-size: 1rem;
+  line-height: 1.8;
 }
 
 .plant-details-info-shell {
@@ -998,6 +1065,33 @@ html[data-theme="dark"] .custom-navbar__user-panel-action:hover {
   line-height: 1.45;
 }
 
+.plant-details-flow-list {
+  margin-bottom: 0;
+}
+
+.plant-details-flow-list .plant-details-label:not(:first-child) {
+  margin-top: 1rem;
+}
+
+.plant-details-flow-list .plant-details-value:not(:last-child) {
+  padding-bottom: 0.9rem;
+  border-bottom: 1px dashed rgba(31, 107, 73, 0.16);
+}
+
+/* Grid aninhada dentro da lista de cuidados (ex.: Época/Ferramenta de Poda) */
+.plant-details-flow-list .plant-details-data-grid {
+  margin-top: 1rem;
+}
+
+.plant-details-flow-list .plant-details-data-grid .plant-details-label {
+  margin-top: 0;
+}
+
+.plant-details-flow-list .plant-details-data-grid .plant-details-value {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
 @media (max-width: 767.98px) {
   .custom-navbar__inner {
     justify-content: space-between;
@@ -1053,6 +1147,7 @@ html[data-theme="dark"] .custom-navbar__user-panel-action:hover {
     grid-template-columns: 1fr;
   }
 
+  .plant-details-description,
   .plant-details-card,
   .plant-details-carousel,
   .plant-details-single-image {
@@ -1268,6 +1363,7 @@ html[data-theme="dark"] .plant-details-page {
     linear-gradient(180deg, #0d2117 0%, #112a1d 100%);
 }
 
+html[data-theme="dark"] .plant-details-description,
 html[data-theme="dark"] .plant-details-card {
   background: rgba(20, 44, 31, 0.92);
   border-color: rgba(133, 214, 158, 0.2);
@@ -1279,9 +1375,17 @@ html[data-theme="dark"] .plant-details-card:hover {
   box-shadow: var(--phyto-shadow-hover);
 }
 
+html[data-theme="dark"] .plant-details-section-title,
 html[data-theme="dark"] .plant-details-card-title {
   color: #9be2b2;
+}
+
+html[data-theme="dark"] .plant-details-card-title {
   border-bottom-color: rgba(133, 214, 158, 0.18);
+}
+
+html[data-theme="dark"] .plant-details-description-text {
+  color: #c2d6c8;
 }
 
 html[data-theme="dark"] .plant-details-data-item {
@@ -1295,6 +1399,10 @@ html[data-theme="dark"] .plant-details-label {
 
 html[data-theme="dark"] .plant-details-value {
   color: #e8f3ec;
+}
+
+html[data-theme="dark"] .plant-details-flow-list .plant-details-value:not(:last-child) {
+  border-bottom-color: rgba(133, 214, 158, 0.22);
 }
 
 html[data-theme="dark"] .plant-details-badge {
@@ -1332,6 +1440,12 @@ html[data-theme="dark"] .plant-details-taxonomy__rank {
 html[data-theme="dark"] .plant-details-taxonomy__value {
   background: rgba(77, 187, 120, 0.08);
   color: #e8f3ec;
+}
+
+html[data-theme="dark"] .plant-details-simple-desc {
+  background: rgba(20, 44, 31, 0.5);
+  border-color: rgba(133, 214, 158, 0.18);
+  border-left-color: #72d095;
 }
 
 html[data-theme="dark"] .plant-details-skeleton .skeleton-pulse {
@@ -3731,6 +3845,38 @@ html[data-theme="dark"] .about-section .alert-success {
 }
 
 /* =====================================================
+   PLANT DETAILS – SIMPLE DESCRIPTION
+   ===================================================== */
+
+.plant-details-simple-desc {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid rgba(47, 138, 93, 0.15);
+  border-left: 5px solid var(--phyto-green-600);
+  border-radius: var(--phyto-radius-md);
+  background: linear-gradient(135deg, rgba(230, 243, 235, 0.6), rgba(230, 243, 235, 0.25));
+  box-shadow: 0 6px 18px rgba(18, 60, 43, 0.05);
+}
+
+.plant-details-simple-desc .plant-details-section-title {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--phyto-green-700);
+}
+
+.plant-details-simple-desc .plant-details-description-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--phyto-ink);
+}
+
+/* =====================================================
    PLANT DETAILS – CARD ICON
    ===================================================== */
 
@@ -4198,6 +4344,48 @@ html[data-theme="dark"] .plant-suggest-bar__chip {
    PLANT DETAILS – LAYOUT "CATÁLOGO BOTÂNICO PREMIUM"
    ===================================================== */
 
+/* Breadcrumb no header (faixa escura) */
+.plant-details-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+  margin-bottom: 1.25rem;
+  color: rgba(231, 249, 237, 0.66);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.plant-details-breadcrumb a {
+  color: #e8f9ed;
+  text-decoration: none;
+  transition: border-color 160ms ease;
+}
+
+.plant-details-breadcrumb a:hover {
+  border-bottom: 1px solid rgba(232, 249, 237, 0.6);
+}
+
+.plant-details-breadcrumb__sep {
+  color: rgba(231, 249, 237, 0.4);
+}
+
+.plant-details-breadcrumb__current {
+  color: #dff3e5;
+  font-weight: 700;
+}
+
+.plant-details-scientific-name {
+  font-style: italic;
+}
+
+/* Hero shell */
+.plant-details-hero-shell {
+  margin-top: clamp(1.5rem, 4vw, 3rem);
+  margin-bottom: clamp(1.5rem, 4vw, 3rem);
+}
+
 /* Carrossel do hero com setas próprias */
 .plant-details-carousel {
   position: relative;
@@ -4276,6 +4464,70 @@ html[data-theme="dark"] .plant-suggest-bar__chip {
   height: 100%;
   object-fit: cover;
   object-position: center;
+}
+
+.plant-details-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.phyto-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid rgba(47, 138, 93, 0.16);
+  border-radius: 999px;
+  background: var(--phyto-green-100);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--phyto-ink);
+}
+
+.phyto-pill__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Citação do resumo rápido */
+.plant-details-quote {
+  position: relative;
+  margin: 0;
+  padding: clamp(1.2rem, 2.5vw, 1.8rem);
+  border: 1px solid rgba(47, 138, 93, 0.15);
+  border-left: 5px solid var(--phyto-green-600);
+  border-radius: var(--phyto-radius-md);
+  background: linear-gradient(135deg, rgba(230, 243, 235, 0.65), rgba(230, 243, 235, 0.22));
+  box-shadow: 0 8px 22px rgba(18, 60, 43, 0.07);
+}
+
+.plant-details-quote::before {
+  content: "“";
+  position: absolute;
+  top: 0.35rem;
+  left: 1.1rem;
+  font-size: 3.2rem;
+  line-height: 1;
+  color: rgba(47, 138, 93, 0.22);
+  font-family: Georgia, "Times New Roman", serif;
+  pointer-events: none;
+}
+
+.plant-details-quote p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: clamp(1.02rem, 1.5vw, 1.2rem);
+  font-weight: 600;
+  line-height: 1.7;
+  color: var(--phyto-ink);
+}
+
+html[data-theme="dark"] .plant-details-quote {
+  background: rgba(20, 44, 31, 0.5);
+  border-color: rgba(133, 214, 158, 0.18);
+  border-left-color: #72d095;
 }
 
 /* Seções com título divisor */
@@ -4799,106 +5051,4 @@ html[data-theme="dark"] .password-requirements {
 
 html[data-theme="dark"] .password-strength {
   border-top-color: rgba(133, 214, 158, 0.16);
-}
-
-/* ==========================================================================
-   FICHA BOTÂNICA – refino da página de detalhes
-   ========================================================================== */
-
-/* Ícones Font Awesome usados em badges e cartões de ambiente têm métricas
-   menores que os emojis antigos — ajusta o tamanho para compensar. */
-
-.plant-details-badge__icon {
-  font-size: 1.25rem;
-  color: var(--phyto-green-700);
-}
-
-.plant-details-env-item__icon {
-  font-size: 1.2rem;
-  color: var(--phyto-green-700);
-}
-
-/* Resumo de abertura (simpleDescription) no hero */
-.plant-details-lead {
-  margin: 0;
-  padding: clamp(1rem, 2vw, 1.25rem);
-  border: 1px solid var(--phyto-border);
-  border-left: 5px solid var(--phyto-green-600);
-  border-radius: var(--phyto-radius-md);
-  background: linear-gradient(135deg, rgba(230, 243, 235, 0.6), rgba(230, 243, 235, 0.25));
-  color: var(--phyto-ink-soft);
-  font-size: clamp(1rem, 1.4vw, 1.08rem);
-  font-weight: 500;
-  line-height: 1.75;
-}
-
-/* Seção "Sobre a Planta" — texto com largura de leitura confortável */
-.plant-details-about {
-  padding: clamp(1.25rem, 2.5vw, 2rem);
-}
-
-.plant-details-about .plant-details-about-text {
-  max-width: 72ch;
-  margin: 0;
-  color: var(--phyto-ink-soft);
-  font-size: clamp(1rem, 1.4vw, 1.08rem);
-  font-weight: 500;
-  line-height: 1.85;
-}
-
-/* Célula de informação com ícone (ficha) */
-.plant-details-data-item--icon {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.85rem 0.9rem;
-  border-left-width: 0;
-}
-
-.plant-details-data-item__icon {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.15rem;
-  height: 2.15rem;
-  margin-top: 0.05rem;
-  border-radius: 50%;
-  background: var(--phyto-green-100);
-  color: var(--phyto-green-700);
-  font-size: 0.95rem;
-}
-
-.plant-details-data-item__content {
-  min-width: 0;
-}
-
-/* Suave nos hovers (sem exagero de animação/sombra) */
-.plant-details-card:hover {
-  transform: translateY(-2px);
-}
-
-.plant-details-badge:hover {
-  transform: translateY(-1px);
-}
-
-html[data-theme="dark"] .plant-details-badge__icon,
-html[data-theme="dark"] .plant-details-env-item__icon,
-html[data-theme="dark"] .plant-details-data-item__icon {
-  color: #72d095;
-}
-
-html[data-theme="dark"] .plant-details-data-item__icon {
-  background: rgba(77, 187, 120, 0.14);
-}
-
-html[data-theme="dark"] .plant-details-lead {
-  background: rgba(20, 44, 31, 0.55);
-  border-color: rgba(133, 214, 158, 0.18);
-  border-left-color: #72d095;
-  color: #c2d6c8;
-}
-
-html[data-theme="dark"] .plant-details-about .plant-details-about-text {
-  color: #c2d6c8;
 }

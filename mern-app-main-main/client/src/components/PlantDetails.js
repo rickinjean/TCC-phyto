@@ -25,28 +25,19 @@ function QuickBadge({ icon, label, value }) {
   if (!value || value === "—") return null;
   return (
     <div className="plant-details-badge">
-      <span className="plant-details-badge__icon">
-        <i className={`fas ${icon}`} aria-hidden="true"></i>
-      </span>
+      <span className="plant-details-badge__icon">{icon}</span>
       <span className="plant-details-badge__label">{label}</span>
       <span className="plant-details-badge__value">{value}</span>
     </div>
   );
 }
 
-function InfoItem({ label, value, icon }) {
+function InfoItem({ label, value }) {
   if (!value || value === "—") return null;
   return (
-    <div className={`plant-details-data-item${icon ? " plant-details-data-item--icon" : ""}`}>
-      {icon && (
-        <span className="plant-details-data-item__icon">
-          <i className={`fas ${icon}`} aria-hidden="true"></i>
-        </span>
-      )}
-      <span className="plant-details-data-item__content">
-        <p className="plant-details-label">{label}</p>
-        <p className="plant-details-value">{value}</p>
-      </span>
+    <div className="plant-details-data-item">
+      <p className="plant-details-label">{label}</p>
+      <p className="plant-details-value">{value}</p>
     </div>
   );
 }
@@ -55,11 +46,7 @@ function SectionCard({ title, icon, children, className = "" }) {
   return (
     <section className={`plant-details-card mb-4 ${className}`}>
       <h2 className="plant-details-card-title">
-        {icon && (
-          <span className="plant-details-card-icon">
-            <i className={icon} aria-hidden="true"></i>
-          </span>
-        )}
+        {icon && <span className="plant-details-card-icon">{icon}</span>}
         {title}
       </h2>
       {children}
@@ -78,11 +65,7 @@ function TaxonomyStep({ label, value, arrow = true }) {
         </div>
         <span className="plant-details-taxonomy__value">{value}</span>
       </div>
-      {arrow && (
-        <span className="plant-details-taxonomy__arrow" aria-hidden="true">
-          <i className="fas fa-arrow-right"></i>
-        </span>
-      )}
+      {arrow && <span className="plant-details-taxonomy__arrow" aria-hidden="true">→</span>}
     </>
   );
 }
@@ -212,9 +195,7 @@ export default function PlantDetails({ onFavChange }) {
     return (
       <div className="plant-details-page plant-details-loading">
         <div style={{ textAlign: "center", padding: "4rem 1rem" }}>
-          <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>
-            <i className="fas fa-seedling" aria-hidden="true"></i>
-          </div>
+          <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🔍</div>
           <h2>Planta não encontrada</h2>
           <p style={{ color: "#71827a", marginBottom: "1.5rem" }}>
             O registro que você procura não existe ou foi removido.
@@ -256,7 +237,7 @@ export default function PlantDetails({ onFavChange }) {
       <header className="plant-details-header">
         <div className="container plant-details-shell">
           <button className="btn plant-details-back" onClick={() => navigate(-1)} type="button">
-            <i className="fas fa-arrow-left" aria-hidden="true"></i> Voltar
+            <span aria-hidden="true">←</span> Voltar
           </button>
           <div className="plant-details-header__title-row">
             <div>
@@ -278,11 +259,10 @@ export default function PlantDetails({ onFavChange }) {
       </header>
 
       <main>
-        {/* ── HERO: 2 colunas no PC (imagem | resumo + badges) ── */}
         <div className="container plant-details-media-shell">
 
           <div className="row g-4 g-lg-5 mb-4 align-items-stretch">
-            {/* ── IMAGEM ── */}
+            {/* ── IMAGEM + SOBRE ── */}
             <div className="col-12 col-lg-7">
               {hasAnyImage ? (
                 hasImages ? (
@@ -301,10 +281,10 @@ export default function PlantDetails({ onFavChange }) {
                       {total > 1 && (
                         <>
                           <button className="plant-details-carousel__arrow is-prev" type="button" onClick={goPrev} aria-label="Imagem anterior">
-                            <i className="fas fa-chevron-left" aria-hidden="true"></i>
+                            <span aria-hidden="true">‹</span>
                           </button>
                           <button className="plant-details-carousel__arrow is-next" type="button" onClick={goNext} aria-label="Próxima imagem">
-                            <i className="fas fa-chevron-right" aria-hidden="true"></i>
+                            <span aria-hidden="true">›</span>
                           </button>
                         </>
                       )}
@@ -341,20 +321,23 @@ export default function PlantDetails({ onFavChange }) {
               )}
             </div>
 
-            {/* ── INFO RÁPIDA + RESUMO ── */}
+            {/* ── SOBRE A PLANTA (texto completo) ── */}
             <div className="col-12 col-lg-5">
               <div className="plant-details-aside d-flex flex-column h-100">
                 <div className="plant-details-quick-badges mb-3">
-                  <QuickBadge icon="fa-seedling" label="Tipo" value={v("type")} />
-                  <QuickBadge icon="fa-globe-americas" label="Origem" value={v("origin")} />
-                  <QuickBadge icon="fa-triangle-exclamation" label="Toxicidade" value={v("toxicity")} />
-                  <QuickBadge icon="fa-gauge-high" label="Dificuldade" value={v("dificulty")} />
+                  <QuickBadge icon="🌿" label="Tipo" value={v("type")} />
+                  <QuickBadge icon="🌍" label="Origem" value={v("origin")} />
+                  <QuickBadge icon="⚠️" label="Toxicidade" value={v("toxicity")} />
+                  <QuickBadge icon="🎯" label="Dificuldade" value={v("dificulty")} />
                 </div>
 
-                {plant.simpleDescription && (
-                  <p className="plant-details-lead">
-                    {plant.simpleDescription}
-                  </p>
+                {plant.description && (
+                  <section className="plant-details-simple-desc flex-grow-1">
+                    <h2 className="plant-details-section-title">Sobre a Planta</h2>
+                    <p className="plant-details-description-text">
+                      {plant.description}
+                    </p>
+                  </section>
                 )}
               </div>
             </div>
@@ -364,21 +347,10 @@ export default function PlantDetails({ onFavChange }) {
 
         <div className="container plant-details-info-shell">
 
-          {/* ── SOBRE A PLANTA (leitura confortável) ── */}
-          {plant.description && (
-            <div className="row g-4 mb-4">
-              <div className="col-12">
-                <SectionCard title="Sobre a Planta" icon="fas fa-book-open" className="plant-details-about">
-                  <p className="plant-details-about-text">{plant.description}</p>
-                </SectionCard>
-              </div>
-            </div>
-          )}
-
-          {/* ── CARACTERÍSTICAS FÍSICAS + NECESSIDADES AMBIENTAIS ── */}
           <div className="row g-4 mb-4">
+            {/* ── CARACTERÍSTICAS FÍSICAS ── */}
             <div className="col-lg-6">
-              <SectionCard title="Características Físicas" icon="fas fa-seedling">
+              <SectionCard title="Características Físicas" icon="🌿">
                 <div className="plant-details-data-grid plant-details-data-grid--4">
                   <InfoItem label="Tipo" value={v("type")} />
                   <InfoItem label="Altura" value={v("height")} />
@@ -392,49 +364,42 @@ export default function PlantDetails({ onFavChange }) {
               </SectionCard>
             </div>
 
+            {/* ── NECESSIDADES AMBIENTAIS ── */}
             <div className="col-lg-6">
-              <SectionCard title="Necessidades Ambientais" icon="fas fa-cloud-sun">
+              <SectionCard title="Necessidades Ambientais" icon="☀️">
                 <div className="plant-details-env-row">
                   <div className="plant-details-env-item">
-                    <span className="plant-details-env-item__icon">
-                      <i className="fas fa-sun" aria-hidden="true"></i>
-                    </span>
+                    <span className="plant-details-env-item__icon">☀️</span>
                     <span className="plant-details-env-item__label">Luz</span>
                     <span className="plant-details-env-item__value">{v("light") || "—"}</span>
                   </div>
                   <div className="plant-details-env-item">
-                    <span className="plant-details-env-item__icon">
-                      <i className="fas fa-droplet" aria-hidden="true"></i>
-                    </span>
+                    <span className="plant-details-env-item__icon">💧</span>
                     <span className="plant-details-env-item__label">Água</span>
                     <span className="plant-details-env-item__value">{v("water") || "—"}</span>
                   </div>
                   <div className="plant-details-env-item">
-                    <span className="plant-details-env-item__icon">
-                      <i className="fas fa-layer-group" aria-hidden="true"></i>
-                    </span>
+                    <span className="plant-details-env-item__icon">🪴</span>
                     <span className="plant-details-env-item__label">Solo</span>
                     <span className="plant-details-env-item__value">{v("soil") || "—"}</span>
                   </div>
                   <div className="plant-details-env-item">
-                    <span className="plant-details-env-item__icon">
-                      <i className="fas fa-temperature-half" aria-hidden="true"></i>
-                    </span>
+                    <span className="plant-details-env-item__icon">🌡️</span>
                     <span className="plant-details-env-item__label">Temperatura</span>
                     <span className="plant-details-env-item__value">{v("idealTemperature") || "—"}</span>
                   </div>
                 </div>
                 <div className="plant-details-data-grid plant-details-data-grid--3 mt-3">
-                  <InfoItem icon="fa-clock" label="Horas de Sol" value={v("iluminosity")} />
-                  <InfoItem icon="fa-shield-halved" label="Tolerância" value={v("tolerance")} />
-                  <InfoItem icon="fa-umbrella" label="Proteção Climática" value={v("protection")} />
+                  <InfoItem label="Horas de Sol" value={v("iluminosity")} />
+                  <InfoItem label="Tolerância" value={v("tolerance")} />
+                  <InfoItem label="Proteção Climática" value={v("protection")} />
                 </div>
               </SectionCard>
             </div>
           </div>
 
           {/* ── CLASSIFICAÇÃO TAXONÔMICA ── */}
-          <SectionCard title="Classificação Taxonômica" icon="fas fa-sitemap">
+          <SectionCard title="Classificação Taxonômica" icon="🧬">
             <div className="plant-details-taxonomy">
               <TaxonomyStep label="Filo" value={v("Filo")} />
               <TaxonomyStep label="Classe" value={v("Classe")} />
@@ -448,25 +413,36 @@ export default function PlantDetails({ onFavChange }) {
           {/* ── CUIDADOS + CULTIVO ── */}
           <div className="row g-4 mb-4">
             <div className="col-lg-6">
-              <SectionCard title="Cuidados da Planta" icon="fas fa-hand-holding-heart" className="h-100">
-                <div className="plant-details-data-grid">
-                  <InfoItem icon="fa-droplet" label="Rega" value={v("watering")} />
-                  <InfoItem icon="fa-clock" label="Horário Ideal de Rega" value={v("manha")} />
-                  <InfoItem icon="fa-fill-drip" label="Quantidade de Rega" value={v("amount")} />
-                  <InfoItem icon="fa-scissors" label="Poda" value={v("pruning")} />
-                  <InfoItem icon="fa-calendar-days" label="Época de Poda" value={v("season")} />
-                  <InfoItem icon="fa-toolbox" label="Ferramenta de Poda" value={v("tools")} />
+              <SectionCard title="Cuidados da Planta" icon="🤲" className="h-100">
+                <div className="plant-details-flow-list">
+                  <p className="plant-details-label">Rega</p>
+                  <p className="plant-details-value">{v("watering") || "—"}</p>
+                  <p className="plant-details-label">Horário Ideal de Rega</p>
+                  <p className="plant-details-value">{v("manha") || "—"}</p>
+                  <p className="plant-details-label">Quantidade de Rega</p>
+                  <p className="plant-details-value">{v("amount") || "—"}</p>
+                  <p className="plant-details-label">Poda</p>
+                  <p className="plant-details-value">{v("pruning") || "—"}</p>
+                  <div className="plant-details-data-grid mt-3">
+                    <InfoItem label="Época de Poda" value={v("season")} />
+                    <InfoItem label="Ferramenta de Poda" value={v("tools")} />
+                  </div>
                 </div>
               </SectionCard>
             </div>
             <div className="col-lg-6">
-              <SectionCard title="Cultivo da Planta" icon="fas fa-sprout" className="h-100">
-                <div className="plant-details-data-grid">
-                  <InfoItem icon="fa-plant-wilt" label="Plantio" value={v("planting")} />
-                  <InfoItem icon="fa-calendar" label="Estação" value={v("station")} />
-                  <InfoItem icon="fa-ruler" label="Espaçamento" value={v("spacing")} />
-                  <InfoItem icon="fa-sun" label="Exposição" value={v("exhibition")} />
-                  <InfoItem icon="fa-wrench" label="Manutenção" value={v("maintenance")} />
+              <SectionCard title="Cultivo da Planta" icon="🌱" className="h-100">
+                <div className="plant-details-flow-list">
+                  <p className="plant-details-label">Plantio</p>
+                  <p className="plant-details-value">{v("planting") || "—"}</p>
+                  <p className="plant-details-label">Estação</p>
+                  <p className="plant-details-value">{v("station") || "—"}</p>
+                  <p className="plant-details-label">Espaçamento</p>
+                  <p className="plant-details-value">{v("spacing") || "—"}</p>
+                  <p className="plant-details-label">Exposição</p>
+                  <p className="plant-details-value">{v("exhibition") || "—"}</p>
+                  <p className="plant-details-label">Manutenção</p>
+                  <p className="plant-details-value">{v("maintenance") || "—"}</p>
                 </div>
               </SectionCard>
             </div>
@@ -475,20 +451,26 @@ export default function PlantDetails({ onFavChange }) {
           {/* ── ADUBAÇÃO + PRAGAS E MONITORAMENTO ── */}
           <div className="row g-4 mb-4">
             <div className="col-lg-6">
-              <SectionCard title="Adubação" icon="fas fa-flask-vial" className="h-100">
-                <div className="plant-details-data-grid">
-                  <InfoItem icon="fa-flask" label="Adubação" value={v("fertilizing")} />
-                  <InfoItem icon="fa-arrows-rotate" label="Frequência de Adubação" value={v("frequency")} />
-                  <InfoItem icon="fa-divide" label="Tipo de NPK" value={v("NPK")} />
+              <SectionCard title="Adubação" icon="🧪" className="h-100">
+                <div className="plant-details-flow-list">
+                  <p className="plant-details-label">Adubação</p>
+                  <p className="plant-details-value">{v("fertilizing") || "—"}</p>
+                  <p className="plant-details-label">Frequência de Adubação</p>
+                  <p className="plant-details-value">{v("frequency") || "—"}</p>
+                  <p className="plant-details-label">Tipo de NPK</p>
+                  <p className="plant-details-value">{v("NPK") || "—"}</p>
                 </div>
               </SectionCard>
             </div>
             <div className="col-lg-6">
-              <SectionCard title="Pragas e Monitoramento" icon="fas fa-bug" className="h-100">
-                <div className="plant-details-data-grid">
-                  <InfoItem icon="fa-bug" label="Pragas Comuns" value={v("pests")} />
-                  <InfoItem icon="fa-shield-halved" label="Prevenção" value={v("prevention")} />
-                  <InfoItem icon="fa-binoculars" label="Monitoramento" value={v("monitoring")} />
+              <SectionCard title="Pragas e Monitoramento" icon="🐛" className="h-100">
+                <div className="plant-details-flow-list">
+                  <p className="plant-details-label">Pragas Comuns</p>
+                  <p className="plant-details-value">{v("pests") || "—"}</p>
+                  <p className="plant-details-label">Prevenção</p>
+                  <p className="plant-details-value">{v("prevention") || "—"}</p>
+                  <p className="plant-details-label">Monitoramento</p>
+                  <p className="plant-details-value">{v("monitoring") || "—"}</p>
                 </div>
               </SectionCard>
             </div>
