@@ -3,14 +3,35 @@ import { useNavigate } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 
+function validarRequisitos(valor) {
+    return [
+        { label: 'Pelo menos 8 caracteres', ok: valor.length >= 8 },
+        { label: 'Uma letra maiúscula', ok: /[A-Z]/.test(valor) },
+        { label: 'Uma letra minúscula', ok: /[a-z]/.test(valor) },
+        { label: 'Um número', ok: /[0-9]/.test(valor) },
+        { label: 'Um caractere especial (! @ # $ % & *)', ok: /[!@#$%&*]/.test(valor) },
+        { label: 'Sem espaços', ok: !/\s/.test(valor) && valor.length > 0 },
+    ];
+}
+
+function calcularForca(valor) {
+    if (!valor) return '';
+    const atendidos = validarRequisitos(valor).filter(r => r.ok).length;
+    if (atendidos <= 2) return 'fraca';
+    if (atendidos <= 4) return 'media';
+    return 'forte';
+}
+
 export default function Create() {
     const [form, setForm] = useState({
         name: "",
         user: "",
         email: "",
         function: "",
-        senha: ""
+        senha: "",
+        confirmarSenha: ""
     })
+    const [forca, setForca] = useState("")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const navigate = useNavigate()
@@ -24,9 +45,22 @@ export default function Create() {
     async function onSubmit(e) {
         e.preventDefault()
         setError("")
+
+        const requisitoFalho = validarRequisitos(form.senha).find(r => !r.ok);
+        if (requisitoFalho) {
+            setError(`A senha não atende o requisito: ${requisitoFalho.label}`)
+            return
+        }
+
+        if (form.senha !== form.confirmarSenha) {
+            setError("As senhas não coincidem.")
+            return
+        }
+
         setLoading(true)
 
         const newPerson = { ...form }
+        delete newPerson.confirmarSenha
 
         try {
             const response = await authFetch(`${API_URL}/user/add`, {
@@ -46,7 +80,8 @@ export default function Create() {
                 return
             }
 
-            setForm({ name: "", user: "", email: "", function: "", senha: "" })
+            setForm({ name: "", user: "", email: "", function: "", senha: "", confirmarSenha: "" })
+            setForca("")
             navigate("/")
         } catch {
             setError("Erro ao conectar com o servidor")
@@ -99,8 +134,47 @@ export default function Create() {
                         className="form-control"
                         id="senha"
                         value={form.senha}
-                        onChange={(e) => updateForm({ senha: e.target.value })}
+                        onChange={(e) => {
+                            updateForm({ senha: e.target.value })
+                            setForca(calcularForca(e.target.value))
+                        }}
                     />
+                    {form.senha && (
+                        <div className="password-requirements">
+                            <p className="password-requirements__title">Requisitos da senha:</p>
+                            <ul className="password-requirements__list">
+                                {validarRequisitos(form.senha).map((r, i) => (
+                                    <li key={i} className={`password-requirements__item${r.ok ? ' ok' : ''}`}>
+                                        <i className={`fas ${r.ok ? 'fa-check-circle' : 'fa-circle'}`}></i>
+                                        {r.label}
+                                    </li>
+                                ))}
+                            </ul>
+                            {forca && (
+                                <div className={`password-strength password-strength--${forca}`}>
+                                    <span className="password-strength__label">Força da senha: </span>
+                                    <span className="password-strength__value">
+                                        {forca === 'fraca' ? 'Fraca' : forca === 'media' ? 'Média' : 'Forte'}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+                <div className="form-group">
+                    <label htmlFor="confirmarSenha">Confirmar senha</label>
+                    <input
+                        type="password"
+                        className="form-control"
+                        id="confirmarSenha"
+                        value={form.confirmarSenha}
+                        onChange={(e) => updateForm({ confirmarSenha: e.target.value })}
+                    />
+                    {form.confirmarSenha && form.confirmarSenha !== form.senha && (
+                        <div className="text-danger small mt-1" role="alert">
+                            <i className="fas fa-exclamation-circle me-1"></i>As senhas não coincidem.
+                        </div>
+                    )}
                 </div>
                 <div className="form-group">
                     <div className="form-check form-check-inline">

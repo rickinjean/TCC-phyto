@@ -5,12 +5,32 @@ import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
 import API_URL from "../config";
 import usePageTitle from "../usePageTitle";
 
+function validarRequisitos(valor) {
+    return [
+        { label: 'Pelo menos 8 caracteres', ok: valor.length >= 8 },
+        { label: 'Uma letra maiúscula', ok: /[A-Z]/.test(valor) },
+        { label: 'Uma letra minúscula', ok: /[a-z]/.test(valor) },
+        { label: 'Um número', ok: /[0-9]/.test(valor) },
+        { label: 'Um caractere especial (! @ # $ % & *)', ok: /[!@#$%&*]/.test(valor) },
+        { label: 'Sem espaços', ok: !/\s/.test(valor) && valor.length > 0 },
+    ];
+}
+
+function calcularForca(valor) {
+    if (!valor) return '';
+    const atendidos = validarRequisitos(valor).filter(r => r.ok).length;
+    if (atendidos <= 2) return 'fraca';
+    if (atendidos <= 4) return 'media';
+    return 'forte';
+}
+
 export default function Register() {
     usePageTitle("Cadastro")
     const [usuario, setUsuario] = useState('');
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [confirmarSenha, setConfirmarSenha] = useState('');
+    const [forca, setForca] = useState('');
     const [showSenha, setShowSenha] = useState(false);
     const [showConfirmar, setShowConfirmar] = useState(false);
     const [mensagem, setMensagem] = useState('');
@@ -22,6 +42,12 @@ export default function Register() {
         e.preventDefault();
         setMensagem('');
         setSucesso(false);
+
+        const requisitoFalho = validarRequisitos(senha).find(r => !r.ok);
+        if (requisitoFalho) {
+            setMensagem(`A senha não atende o requisito: ${requisitoFalho.label}`);
+            return;
+        }
 
         if (senha !== confirmarSenha) {
             setMensagem('As senhas não coincidem.');
@@ -149,7 +175,10 @@ export default function Register() {
                                     className="form-control"
                                     placeholder="••••••••"
                                     value={senha}
-                                    onChange={(e) => setSenha(e.target.value)}
+                                    onChange={(e) => {
+                                        setSenha(e.target.value);
+                                        setForca(calcularForca(e.target.value));
+                                    }}
                                     required
                                 />
                                 <button
@@ -161,6 +190,28 @@ export default function Register() {
                                     <i className={showSenha ? 'fas fa-eye-slash' : 'fas fa-eye'}></i>
                                 </button>
                             </div>
+
+                            {senha && (
+                                <div className="password-requirements">
+                                    <p className="password-requirements__title">Requisitos da senha:</p>
+                                    <ul className="password-requirements__list">
+                                        {validarRequisitos(senha).map((r, i) => (
+                                            <li key={i} className={`password-requirements__item${r.ok ? ' ok' : ''}`}>
+                                                <i className={`fas ${r.ok ? 'fa-check-circle' : 'fa-circle'}`}></i>
+                                                {r.label}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    {forca && (
+                                        <div className={`password-strength password-strength--${forca}`}>
+                                            <span className="password-strength__label">Força da senha: </span>
+                                            <span className="password-strength__value">
+                                                {forca === 'fraca' ? 'Fraca' : forca === 'media' ? 'Média' : 'Forte'}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Campo confirmar senha */}
@@ -188,6 +239,11 @@ export default function Register() {
                                     <i className={showConfirmar ? 'fas fa-eye-slash' : 'fas fa-eye'}></i>
                                 </button>
                             </div>
+                            {confirmarSenha && confirmarSenha !== senha && (
+                                <div className="text-danger small mt-1" role="alert">
+                                    <i className="fas fa-exclamation-circle me-1"></i>As senhas não coincidem.
+                                </div>
+                            )}
                         </div>
 
                         {/* Botão registrar */}

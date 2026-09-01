@@ -11,6 +11,17 @@ function escapeRegex(texto) {
     return (texto || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
+function validarSenha(senha) {
+    if (typeof senha !== "string") return "Senha inválida"
+    if (senha.length < 8) return "A senha deve ter pelo menos 8 caracteres"
+    if (/\s/.test(senha)) return "A senha não pode conter espaços"
+    if (!/[A-Z]/.test(senha)) return "A senha deve conter pelo menos 1 letra maiúscula"
+    if (!/[a-z]/.test(senha)) return "A senha deve conter pelo menos 1 letra minúscula"
+    if (!/[0-9]/.test(senha)) return "A senha deve conter pelo menos 1 número"
+    if (!/[!@#$%&*]/.test(senha)) return "A senha deve conter pelo menos 1 caractere especial (! @ # $ % & *)"
+    return null
+}
+
 userRoutes.route('/user/login').post(async function (req, res) {
     const db_connect = dbo.getDb()
 
@@ -80,8 +91,9 @@ userRoutes.route('/user/register').post(async function (req, res) {
             return res.status(400).json({ mensagem: 'Email inválido' });
         }
 
-        if (senha.length < 6) {
-            return res.status(400).json({ mensagem: 'A senha deve ter pelo menos 6 caracteres' });
+        const erroSenha = validarSenha(senha);
+        if (erroSenha) {
+            return res.status(400).json({ mensagem: erroSenha });
         }
 
         const expUser = escapeRegex(user)
@@ -225,8 +237,9 @@ userRoutes.route("/user/add").post(authenticateToken, authorizeRoles("ADM"), asy
         return res.status(400).json({ message: "Email inválido" })
     }
 
-    if (typeof senha !== "string" || senha.length < 6) {
-        return res.status(400).json({ message: "A senha deve ter pelo menos 6 caracteres" })
+    const erroSenha = validarSenha(senha)
+    if (erroSenha) {
+        return res.status(400).json({ message: erroSenha })
     }
 
     try {
