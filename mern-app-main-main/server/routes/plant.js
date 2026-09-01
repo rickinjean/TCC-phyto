@@ -85,66 +85,107 @@ const upload = multer({
 
 async function salvarImagensGridFS(files) {
     const bucket = getBucket()
-    const images = []
-    for (const file of files) {
-        let buffer = file.buffer
-        let contentType = file.mimetype
 
-        // Redimensiona e otimiza para a web (exceto GIF/animações), mantendo a proporção
-        let animated = false
-        try {
-            const meta = await sharp(buffer).metadata()
-            animated = (meta.pages || 1) > 1
-        } catch {
-            // não é um formato de imagem suportado — salva o original
-        }
-        if (file.mimetype !== "image/gif" && !animated) {
-            try {
-                buffer = await sharp(buffer)
-                    .rotate()
-                    .resize({
-                        width: 1600,
-                        height: 1600,
-                        fit: "inside",
-                        withoutEnlargement: true
-                    })
-                    .toFormat("webp", { quality: 82 })
-                    .toBuffer()
-                contentType = "image/webp"
-            } catch {
-                // falha inesperada ao processar — salva o original
-            }
-        }
-
-        let width = 0
-        let height = 0
-        try {
-            const meta = await sharp(buffer).metadata()
-            width = meta.width || 0
-            height = meta.height || 0
-        } catch {
-            // metadados indisponíveis — dimensões desconhecidas
-        }
-
-        const id = await new Promise((resolve, reject) => {
-            const stream = bucket.openUploadStream(file.originalname, {
+    // Salva um buffer no GridFS e retorna o id
+    function uploadBuffer(buffer, contentType, originalname) {
+        return new Promise((resolve, reject) => {
+            const stream = bucket.openUploadStream(originalname, {
                 contentType,
-                metadata: { originalname: file.originalname, width, height }
+                metadata: { originalname }
             })
             stream.on("error", reject)
             stream.on("finish", () => resolve(stream.id))
             stream.end(buffer)
         })
-        images.push({ path: `/uploads/${id}`, width, height })
+    }
+
+    const images = []
+    for (const file of files) {
+        // Redimensiona e otimiza para a web (exceto GIF/animações), mantendo a proporção
+        let animated = false
+        try {
+            const meta = await sharp(file.buffer).metadata()
+            animated = (meta.pages || 1) > 1
+        } catch {
+            // não é um formato de imagem suportado — salva o original
+        }
+
+        let finalBuffer = file.buffer
+        let finalContentType = file.mimetype
+        let width = 0
+        let height = 0
+        let avifPath = ""
+        let webpPath = ""
+
+        if (file.mimetype !== "image/gif" && !animated) {
+            const resized = sharp(file.buffer)
+                .rotate()
+                .resize({
+                    width: 1600,
+                    height: 1600,
+                    fit: "inside",
+                    withoutEnlargement: true
+                })
+
+            // AVIF é o formato principal (menor); WebP fica como fallback
+            let avatar = null
+            let webpbuf = null
+            try {
+                [avatar, webpbuf] = await Promise.all([
+                    resized.clone().toFormat("avif", { quality: 62 }).toBuffer(),
+                    resized.clone().toFormat("webp", { quality: 82 }).toBuffer(),
+                ])
+            } catch {
+                // falha inesperada ao processar — salva o original abaixo
+            }
+
+            if (avatar && webpbuf) {
+                const avifId = await uploadBuffer(avatar, "image/avif", file.originalname)
+                const webpId = await uploadBuffer(webpbuf, "image/webp", file.originalname)
+                avifPath = `/uploads/${avifId}`
+                webpPath = `/uploads/${webpId}`
+                finalBuffer = avatar
+                finalContentType = "image/avif"
+            }
+        }
+
+        try {
+            const meta = await sharp(finalBuffer).metadata()
+            width = meta.width || 0
+            height = meta.height || 0
+        } catch {
+            // dimensões desconhecidas
+        }
+
+        if (!avifPath && !webpPath) {
+            const id = await uploadBuffer(finalBuffer, finalContentType, file.originalname)
+            avifPath = ""
+            webpPath = `/uploads/${id}`
+        }
+
+        images.push({ avifPath, webpPath, path: webpPath || avifPath, width, height })
     }
     return images
 }
 
-async function deletarImagensGridFS(paths) {
+function objetoIdsDeImagem(item) {
+    // Aceita strings (paths) ou metas {avifPath, webpPath, path}
+    const paths = []
+    if (typeof item === "string") {
+        paths.push(item)
+    } else if (item && typeof item === "object") {
+        if (typeof item.avifPath === "string") paths.push(item.avifPath)
+        if (typeof item.webpPath === "string") paths.push(item.webpPath)
+        if (typeof item.path === "string") paths.push(item.path)
+    }
+    return paths
+        .map(p => String(p).split("/").pop())
+        .filter(idStr => ObjectId.isValid(idStr))
+}
+
+async function deletarImagensGridFS(itens) {
     const bucket = getBucket()
-    await Promise.allSettled((paths || []).map(async (p) => {
-        const idStr = String(p).split("/").pop()
-        if (!ObjectId.isValid(idStr)) return
+    await Promise.allSettled((itens || []).flatMap(objetoIdsDeImagem).map(async (idStr) => {
         try {
             await bucket.delete(new ObjectId(idStr))
         } catch {
@@ -307,7 +348,7 @@ plantRoutes.route("/plant/add").post(authenticateToken, authorizeRoles("ADM"), u
         const result = await db_connect.collection("plants").insertOne(myobj)
         res.status(201).json({ result, imagesReceived: files.length, imagesPath: imagePaths })
     } catch (error) {
-        if (imagensSalvas.length > 0) await deletarImagensGridFS(imagensSalvas.map(i => i.path))
+        if (imagensSalvas.length > 0) await deletarImagensGridFS(imagensSalvas)
         res.status(500).json({ message: error.message })
     }
 })
@@ -382,7 +423,7 @@ plantRoutes.route("/plant/:id").put(authenticateToken, authorizeRoles("ADM"), up
             try { docAtualSeguro = JSON.parse(docAtualSeguro) || [] } catch { docAtualSeguro = [] }
         }
         const imagensManitdasMeta = (Array.isArray(docAtualSeguro) ? docAtualSeguro : [])
-            .filter(m => m && typeof m.path === "string" && mantidasPaths.includes(m.path))
+            .filter(m => m && (typeof m.path === "string" || typeof m.webpPath === "string") && mantidasPaths.includes(m.path || m.webpPath))
         let novasImages = []
         try {
             if (files.length > 0) {
@@ -399,10 +440,14 @@ plantRoutes.route("/plant/:id").put(authenticateToken, authorizeRoles("ADM"), up
                 const antigasPaths = docAtual?.imagesPath?.length > 0
                     ? docAtual.imagesPath
                     : (docAtual?.imagePath ? [docAtual.imagePath] : [])
-                await deletarImagensGridFS(antigasPaths.filter(p => !imagensFinal.includes(p)))
+                const antigasMetas = Array.isArray(docAtual?.imagesMeta) ? docAtual.imagesMeta : []
+                const removidas = antigasPaths.filter(p => !imagensFinal.includes(p))
+                // Deleta os objectIds (webp + avif) das imagens removidas, incluindo vias de metas antigas
+                const metasRemovidas = antigasMetas.filter(m => m && removidas.includes(m.path || m.webpPath))
+                await deletarImagensGridFS([...removidas, ...metasRemovidas])
             }
         } catch (error) {
-            if (novasImages.length > 0) await deletarImagensGridFS(novasImages.map(i => i.path))
+            if (novasImages.length > 0) await deletarImagensGridFS(novasImages)
             throw error
         }
 
@@ -436,11 +481,12 @@ plantRoutes.route("/plant/:id").delete(authenticateToken, authorizeRoles("ADM"),
         const imagens = doc.imagesPath?.length > 0
             ? doc.imagesPath
             : (doc.imagePath ? [doc.imagePath] : [])
+        const metas = Array.isArray(doc.imagesMeta) ? doc.imagesMeta : []
 
         await db_connect.collection("plants").deleteOne({ _id: new ObjectId(id) })
         // Remove favoritos órfãos mantendo a contagem de favoritos fiel
         await db_connect.collection("favorites").deleteMany({ plantId: new ObjectId(id) }).catch(() => {})
-        await deletarImagensGridFS(imagens)
+        await deletarImagensGridFS([...imagens, ...metas])
         res.status(200).json({ message: "Planta deletada com sucesso" })
     } catch (err) {
         res.status(500).json({ message: "Erro ao deletar planta" })

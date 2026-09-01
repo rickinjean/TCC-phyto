@@ -6,7 +6,7 @@ import { encodeId } from "../idCodec"
 import PlantImage from "./PlantImage"
 import sortPorNome from "../sortOptions"
 import usePageTitle from "../usePageTitle"
-import getAspectRatio from "../getAspectRatio"
+import getImageVariants from "../getImageVariants"
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' fill='%23dceee3'%3E%3Crect width='400' height='250'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='62%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E"
 
@@ -31,6 +31,14 @@ const PlantCard = (props) => {
     const images = props.record.imagesPath?.length > 0 ? props.record.imagesPath : props.record.imagePath ? [props.record.imagePath] : []
     const isAdmin = props.role === "ADM"
     const isFav = props.favoriteIds?.has(props.record._id)
+
+    function imgVariantProps(path) {
+        const v = getImageVariants(props.record.imagesMeta, path)
+        return {
+            aspectRatio: v?.aspectRatio || undefined,
+            avifSrc: v?.avifSrc ? `${API_URL}${v.avifSrc}` : undefined,
+        }
+    }
 
     useEffect(() => {
         if (typeof window !== "undefined" && window.bootstrap?.Carousel && carouselRef.current) {
@@ -99,7 +107,7 @@ const PlantCard = (props) => {
                                             alt={`${props.record.name} ${index + 1}`}
                                             className="plant-list-card__image d-block w-100"
                                             fallback={PLACEHOLDER_IMG}
-                                            aspectRatio={getAspectRatio(props.record.imagesMeta, src)}
+                                            {...imgVariantProps(src)}
                                         />
                                     </div>
                                 ))
@@ -110,7 +118,7 @@ const PlantCard = (props) => {
                                         alt={props.record.name}
                                         className="plant-list-card__image d-block w-100"
                                         fallback={PLACEHOLDER_IMG}
-                                        aspectRatio={getAspectRatio(props.record.imagesMeta, props.record.imagePath)}
+                                        {...imgVariantProps(props.record.imagePath)}
                                     />
                                 </div>
                             )}

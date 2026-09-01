@@ -333,7 +333,7 @@ export default function Edit() {
             } else if (key === "imagesMeta") {
                 // metas das imagens mantidas (com width/height) são reenviadas como JSON
                 const mantidas = Array.isArray(form.imagesMeta)
-                    ? form.imagesMeta.filter(m => m && typeof m.path === "string" && existingImages.includes(m.path))
+                    ? form.imagesMeta.filter(m => m && (typeof m.path === "string" || typeof m.webpPath === "string") && existingImages.includes(m.path || m.webpPath))
                     : []
                 formData.append("imagesMeta", JSON.stringify(mantidas))
             } else {
