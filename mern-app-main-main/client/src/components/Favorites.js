@@ -24,7 +24,6 @@ const FavoriteCard = ({ favorite, onRemove }) => {
                         alt={plant.name}
                         className="plant-list-card__image d-block w-100"
                         fallback={PLACEHOLDER_IMG}
-                        aspectRatio={variants?.aspectRatio || undefined}
                         avifSrc={variants?.avifSrc ? `${API_URL}${variants.avifSrc}` : undefined}
                     />
                     <button

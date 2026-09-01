@@ -1805,7 +1805,8 @@ html[data-theme="dark"] .btn-primary:focus {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center;
   transition: transform 500ms var(--phyto-ease);
 }
 
@@ -1874,10 +1875,16 @@ html[data-theme="dark"] .btn-primary:focus {
   background: var(--phyto-sage);
 }
 
+.plant-list-card__image-wrapper {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--phyto-sage);
+}
+
 .plant-list-card__image {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
 }
 
@@ -2640,6 +2647,7 @@ html[data-theme="dark"] .plant-filters {
 }
 
 html[data-theme="dark"] .plant-feature-card__image,
+html[data-theme="dark"] .plant-list-card__image-wrapper,
 html[data-theme="dark"] .plant-list-card__carousel,
 html[data-theme="dark"] .plant-list-card__carousel-inner {
   background: #173725;

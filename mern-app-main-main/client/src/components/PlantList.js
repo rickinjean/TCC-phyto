@@ -35,7 +35,6 @@ const PlantCard = (props) => {
     function imgVariantProps(path) {
         const v = getImageVariants(props.record.imagesMeta, path)
         return {
-            aspectRatio: v?.aspectRatio || undefined,
             avifSrc: v?.avifSrc ? `${API_URL}${v.avifSrc}` : undefined,
         }
     }

@@ -52,7 +52,6 @@ const PlantCard = ({ plant }) => {
                         alt={plant.name}
                         className="plant-feature-card__img"
                         fallback={PLACEHOLDER_IMG}
-                        aspectRatio={variants?.aspectRatio || undefined}
                         avifSrc={variants?.avifSrc ? `${API_URL}${variants.avifSrc}` : undefined}
                     />
                 </div>
