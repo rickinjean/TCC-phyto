@@ -29,6 +29,7 @@ export default function PlantImage({ src, alt, className = "", fallback = "", as
             src={currentSrc}
             alt={alt}
             loading="lazy"
+            decoding="async"
             className={`${className}${isSmall ? " is-small" : ""}`}
             style={ratio ? { aspectRatio: String(ratio), width: "100%", height: "auto" } : undefined}
             onLoad={handleLoad}

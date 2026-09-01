@@ -56,7 +56,7 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
         <nav className="custom-navbar">
             <div className="custom-navbar__inner">
                 <NavLink className="custom-navbar__brand" to="/inicio" aria-label="Ir para início">
-                    <img className="custom-navbar__logo" src={Logo} alt="Logo do Phytografia" />
+                    <img className="custom-navbar__logo" src={Logo} alt="Logo do Phytografia" decoding="async" />
                     <span className="custom-navbar__brand-text">Phytografia</span>
                 </NavLink>
 
@@ -88,7 +88,7 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                             onClick={() => setUserMenuOpen((prev) => !prev)}
                         >
                             {userAvatar ? (
-                                <img className="custom-navbar__user-avatar" src={userAvatar} alt="" />
+                                <img className="custom-navbar__user-avatar" src={userAvatar} alt="" decoding="async" />
                             ) : (
                                 <span className="custom-navbar__user-avatar custom-navbar__user-avatar--fallback">
                                     {userName ? userName.charAt(0).toUpperCase() : "?"}
@@ -106,7 +106,7 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                         <div className={`custom-navbar__user-panel ${userMenuOpen ? "is-open" : ""}`}>
                             <div className="custom-navbar__user-panel-header">
                                 {userAvatar ? (
-                                    <img className="custom-navbar__user-panel-avatar" src={userAvatar} alt="" />
+                                    <img className="custom-navbar__user-panel-avatar" src={userAvatar} alt="" decoding="async" />
                                 ) : (
                                     <span className="custom-navbar__user-panel-avatar custom-navbar__user-panel-avatar--fallback">
                                         {userName ? userName.charAt(0).toUpperCase() : "?"}
@@ -238,7 +238,7 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     {userName && (
                                         <li className="nav-item d-flex align-items-center gap-2 px-3 py-2">
                                             {userAvatar ? (
-                                                <img src={userAvatar} alt="" style={{width: 32, height: 32, borderRadius: "50%", objectFit: "cover"}} />
+                                                <img src={userAvatar} alt="" decoding="async" style={{width: 32, height: 32, borderRadius: "50%", objectFit: "cover"}} />
                                             ) : (
                                                 <span style={{width: 32, height: 32, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 600, color: "#fff"}}>
                                                     {userName.charAt(0).toUpperCase()}
