@@ -46,6 +46,10 @@ export default function Footer() {
           <p className="site-footer__text site-footer__text--small">
             &copy; {year} Phytografia · Projeto MERN — IFC Campus Sombrio
           </p>
+          <p className="site-footer__text site-footer__text--small site-footer__disclaimer">
+            Este site é um trabalho acadêmico. O conteúdo informativo sobre plantas
+            não substitui a orientação de profissionais da saúde.
+          </p>
         </div>
       </div>
     </footer>

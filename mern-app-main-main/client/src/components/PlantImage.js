@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 
 const SMALL_DIMENSION = 640
 
-export default function PlantImage({ src, alt, className = "", fallback = "", ...rest }) {
+export default function PlantImage({ src, alt, className = "", fallback = "", aspectRatio, ...rest }) {
     const [currentSrc, setCurrentSrc] = useState(src)
     const [isSmall, setIsSmall] = useState(false)
 
@@ -22,12 +22,15 @@ export default function PlantImage({ src, alt, className = "", fallback = "", ..
         if (fallback && currentSrc !== fallback) setCurrentSrc(fallback)
     }
 
+    const ratio = aspectRatio && Number(aspectRatio) > 0 ? Number(aspectRatio) : null
+
     return (
         <img
             src={currentSrc}
             alt={alt}
             loading="lazy"
             className={`${className}${isSmall ? " is-small" : ""}`}
+            style={ratio ? { aspectRatio: String(ratio), width: "100%", height: "auto" } : undefined}
             onLoad={handleLoad}
             onError={handleError}
             {...rest}

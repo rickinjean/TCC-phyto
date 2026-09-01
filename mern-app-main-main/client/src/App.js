@@ -120,8 +120,9 @@ const App = () => {
 
     return (
         <div className="d-flex flex-column min-vh-100">
+            <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
             <Navbar token={token} role={role} userName={userName} userAvatar={userAvatar} onLogout={handleLogout} />
-            <main className="app-main flex-fill">
+            <main className="app-main flex-fill" id="conteudo">
                 <ErrorBoundary>
                     <Routes>
                         <Route path="/login" element={<Login onLogin={handleLogin} />} />

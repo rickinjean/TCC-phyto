@@ -330,6 +330,12 @@ export default function Edit() {
         Object.keys(form).forEach(key => {
             if (key === "imagesPath") {
                 existingImages.forEach(path => formData.append("imagesPath", path))
+            } else if (key === "imagesMeta") {
+                // metas das imagens mantidas (com width/height) são reenviadas como JSON
+                const mantidas = Array.isArray(form.imagesMeta)
+                    ? form.imagesMeta.filter(m => m && typeof m.path === "string" && existingImages.includes(m.path))
+                    : []
+                formData.append("imagesMeta", JSON.stringify(mantidas))
             } else {
                 formData.append(key, form[key])
             }

@@ -61,6 +61,26 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 2000;
+  padding: 0.6rem 1rem;
+  border-radius: 0 0 var(--phyto-radius-sm) var(--phyto-radius-sm);
+  background: var(--phyto-green-700);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: var(--phyto-shadow);
+  transition: top 180ms var(--phyto-ease);
+}
+
+.skip-link:focus-visible {
+  top: 0;
+  outline: 3px solid rgba(47, 138, 93, 0.5);
+  outline-offset: 2px;
+}
+
 button,
 a {
   -webkit-tap-highlight-color: transparent;
@@ -741,6 +761,12 @@ html[data-theme="dark"] .custom-navbar__user-panel-action:hover {
 .site-footer__bottom {
   padding-top: 1.25rem;
   text-align: center;
+}
+
+.site-footer__disclaimer {
+  margin: 0.5rem auto 0;
+  max-width: 720px;
+  line-height: 1.5;
 }
 
 .site-footer__text--small {
@@ -3023,6 +3049,21 @@ html[data-theme="dark"] .is-invalid-mild {
   height: 40px;
   background: var(--phyto-green-100);
   color: var(--phyto-green-700);
+}
+
+.about-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  background: var(--phyto-green-100);
+  color: var(--phyto-ink);
+  border-left: 4px solid var(--phyto-green-700);
+}
+
+.about-disclaimer__icon {
+  font-size: 1.1rem;
+  color: var(--phyto-green-700);
+  margin-top: 0.15rem;
 }
 
 .about-team__image {

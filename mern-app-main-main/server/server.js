@@ -6,6 +6,7 @@ const fs = require("fs")
 const cors = require("cors")
 const helmet = require("helmet")
 const rateLimit = require("express-rate-limit")
+const compression = require("compression")
 const mongodb = require("mongodb")
 const { getBucket } = require("./gridfs")
 
@@ -18,12 +19,27 @@ const port = process.env.PORT || 5050
 
 app.set('trust proxy', true)
 
-// Headers de segurança (helmet). CSP desabilitado por escolha para nao causar
-// regressao com os assets bundlados via npm; CORP liberado para o dev
-// (frontend em :3000 carrega imagens da API em :5050).
+const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER
+
+// Headers de segurança (helmet). CSP com política restrita compatível com o
+// build do CRA (CSP desabilitado antes para evitar regressão). CORP é
+// liberado (cross-origin) só no dev, onde o frontend em :3000 carrega
+// imagens da API em :5050; em produção client e API são mesma origem.
 app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "blob:"],
+            fontSrc: ["'self'", "data:"],
+            connectSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            frameAncestors: ["'none'"],
+        },
+    },
+    crossOriginResourcePolicy: isProduction ? { policy: "same-origin" } : { policy: "cross-origin" },
 }))
 
 const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")
@@ -63,6 +79,17 @@ app.use(cors({
 }))
 app.use(express.json({ limit: "2mb" }))
 
+// Compressão gzip/brotli. Pula imagens (já compactadas por sharp) para economizar CPU.
+app.use(compression({
+    threshold: 1024,
+    filter: function(req, res) {
+        if (req.headers["x-no-compression"]) return false
+        const type = res.getHeader("Content-Type")
+        if (typeof type === "string" && /^image\//.test(type)) return false
+        return compression.filter(req, res)
+    },
+}))
+
 // Imagens: prioriza o GridFS (MongoDB) e cai para arquivos antigos salvos em disco
 const uploadsDir = path.join(__dirname, 'uploads')
 
@@ -76,6 +103,9 @@ app.use('/uploads', function (req, res) {
     if (nome.includes("/") || nome.includes("\\") || nome.includes("..")) {
         return res.status(404).json({ message: "Imagem não encontrada" })
     }
+
+    // Nomes são ObjectIds do GridFS (imutáveis por upload): cache longo é seguro
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable")
 
     if (mongodb.ObjectId.isValid(nome)) {
         const stream = getBucket().openDownloadStream(new mongodb.ObjectId(nome))
@@ -127,10 +157,25 @@ app.get("/health", function(req, res) {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() })
 })
 
-if (process.env.NODE_ENV === "production" || process.env.RENDER) {
+if (isProduction) {
     const clientBuildPath = path.join(__dirname, "..", "client", "build")
-    app.use(express.static(clientBuildPath))
+
+    // Assets do CRA trazem nomes hasheados: cache de 1 ano é seguro.
+    // index.html é servido sem cache para refletir novos builds imediatamente.
+    app.use(express.static(clientBuildPath, {
+        index: false,
+        setHeaders: function(res, filePath) {
+            if (filePath.includes(`${path.sep}static${path.sep}`)) {
+                res.setHeader("Cache-Control", "public, max-age=31536000, immutable")
+            } else if (filePath.endsWith("index.html")) {
+                res.setHeader("Cache-Control", "no-cache")
+            } else {
+                res.setHeader("Cache-Control", "public, max-age=3600")
+            }
+        },
+    }))
     app.get("*", function(req, res) {
+        res.setHeader("Cache-Control", "no-cache")
         res.sendFile(path.join(clientBuildPath, "index.html"))
     })
 } else {

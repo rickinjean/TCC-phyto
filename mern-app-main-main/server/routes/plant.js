@@ -85,7 +85,7 @@ const upload = multer({
 
 async function salvarImagensGridFS(files) {
     const bucket = getBucket()
-    const paths = []
+    const images = []
     for (const file of files) {
         let buffer = file.buffer
         let contentType = file.mimetype
@@ -116,18 +116,28 @@ async function salvarImagensGridFS(files) {
             }
         }
 
+        let width = 0
+        let height = 0
+        try {
+            const meta = await sharp(buffer).metadata()
+            width = meta.width || 0
+            height = meta.height || 0
+        } catch {
+            // metadados indisponíveis — dimensões desconhecidas
+        }
+
         const id = await new Promise((resolve, reject) => {
             const stream = bucket.openUploadStream(file.originalname, {
                 contentType,
-                metadata: { originalname: file.originalname }
+                metadata: { originalname: file.originalname, width, height }
             })
             stream.on("error", reject)
             stream.on("finish", () => resolve(stream.id))
             stream.end(buffer)
         })
-        paths.push(`/uploads/${id}`)
+        images.push({ path: `/uploads/${id}`, width, height })
     }
-    return paths
+    return images
 }
 
 async function deletarImagensGridFS(paths) {
@@ -157,8 +167,8 @@ plantRoutes.route("/plant/:id/clone").get(authenticateToken, authorizeRoles("ADM
         if (!result) {
             return res.status(404).json({ message: `Planta com id ${id} não encontrada` })
         }
-        // Remove _id, imagesPath e imagePath para criar uma cópia limpa
-        const { _id, imagesPath, imagePath, ...cloneData } = result
+        // Remove _id, imagesPath, imagePath e imagesMeta para criar uma cópia limpa
+        const { _id, imagesPath, imagePath, imagesMeta, ...cloneData } = result
         res.status(200).json(cloneData)
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -172,7 +182,7 @@ plantRoutes.route("/plant/:id/clone").get(authenticateToken, authorizeRoles("ADM
 ================================================== */
 const LIST_PROJECTION = {
     _id: 1, name: 1, scientificName: 1, simpleDescription: 1,
-    imagesPath: 1, imagePath: 1,
+    imagesPath: 1, imagePath: 1, imagesMeta: 1,
     type: 1, light: 1, height: 1, flowercolor: 1, dificulty: 1,
     toxicity: 1, origin: 1
 }
@@ -234,12 +244,14 @@ plantRoutes.route("/plant/:id").get(async function (req, res) {
 plantRoutes.route("/plant/add").post(authenticateToken, authorizeRoles("ADM"), upload.fields([{ name: "images", maxCount: 5 }]), async function (req, res) {
     const db_connect = dbo.getDb()
     const files = req.files?.images || []
-    let imagePaths = []
+    let imagensSalvas = []
     try {
         if (files.length > 0) {
-            imagePaths = await salvarImagensGridFS(files)
+            imagensSalvas = await salvarImagensGridFS(files)
         }
         console.log(`[plant/add] recebido ${files.length} arquivo(s)`)
+        const imagePaths = imagensSalvas.map(i => i.path)
+        const imagesMeta = imagensSalvas
         const myobj = {
             name: req.body.name,
             scientificName: req.body.scientificName,
@@ -288,13 +300,14 @@ plantRoutes.route("/plant/add").post(authenticateToken, authorizeRoles("ADM"), u
             tolerance: req.body.tolerance,
 
             imagesPath: imagePaths,
-            imagePath: imagePaths[0] || ""
+            imagePath: imagePaths[0] || "",
+            imagesMeta
         }
 
         const result = await db_connect.collection("plants").insertOne(myobj)
         res.status(201).json({ result, imagesReceived: files.length, imagesPath: imagePaths })
     } catch (error) {
-        if (imagePaths.length > 0) await deletarImagensGridFS(imagePaths)
+        if (imagensSalvas.length > 0) await deletarImagensGridFS(imagensSalvas.map(i => i.path))
         res.status(500).json({ message: error.message })
     }
 })
@@ -364,16 +377,24 @@ plantRoutes.route("/plant/:id").put(authenticateToken, authorizeRoles("ADM"), up
             [].concat(req.body.imagesPath || [])
                 .filter(p => typeof p === "string" && p.startsWith("/uploads/") && p.length > 10)
         )]
-        let novasPaths = []
+        let docAtualSeguro = req.body.imagesMeta || []
+        if (typeof docAtualSeguro === "string") {
+            try { docAtualSeguro = JSON.parse(docAtualSeguro) || [] } catch { docAtualSeguro = [] }
+        }
+        const imagensManitdasMeta = (Array.isArray(docAtualSeguro) ? docAtualSeguro : [])
+            .filter(m => m && typeof m.path === "string" && mantidasPaths.includes(m.path))
+        let novasImages = []
         try {
             if (files.length > 0) {
-                novasPaths = await salvarImagensGridFS(files)
+                novasImages = await salvarImagensGridFS(files)
                 console.log(`[plant/:id PUT] recebido ${files.length} arquivo(s)`)
             }
             if (files.length > 0 || req.body.imagesPath !== undefined) {
+                const novasPaths = novasImages.map(i => i.path)
                 const imagensFinal = [...mantidasPaths, ...novasPaths]
                 updateFields.imagesPath = imagensFinal
                 updateFields.imagePath = imagensFinal[0] || ""
+                updateFields.imagesMeta = [...imagensManitdasMeta, ...novasImages]
                 const docAtual = await db_connect.collection("plants").findOne(myquery)
                 const antigasPaths = docAtual?.imagesPath?.length > 0
                     ? docAtual.imagesPath
@@ -381,7 +402,7 @@ plantRoutes.route("/plant/:id").put(authenticateToken, authorizeRoles("ADM"), up
                 await deletarImagensGridFS(antigasPaths.filter(p => !imagensFinal.includes(p)))
             }
         } catch (error) {
-            if (novasPaths.length > 0) await deletarImagensGridFS(novasPaths)
+            if (novasImages.length > 0) await deletarImagensGridFS(novasImages.map(i => i.path))
             throw error
         }
 

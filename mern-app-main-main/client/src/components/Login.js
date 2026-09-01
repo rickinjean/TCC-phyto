@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
 import API_URL from "../config";
+import usePageTitle from "../usePageTitle";
 
 export default function Login({ onLogin }) {
+    usePageTitle("Entrar")
     const [user, setUser] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)

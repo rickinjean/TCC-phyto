@@ -4,12 +4,32 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#2f5233" />
     <meta
       name="description"
-      content="Phytografia - Sistema de Pesquisa Botânica"
+      content="Phytografia é um sistema de pesquisa botânica desenvolvido como trabalho de conclusão de curso do IFC Campus Sombrio. Consulte informações sobre plantas medicinais, fitoterapia e biodiversidade."
     />
+    <link rel="canonical" href="https://tcc-phyto.onrender.com/" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Phytografia" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content="Phytografia — Sistema de Pesquisa Botânica" />
+    <meta
+      property="og:description"
+      content="Pesquisa botânica do IFC Campus Sombrio: plantas medicinais, fitoterapia e biodiversidade em um catálogo digital interativo."
+    />
+    <meta property="og:url" content="https://tcc-phyto.onrender.com/" />
+    <meta property="og:image" content="https://tcc-phyto.onrender.com/logo512.png" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Phytografia — Sistema de Pesquisa Botânica" />
+    <meta
+      name="twitter:description"
+      content="Pesquisa botânica do IFC Campus Sombrio: plantas medicinais, fitoterapia e biodiversidade em um catálogo digital interativo."
+    />
+    <meta name="twitter:image" content="https://tcc-phyto.onrender.com/logo512.png" />
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
@@ -24,20 +44,24 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>Phytografia</title>
+    <title>Phytografia — Sistema de Pesquisa Botânica</title>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Phytografia",
+      "url": "https://tcc-phyto.onrender.com/",
+      "description": "Sistema de pesquisa botânica desenvolvido como trabalho de conclusão de curso do IFC Campus Sombrio.",
+      "inLanguage": "pt-BR",
+      "publisher": {
+        "@type": "EducationalOrganization",
+        "name": "IFC Campus Sombrio"
+      }
+    }
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>

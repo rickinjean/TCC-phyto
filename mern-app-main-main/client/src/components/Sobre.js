@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import API_URL from "../config";
+import usePageTitle from "../usePageTitle";
 
 export default function About() {
+    usePageTitle("Sobre")
     const [formData, setFormData] = useState({ nome: '', email: '', assunto: '', mensagem: '' });
     const [enviado, setEnviado] = useState(false);
     const [enviando, setEnviando] = useState(false);
@@ -282,6 +284,20 @@ export default function About() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── AVISO ACADÊMICO ── */}
+            <section className="about-section py-4">
+                <div className="container">
+                    <div className="about-disclaimer rounded p-4 shadow-sm">
+                        <i className="fas fa-info-circle me-2 about-disclaimer__icon" aria-hidden="true"></i>
+                        <p className="mb-0 small">
+                            <strong>Aviso:</strong> este site é um trabalho acadêmico desenvolvido no IFC Campus Sombrio.
+                            As informações sobre plantas são educativas e não substituem a orientação de profissionais
+                            da saúde, farmacêuticos ou médicos.
+                        </p>
                     </div>
                 </div>
             </section>
