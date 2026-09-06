@@ -160,20 +160,23 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                         </div>
                     </div>
                 ) : (
-                    <button
-                        className="custom-navbar__theme-toggle"
-                        type="button"
-                        aria-pressed={theme === "dark"}
-                        aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
-                        onClick={toggleTheme}
-                    >
-                        <span className="custom-navbar__theme-icon" aria-hidden="true">
-                            {theme === "dark" ? "☀" : "☾"}
-                        </span>
-                        <span className="custom-navbar__theme-label">
-                            {theme === "dark" ? "Claro" : "Escuro"}
-                        </span>
-                    </button>
+                    <div className="d-flex align-items-center gap-2">
+                        <NavLink className="custom-navbar__link" to="/login">Entrar</NavLink>
+                        <button
+                            className="custom-navbar__theme-toggle"
+                            type="button"
+                            aria-pressed={theme === "dark"}
+                            aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+                            onClick={toggleTheme}
+                        >
+                            <span className="custom-navbar__theme-icon" aria-hidden="true">
+                                {theme === "dark" ? "☀" : "☾"}
+                            </span>
+                            <span className="custom-navbar__theme-label">
+                                {theme === "dark" ? "Claro" : "Escuro"}
+                            </span>
+                        </button>
+                    </div>
                 )}
 
                 <button

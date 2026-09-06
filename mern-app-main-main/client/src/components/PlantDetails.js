@@ -111,9 +111,9 @@ const TEXT_FIELDS = [
   "Filo", "Classe", "Ordem", "Family", "Genero", "Especie",
 ];
 
-export default function PlantDetails({ onFavChange }) {
+export default function PlantDetails({ onFavChange, canFavorite = false }) {
   const [plant, setPlant] = useState(null);
-  usePageTitle(plant ? plant.name : "Planta")
+  usePageTitle(plant ? plant.name : "Planta", plant?.simpleDescription)
   const [notFound, setNotFound] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -153,13 +153,15 @@ export default function PlantDetails({ onFavChange }) {
           setPlant({ ...data, ...resolved });
         }
 
-        try {
-          const favRes = await authFetch(`${API_URL}/favorites`);
-          if (!cancelled && favRes && favRes.ok) {
-            const favs = await favRes.json();
-            setIsFavorite(favs.some(f => String(f.plantId) === realId));
-          }
-        } catch { /* ignore */ }
+        if (canFavorite) {
+          try {
+            const favRes = await authFetch(`${API_URL}/favorites`);
+            if (!cancelled && favRes && favRes.ok) {
+              const favs = await favRes.json();
+              setIsFavorite(favs.some(f => String(f.plantId) === realId));
+            }
+          } catch { /* ignore */ }
+        }
 
       } catch (error) {
         console.error("Erro ao carregar planta:", error);
@@ -171,7 +173,7 @@ export default function PlantDetails({ onFavChange }) {
 
     load();
     return () => { cancelled = true; };
-  }, [realId]);
+  }, [realId, canFavorite]);
 
   async function toggleFavorite() {
     try {
@@ -244,16 +246,18 @@ export default function PlantDetails({ onFavChange }) {
               <h1 className="plant-details-title">{plant.name}</h1>
               <p className="plant-details-scientific-name">{plant.scientificName}</p>
             </div>
-            <button
-              className={`plant-details-favorite-btn ${isFavorite ? "is-favorite" : ""}`}
-              onClick={toggleFavorite}
-              type="button"
-              aria-label={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-            >
-              <svg viewBox="0 0 24 24" width="24" height="24" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            </button>
+            {canFavorite && (
+              <button
+                className={`plant-details-favorite-btn ${isFavorite ? "is-favorite" : ""}`}
+                onClick={toggleFavorite}
+                type="button"
+                aria-label={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+              >
+                <svg viewBox="0 0 24 24" width="24" height="24" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </header>

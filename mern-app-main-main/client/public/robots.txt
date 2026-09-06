@@ -1,5 +1,10 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Disallow: /favoritos
+Disallow: /userlist
+Disallow: /create
+Disallow: /createplant
+Disallow: /edit
+Disallow: /editplant
 
 Sitemap: https://tcc-phyto.onrender.com/sitemap.xml

@@ -3,7 +3,7 @@ import API_URL from "../config";
 import usePageTitle from "../usePageTitle";
 
 export default function About() {
-    usePageTitle("Sobre")
+    usePageTitle("Sobre", "Conheça o Phytografia: sistema de pesquisa botânica desenvolvido no IFC Campus Sombrio para democratizar o acesso ao conhecimento sobre plantas medicinais e biodiversidade.")
     const [formData, setFormData] = useState({ nome: '', email: '', assunto: '', mensagem: '' });
     const [enviado, setEnviado] = useState(false);
     const [enviando, setEnviando] = useState(false);

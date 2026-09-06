@@ -152,16 +152,18 @@ const PlantCard = (props) => {
                         )}
                     </div>
 
-                    <button
-                        className={`plant-list-card__favorite ${isFav ? "is-favorite" : ""}`}
-                        onClick={toggleFavorite}
-                        type="button"
-                        aria-label={isFav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-                    >
+                    {props.canFavorite && (
+                        <button
+                            className={`plant-list-card__favorite ${isFav ? "is-favorite" : ""}`}
+                            onClick={toggleFavorite}
+                            type="button"
+                            aria-label={isFav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                        >
                             <svg viewBox="0 0 24 24" width="18" height="18" fill={isFav ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                             </svg>
                         </button>
+                    )}
                     </div>
 
                 <div className="plant-list-card__body card-body d-flex flex-column">
@@ -235,8 +237,8 @@ const EmptyState = ({ hasActiveFilters, onClear }) => (
     </div>
 )
 
-export default function PlantList({ role }) {
-    usePageTitle("Catálogo de Plantas")
+export default function PlantList({ role, canFavorite = false }) {
+    usePageTitle("Catálogo de Plantas", "Explore o catálogo digital de plantas do Phytografia: plantas medicinais, ornamentais e mais, com fichas técnicas de cultivo, origem e classificação botânica.")
     const [plants, setPlants] = useState([])
     const [loading, setLoading] = useState(true)
     const [fetchError, setFetchError] = useState(null)
@@ -272,7 +274,7 @@ export default function PlantList({ role }) {
             const entries = await Promise.all(
                 FILTER_FIELDS.map(async ({ key }) => {
                     try {
-                        const res = await authFetch(`${API_URL}/collections/${key}`)
+                        const res = await fetch(`${API_URL}/collections/${key}`)
                         if (!res || !res.ok) {
                             console.warn(`Falha ao carregar collection "${key}": ${res?.status}`)
                             return [key, []]
@@ -291,6 +293,7 @@ export default function PlantList({ role }) {
     }, [])
 
     useEffect(() => {
+        if (!canFavorite) return;
         async function loadFavorites() {
             try {
                 const res = await authFetch(`${API_URL}/favorites`)
@@ -305,7 +308,7 @@ export default function PlantList({ role }) {
             }
         }
         loadFavorites()
-    }, [])
+    }, [canFavorite])
 
     const fetchPlants = useCallback(async (activeFilters, searchQuery) => {
         setLoading(true)
@@ -559,6 +562,7 @@ export default function PlantList({ role }) {
                             key={record._id}
                             record={record}
                             role={role}
+                            canFavorite={canFavorite}
                             deleteRecord={deleteRecord}
                             favoriteIds={favoriteIds}
                             onFavoriteToggle={handleFavoriteToggle}

@@ -132,8 +132,8 @@ const TABS = [
     { key: "recentes", label: "Recém Adicionadas" },
 ]
 
-export default function Home() {
-    usePageTitle("Início")
+export default function Home({ token = null }) {
+    usePageTitle("Início", "Phytografia — sistema de pesquisa botânica do IFC Campus Sombrio com plantas medicinais, fitoterapia e biodiversidade em um catálogo digital interativo.")
     const [plants, setPlants] = useState([])
     const [stats, setStats] = useState({ plantCount: 0, userCount: 0 })
     const [searchTerm, setSearchTerm] = useState("")
@@ -241,7 +241,7 @@ export default function Home() {
                 <div className="container">
                     <h3 className="home-section__title text-center mb-5">Acesso Rápido</h3>
                     <div className="row g-4">
-                        {QUICK_ACCESS_CARDS.map((card, index) => {
+                        {(token ? QUICK_ACCESS_CARDS : QUICK_ACCESS_CARDS.filter(c => c.href !== "/favoritos")).map((card, index) => {
                             return (
                                 <div key={index} className="col-12 col-md-4">
                                     <div className="quick-card card h-100 shadow-sm">
