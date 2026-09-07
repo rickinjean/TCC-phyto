@@ -101,9 +101,27 @@ async function salvarImagensGridFS(files) {
 
     const SIZES = [400, 800, 1200, 1600]
 
+    async function dimensionsOf(buffer) {
+        try {
+            const meta = await sharp(buffer).metadata()
+            return { width: meta.width || 0, height: meta.height || 0 }
+        } catch {
+            return { width: 0, height: 0 }
+        }
+    }
+
+    async function salvarOriginal(buffer, contentType, originalname) {
+        const id = await uploadBuffer(buffer, contentType, originalname)
+        const path = `/uploads/${id}`
+        const dims = await dimensionsOf(buffer)
+        return { avifPath: "", webpPath: "", path, width: dims.width, height: dims.height, sizes: null }
+    }
+
     const images = []
     for (const file of files) {
-        // Redimensiona e otimiza para a web (exceto GIF/animações), mantendo a proporção
+        // Redimensiona e otimiza para a web (exceto GIF/animações), mantendo a proporção.
+        // Formato único: WebP (fallback amplamente suportado). Manter AVIF aqui dobraria o
+        // custo de CPU no servidor sem ganho proporcional para este projeto.
         let animated = false
         try {
             const meta = await sharp(file.buffer).metadata()
@@ -112,73 +130,54 @@ async function salvarImagensGridFS(files) {
             // não é um formato de imagem suportado — salva o original
         }
 
-        let finalBuffer = file.buffer
-        let finalContentType = file.mimetype
-        let width = 0
-        let height = 0
-        let avifPath = ""
-        let webpPath = ""
+        if (file.mimetype === "image/gif" || animated) {
+            images.push(await salvarOriginal(file.buffer, file.mimetype, file.originalname))
+            continue
+        }
 
-        // Mapa de variantes responsivas: { avif: {400: path,...}, webp: {400: path,...} }
-        let sizes = null
+        const base = sharp(file.buffer).rotate()
 
-        if (file.mimetype !== "image/gif" && !animated) {
-            const base = sharp(file.buffer).rotate()
-
-            // Gera cada largura em AVIF (formato principal) e WebP (fallback)
-            const variants = {}
+        // Gera cada largura em WebP, em paralelo. Uma largura que falhe não derruba as demais.
+        const results = await Promise.all(SIZES.map(async (sizeW) => {
             try {
-                for (const sizeW of SIZES) {
-                    const resized = base.clone().resize({
-                        width: sizeW,
-                        height: sizeW,
-                        fit: "inside",
-                        withoutEnlargement: true
-                    })
-                    const [avifBuf, webpBuf] = await Promise.all([
-                        resized.clone().toFormat("avif", { quality: 62 }).toBuffer(),
-                        resized.clone().toFormat("webp", { quality: 82 }).toBuffer(),
-                    ])
-                    const [avifId, webpId] = await Promise.all([
-                        uploadBuffer(avifBuf, "image/avif", file.originalname),
-                        uploadBuffer(webpBuf, "image/webp", file.originalname),
-                    ])
-                    variants[sizeW] = {
-                        avif: `/uploads/${avifId}`,
-                        webp: `/uploads/${webpId}`
-                    }
-                    // Usa o maior tamanho como referência principal da imagem
-                    avifPath = `/uploads/${avifId}`
-                    webpPath = `/uploads/${webpId}`
-                    finalBuffer = avifBuf
-                    finalContentType = "image/avif"
-                }
-                sizes = variants
+                const resized = base.clone().resize({
+                    width: sizeW,
+                    height: sizeW,
+                    fit: "inside",
+                    withoutEnlargement: true
+                })
+                const { data: webpBuf, info } = await resized
+                    .toFormat("webp", { quality: 82 })
+                    .toBuffer({ resolveWithObject: true })
+                const webpId = await uploadBuffer(webpBuf, "image/webp", file.originalname)
+                return { sizeW, webp: `/uploads/${webpId}`, width: info.width, height: info.height }
             } catch {
-                // falha inesperada ao processar — salva o original abaixo
-                sizes = null
-                avifPath = ""
-                webpPath = ""
-                finalBuffer = file.buffer
-                finalContentType = file.mimetype
+                return null
             }
+        }))
+
+        const sizes = {}
+        let maior = null
+        for (const r of results.filter(Boolean)) {
+            sizes[r.sizeW] = { webp: r.webp }
+            if (!maior || r.sizeW > maior.sizeW) maior = r
         }
 
-        try {
-            const meta = await sharp(finalBuffer).metadata()
-            width = meta.width || 0
-            height = meta.height || 0
-        } catch {
-            // dimensões desconhecidas
+        // Falha total no processamento — grava o original
+        if (!maior) {
+            images.push(await salvarOriginal(file.buffer, file.mimetype, file.originalname))
+            continue
         }
 
-        if (!avifPath && !webpPath) {
-            const id = await uploadBuffer(finalBuffer, finalContentType, file.originalname)
-            avifPath = ""
-            webpPath = `/uploads/${id}`
-        }
-
-        images.push({ avifPath, webpPath, path: webpPath || avifPath, width, height, sizes })
+        const webpPath = maior.webp
+        images.push({
+            avifPath: "",
+            webpPath,
+            path: webpPath,
+            width: maior.width,
+            height: maior.height,
+            sizes
+        })
     }
     return images
 }
