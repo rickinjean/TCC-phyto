@@ -247,7 +247,8 @@ const LIST_PROJECTION = {
     _id: 1, name: 1, scientificName: 1, simpleDescription: 1,
     imagesPath: 1, imagePath: 1, imagesMeta: 1,
     type: 1, light: 1, height: 1, flowercolor: 1, dificulty: 1,
-    toxicity: 1, origin: 1
+    toxicity: 1, origin: 1,
+    Family: 1, Genero: 1, Especie: 1
 }
 
 plantRoutes.route("/plant").get(async function (req, res) {
