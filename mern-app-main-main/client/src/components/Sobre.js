@@ -2,6 +2,31 @@ import { useState, useEffect } from 'react';
 import API_URL from "../config";
 import usePageTitle from "../usePageTitle";
 
+function SobreImagem({ src, alt, icon, minHeight, className }) {
+    const [erro, setErro] = useState(false);
+    if (src && !erro) {
+        return (
+            <img src={src} alt={alt} className={`${className} img-fluid rounded shadow`} onError={() => setErro(true)} />
+        );
+    }
+    return (
+        <div
+            className={`${className} img-fluid rounded shadow d-flex align-items-center justify-content-center`}
+            style={{ background: "var(--surface-alt, #f0f4f0)", minHeight }}
+        >
+            <i className={`fas ${icon}`} style={{ fontSize: 80, color: "var(--accent, #4a7c59)", opacity: 0.3 }}></i>
+        </div>
+    );
+}
+
+function FotoOuInicial({ foto, nome }) {
+    const [erro, setErro] = useState(false);
+    if (foto && !erro) {
+        return <img src={foto} alt={nome} className="w-100 h-100" style={{ objectFit: "cover" }} onError={() => setErro(true)} />;
+    }
+    return nome.charAt(0);
+}
+
 export default function About() {
     usePageTitle("Sobre", "Conheça o Phytografia: sistema de pesquisa botânica desenvolvido no IFC Campus Sombrio para democratizar o acesso ao conhecimento sobre a biodiversidade de plantas.")
     const [formData, setFormData] = useState({ nome: '', email: '', assunto: '', mensagem: '' });
@@ -83,9 +108,13 @@ export default function About() {
                             </div>
                         </div>
                         <div className="col-md-6">
-                            <div className="about-hero__image img-fluid rounded shadow d-flex align-items-center justify-content-center" style={{background: "var(--surface-alt, #f0f4f0)", minHeight: 280}}>
-                                <i className="fas fa-leaf" style={{fontSize: 80, color: "var(--accent, #4a7c59)", opacity: 0.3}}></i>
-                            </div>
+                            <SobreImagem
+                            src="/images/sobre/hero.jpg"
+                            alt="Pesquisa botânica do Phytografia"
+                            icon="fa-leaf"
+                            minHeight="280px"
+                            className="about-hero__image"
+                        />
                         </div>
                     </div>
                 </div>
@@ -152,9 +181,13 @@ export default function About() {
                             </div>
                         </div>
                         <div className="col-md-5">
-                            <div className="about-history__image img-fluid rounded shadow d-flex align-items-center justify-content-center" style={{background: "var(--surface-alt, #f0f4f0)", minHeight: 320}}>
-                                <i className="fas fa-history" style={{fontSize: 70, color: "var(--accent, #4a7c59)", opacity: 0.3}}></i>
-                            </div>
+                            <SobreImagem
+                                src="/images/sobre/historia.jpg"
+                                alt="História do Phytografia"
+                                icon="fa-history"
+                                minHeight="360px"
+                                className="about-history__image"
+                            />
                         </div>
                     </div>
                 </div>
@@ -232,7 +265,7 @@ export default function About() {
                     </div>
                     <div className="row g-4 justify-content-center">
                         {[
-                            { nome: 'Dr. Jean Lucas', cargo: 'Estudante(Chefe)',                 bio: 'PhD em tomar café, especialista em videojogos com mais de 15 anos de experiência.' },
+                            { nome: 'Dr. Jean Lucas', cargo: 'Estudante(Chefe)',                 bio: 'PhD em tomar café, especialista em videojogos com mais de 15 anos de experiência.', foto: '/images/sobre/equipe-jean.jpeg' },
                             { nome: 'Henrique P',     cargo: 'Desenvolvedor Full-Stack(confia)', bio: 'Engenheiro de Software especializada em aplicações web, responsável pela arquitetura e desenvolvimento do sistema.' },
                             { nome: 'Renato Bettin',  cargo: 'Coorientador',                    bio: 'Professor na Unesc de Criciúma, coorientador do Trabalho de Conclusão de Curso. Especialista em desenvolvimento de software e engenharia de sistemas.' },
                         ].map((membro, i) => (
@@ -240,10 +273,10 @@ export default function About() {
                                 <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
                                     <div className="card-body">
                                         <div
-                                            className="about-team__image rounded-circle mb-3 d-flex align-items-center justify-content-center mx-auto"
+                                            className="about-team__image rounded-circle mb-3 d-flex align-items-center justify-content-center mx-auto overflow-hidden"
                                             style={{width: 100, height: 100, background: "var(--accent, #4a7c59)", color: "#fff", fontSize: 32, fontWeight: 600}}
                                         >
-                                            {membro.nome.charAt(0)}
+                                            <FotoOuInicial foto={membro.foto} nome={membro.nome} />
                                         </div>
                                         <h5 className="about-card__title card-title mb-1">{membro.nome}</h5>
                                         <p className="about-team__role small fw-medium mb-2">{membro.cargo}</p>
