@@ -1801,6 +1801,11 @@ html[data-theme="dark"] .btn-primary:focus {
   background: var(--phyto-sage);
 }
 
+.plant-feature-card__image picture {
+  display: block;
+  height: 100%;
+}
+
 .plant-feature-card__img {
   display: block;
   width: 100%;
@@ -1893,6 +1898,15 @@ html[data-theme="dark"] .btn-primary:focus {
 .plant-details-image.is-small,
 .plant-details-gallery__img.is-small {
   object-fit: cover;
+}
+
+.plant-list-card__carousel-inner .carousel-item,
+.plant-list-card__carousel-inner picture {
+  height: 100%;
+}
+
+.plant-list-card__carousel-inner picture {
+  display: block;
 }
 
 .plant-list-card__body {
