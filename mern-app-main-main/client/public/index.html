@@ -54,9 +54,29 @@
       "url": "https://tcc-phyto.onrender.com/",
       "description": "Sistema de pesquisa botânica desenvolvido como trabalho de conclusão de curso do IFC Campus Sombrio.",
       "inLanguage": "pt-BR",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://tcc-phyto.onrender.com/plantlist?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      },
       "publisher": {
-        "@type": "EducationalOrganization",
-        "name": "IFC Campus Sombrio"
+        "@type": "Organization",
+        "@id": "https://tcc-phyto.onrender.com/#organization",
+        "name": "Phytografia",
+        "url": "https://tcc-phyto.onrender.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://tcc-phyto.onrender.com/logo512.png",
+          "width": 512,
+          "height": 512
+        },
+        "parentOrganization": {
+          "@type": "EducationalOrganization",
+          "name": "IFC Campus Sombrio"
+        }
       }
     }
     </script>
