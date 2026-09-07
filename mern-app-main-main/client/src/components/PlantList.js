@@ -433,16 +433,18 @@ export default function PlantList({ role, canFavorite = false }) {
     return (
         <div className="plant-list-page container mt-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h3 className="plant-list-page__title mb-0 fw-semibold">
-                        Lista de Plantas
-                    </h3>
-                    {!loading && (
-                        <span className="plant-list-page__count">
-                            {plants.length} {plants.length === 1 ? "planta" : "plantas"} {hasActiveFilters ? "encontradas" : "cadastradas"}
-                        </span>
-                    )}
-                </div>
+                {role === "ADM" && (
+                    <div>
+                        <h3 className="plant-list-page__title mb-0 fw-semibold">
+                            Lista de Plantas
+                        </h3>
+                        {!loading && (
+                            <span className="plant-list-page__count">
+                                {plants.length} {plants.length === 1 ? "planta" : "plantas"} {hasActiveFilters ? "encontradas" : "cadastradas"}
+                            </span>
+                        )}
+                    </div>
+                )}
                 {role === "ADM" && (
                     <div className="d-flex gap-2">
                         <Link
