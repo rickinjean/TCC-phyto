@@ -306,8 +306,8 @@ export default function Home({ token = null }) {
                         <StatBox value={stats.plantCount} label="Plantas Cadastradas" loading={loadingStats} />
                         <StatBox value={stats.userCount} label="Usuários Cadastrados" loading={loadingStats} />
                         <StatBox
-                            value={plants.filter(p => p.imagesPath?.length > 0 || p.imagePath).length}
-                            label="Plantas com Imagem"
+                            value={new Set(plants.map(p => p.Family).filter(Boolean)).size}
+                            label="Famílias Botânicas"
                             loading={loadingPlants}
                         />
                         <StatBox value={stats.favoriteCount || 0} label="Favoritos no Sistema" loading={loadingStats} />
