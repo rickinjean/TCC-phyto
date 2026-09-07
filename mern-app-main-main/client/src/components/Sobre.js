@@ -3,7 +3,7 @@ import API_URL from "../config";
 import usePageTitle from "../usePageTitle";
 
 export default function About() {
-    usePageTitle("Sobre", "Conheça o Phytografia: sistema de pesquisa botânica desenvolvido no IFC Campus Sombrio para democratizar o acesso ao conhecimento sobre plantas medicinais e biodiversidade.")
+    usePageTitle("Sobre", "Conheça o Phytografia: sistema de pesquisa botânica desenvolvido no IFC Campus Sombrio para democratizar o acesso ao conhecimento sobre a biodiversidade de plantas.")
     const [formData, setFormData] = useState({ nome: '', email: '', assunto: '', mensagem: '' });
     const [enviado, setEnviado] = useState(false);
     const [enviando, setEnviando] = useState(false);
@@ -295,8 +295,7 @@ export default function About() {
                         <i className="fas fa-info-circle me-2 about-disclaimer__icon" aria-hidden="true"></i>
                         <p className="mb-0 small">
                             <strong>Aviso:</strong> este site é um trabalho acadêmico desenvolvido no IFC Campus Sombrio.
-                            As informações sobre plantas são educativas e não substituem a orientação de profissionais
-                            da saúde, farmacêuticos ou médicos.
+                            As informações sobre plantas têm caráter educativo e de pesquisa botânica.
                         </p>
                     </div>
                 </div>

@@ -133,7 +133,7 @@ const TABS = [
 ]
 
 export default function Home({ token = null }) {
-    usePageTitle("Início", "Phytografia — sistema de pesquisa botânica do IFC Campus Sombrio com plantas medicinais, fitoterapia e biodiversidade em um catálogo digital interativo.")
+    usePageTitle("Início", "Phytografia — sistema de pesquisa botânica do IFC Campus Sombrio com biodiversidade em um catálogo de plantas digital e interativo.")
     const [plants, setPlants] = useState([])
     const [stats, setStats] = useState({ plantCount: 0, userCount: 0 })
     const [searchTerm, setSearchTerm] = useState("")

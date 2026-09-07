@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 
-const DEFAULT_DESCRIPTION = "Phytografia é um sistema de pesquisa botânica desenvolvido como trabalho de conclusão de curso do IFC Campus Sombrio. Consulte informações sobre plantas medicinais, fitoterapia e biodiversidade."
+const DEFAULT_DESCRIPTION = "Phytografia é um sistema de pesquisa botânica desenvolvido como trabalho de conclusão de curso do IFC Campus Sombrio. Consulte informações sobre biodiversidade em um catálogo digital interativo."
 
 export default function usePageTitle(title, description) {
     useEffect(() => {
