@@ -5,6 +5,10 @@ if (!JWT_SECRET) {
   throw new Error("JWT_SECRET não está definida no ambiente. Configure server/.env antes de subir o servidor.")
 }
 
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || JWT_SECRET
+const ACCESS_TOKEN_TTL = process.env.ACCESS_TOKEN_TTL || "15m"
+const REFRESH_TOKEN_TTL = process.env.REFRESH_TOKEN_TTL || "7d"
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"]
   const token = authHeader && authHeader.split(" ")[1]
@@ -32,7 +36,20 @@ function authorizeRoles(...allowedRoles) {
 }
 
 function signToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" })
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL })
 }
 
-module.exports = { authenticateToken, authorizeRoles, signToken }
+function signRefreshToken(payload) {
+  return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_TTL })
+}
+
+function verifyRefreshToken(token) {
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, JWT_REFRESH_SECRET, { algorithms: ["HS256"] }, (err, decoded) => {
+      if (err) return reject(err)
+      resolve(decoded)
+    })
+  })
+}
+
+module.exports = { authenticateToken, authorizeRoles, signToken, signRefreshToken, verifyRefreshToken, REFRESH_TOKEN_TTL }

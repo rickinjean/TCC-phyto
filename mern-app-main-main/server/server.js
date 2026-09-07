@@ -133,8 +133,17 @@ const loginLimiter = rateLimit({
     legacyHeaders: false,
 })
 
+const refreshLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 60,
+    message: { mensagem: "Muitas tentativas de renovação de sessão. Tente novamente em 15 minutos." },
+    standardHeaders: true,
+    legacyHeaders: false,
+})
+
 app.use("/user/login", loginLimiter)
 app.use("/user/register", loginLimiter)
+app.use("/auth/refresh", refreshLimiter)
 
 process.on("unhandledRejection", (reason) => {
     console.error("Rejeição não tratada:", reason)
@@ -146,6 +155,7 @@ process.on("uncaughtException", (error) => {
 
 app.use(require("./routes/auth"))
 app.use(require("./routes/user"))
+app.use(require("./routes/sessions"))
 app.use(require("./routes/plant"))
 app.use(require("./routes/favorites"))
 app.use(require("./routes/messages"))

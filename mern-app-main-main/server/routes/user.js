@@ -4,6 +4,7 @@ const dbo = require("../db/conn")
 const crypto = require("crypto")
 const ObjectId = require("mongodb").ObjectId
 const { authenticateToken, authorizeRoles, signToken } = require("../middleware/auth")
+const { createSession } = require("./sessions")
 const { enviarEmailConfirmacao, smtpConfigurado } = require("../mailer")
 const bcrypt = require("bcrypt")
 
@@ -61,8 +62,9 @@ userRoutes.route('/user/login').post(async function (req, res) {
         }
 
         const token = signToken({ userId: usuario._id, tipo: usuario.function, name: usuario.name || usuario.user, avatar: usuario.avatar || null })
+        const refreshToken = await createSession(db_connect, usuario)
 
-        res.json({ mensagem: 'Login bem-sucedido', token });
+        res.json({ mensagem: 'Login bem-sucedido', token, refreshToken });
     } catch (erro) {
         console.error(erro);
         res.status(500).json({ mensagem: 'Erro no servidor' });

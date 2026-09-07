@@ -16,13 +16,18 @@ import Inicio from './components/inicio'
 import Sobre from './components/Sobre'
 import Favorites from './components/Favorites'
 import ErrorBoundary from './ErrorBoundary'
+import API_URL from "./config"
 
 const urlParams = new URLSearchParams(window.location.search)
 const oauthToken = urlParams.get('token')
+const oauthRefreshToken = urlParams.get('refreshToken')
 const oauthError = urlParams.get('error')
 if (oauthToken) {
     localStorage.setItem('token', oauthToken)
     window.history.replaceState({}, '', window.location.pathname)
+}
+if (oauthRefreshToken) {
+    localStorage.setItem('refreshToken', oauthRefreshToken)
 }
 if (oauthError) {
     window.history.replaceState({}, '', window.location.pathname)
@@ -84,6 +89,69 @@ const App = () => {
         return parseJwt(storedToken)?.avatar || null
     });
     const [favTick, setFavTick] = useState(0);
+    const [hydrating, setHydrating] = useState(() => {
+        const stored = localStorage.getItem('token')
+        const storedRefresh = localStorage.getItem('refreshToken')
+        if (stored && !isTokenExpired(stored)) return false
+        return Boolean(storedRefresh)
+    });
+
+    useEffect(() => {
+        let cancelled = false
+        async function hydrate() {
+            try {
+                const storedToken = localStorage.getItem('token')
+                const storedRefresh = localStorage.getItem('refreshToken')
+
+                // Access token ainda válido: nada a fazer.
+                if (storedToken && !isTokenExpired(storedToken)) return
+
+                // Sem refresh token: a sessão realmente expirou.
+                if (!storedRefresh) {
+                    localStorage.removeItem('token')
+                    return
+                }
+
+                // Renova a sessão silenciosamente antes de renderizar as rotas.
+                let res
+                try {
+                    res = await fetch(`${API_URL}/auth/refresh`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${storedRefresh}` },
+                    })
+                } catch {
+                    return
+                }
+
+                if (!res.ok) {
+                    localStorage.removeItem('token')
+                    localStorage.removeItem('refreshToken')
+                    return
+                }
+
+                const data = await res.json()
+                if (!data.token || !data.refreshToken) {
+                    localStorage.removeItem('token')
+                    localStorage.removeItem('refreshToken')
+                    return
+                }
+
+                if (!cancelled) {
+                    localStorage.setItem('token', data.token)
+                    localStorage.setItem('refreshToken', data.refreshToken)
+                    setToken(data.token)
+                    const payload = parseJwt(data.token)
+                    setRole(payload?.tipo || null)
+                    setUserName(payload?.name || null)
+                    setUserAvatar(payload?.avatar || null)
+                }
+            } finally {
+                if (!cancelled) setHydrating(false)
+            }
+        }
+        hydrate()
+        return () => { cancelled = true }
+    }, [])
 
     const notifyFavChange = () => setFavTick(t => t + 1);
 
@@ -101,8 +169,9 @@ const App = () => {
         return () => window.removeEventListener("auth:logout", handleAuthLogout);
     }, [])
 
-    const handleLogin = (tokenValue) => {
+    const handleLogin = (tokenValue, refreshTokenValue) => {
         localStorage.setItem('token', tokenValue)
+        if (refreshTokenValue) localStorage.setItem('refreshToken', refreshTokenValue)
         setToken(tokenValue)
         const payload = parseJwt(tokenValue)
         setRole(payload?.tipo || null)
@@ -111,11 +180,32 @@ const App = () => {
     }
 
     const handleLogout = () => {
+        const storedRefresh = localStorage.getItem('refreshToken')
         localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
         setToken(null)
         setRole(null)
         setUserName(null)
         setUserAvatar(null)
+
+        // Revoga a sessão no servidor (best-effort; ignora falhas de rede).
+        if (storedRefresh) {
+            fetch(`${API_URL}/auth/logout`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${storedRefresh}` },
+            }).catch(() => {})
+        }
+    }
+
+    if (hydrating) {
+        return (
+            <div className="min-vh-100 d-flex align-items-center justify-content-center">
+                <div className="text-center">
+                    <div className="spinner-border text-primary mb-2" role="status" />
+                    <div className="small text-muted">Restaurando sessão...</div>
+                </div>
+            </div>
+        )
     }
 
     return (

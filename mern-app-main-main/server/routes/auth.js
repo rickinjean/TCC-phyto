@@ -3,6 +3,7 @@ const authRoutes = express.Router()
 const axios = require("axios")
 const dbo = require("../db/conn")
 const { signToken } = require("../middleware/auth")
+const { createSession } = require("./sessions")
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
 
@@ -104,8 +105,9 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
         )
 
         const token = signToken({ userId: user._id, tipo: user.function, name: user.name, avatar: user.avatar || null })
+        const refreshToken = await createSession(db_connect, user)
 
-        res.redirect(`${FRONTEND_URL}/?token=${token}`)
+        res.redirect(`${FRONTEND_URL}/?token=${encodeURIComponent(token)}&refreshToken=${encodeURIComponent(refreshToken)}`)
     } catch (error) {
         console.error("[OAuth Google] Erro:", error.response?.data || error.message)
         res.redirect(`${FRONTEND_URL}/login?error=google_failed`)
@@ -164,8 +166,9 @@ authRoutes.get("/auth/github/callback", async (req, res) => {
         )
 
         const token = signToken({ userId: user._id, tipo: user.function, name: user.name, avatar: user.avatar || null })
+        const refreshToken = await createSession(db_connect, user)
 
-        res.redirect(`${FRONTEND_URL}/?token=${token}`)
+        res.redirect(`${FRONTEND_URL}/?token=${encodeURIComponent(token)}&refreshToken=${encodeURIComponent(refreshToken)}`)
     } catch (error) {
         console.error("Erro no OAuth GitHub:", error.response?.data || error.message)
         res.redirect(`${FRONTEND_URL}/login?error=github_failed`)

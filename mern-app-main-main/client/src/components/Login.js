@@ -37,7 +37,10 @@ export default function Login({ onLogin }) {
             }
 
             localStorage.setItem('token', data.token);
-            onLogin(data.token);
+            if (data.refreshToken) {
+                localStorage.setItem('refreshToken', data.refreshToken);
+            }
+            onLogin(data.token, data.refreshToken);
             navigate('/inicio');
         } catch (error) {
             setError('Erro na conexão com o servidor');
