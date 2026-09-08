@@ -100,30 +100,56 @@ suggestionsRoutes.route("/suggestions/:id").patch(authenticateToken, authorizeRo
         if (!ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ message: "ID inválido" })
         }
+
         const status = req.body.status
-        if (!STATUS_VALIDOS.includes(status)) {
+        const temStatus = status !== undefined && status !== null && status !== ""
+        if (temStatus && !STATUS_VALIDOS.includes(status)) {
             return res.status(400).json({ message: "Status inválido" })
         }
 
-        const update = {
-            $set: {
+        const sug = await db_connect.collection("suggestions").findOne({ _id: new ObjectId(req.params.id) })
+        if (!sug) {
+            return res.status(404).json({ message: "Sugestão não encontrada" })
+        }
+
+        const update = {}
+
+        if (temStatus) {
+            update.$set = {
                 status,
                 anotacao: String(req.body.anotacao || "").trim().slice(0, 500)
             }
+            if (status === "rejeitada" || status === "concluida") {
+                update.$set.resolved = new Date()
+            } else {
+                update.$set.resolved = null
+            }
         }
-        if (status === "rejeitada" || status === "concluida") {
-            update.$set.resolved = new Date()
-        } else {
-            update.$set.resolved = null
+
+        if (req.body.data && typeof req.body.data === "object") {
+            if (sug.tipo !== "nova") {
+                return res.status(400).json({ message: "Sugestões de correção não aceitam edição de dados." })
+            }
+            const dadosAceitos = {}
+            for (const campo of CAMPOS_NOVA) {
+                if (req.body.data[campo] !== undefined) {
+                    dadosAceitos[campo] = req.body.data[campo]
+                }
+            }
+            update.$set = update.$set || {}
+            update.$set.data = { ...(sug.data || {}), ...dadosAceitos }
+            // Ao editar os dados, resetamos o estado de publicação para exigir nova decisão do ADM.
+            update.$set.plantaCriadaId = null
+        }
+
+        if (!update.$set) {
+            return res.status(400).json({ message: "Nenhuma alteração informada." })
         }
 
         const result = await db_connect.collection("suggestions").updateOne(
             { _id: new ObjectId(req.params.id) },
             update
         )
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ message: "Sugestão não encontrada" })
-        }
         res.status(200).json({ message: "Sugestão atualizada" })
     } catch (error) {
         res.status(500).json({ message: error.message })

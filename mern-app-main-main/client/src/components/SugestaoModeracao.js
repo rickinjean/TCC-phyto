@@ -3,6 +3,8 @@ import { Link } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
+import PreviaFicha from "./PreviaFicha"
+import EditarSugestao from "./EditarSugestao"
 
 const STATUS_LABEL = {
     pendente: "Pendente",
@@ -94,6 +96,26 @@ function SugestaoCard({ sug, acoes }) {
                     )}
 
                     <div className="sugestao-card__acoes">
+                        {(sug.status === "pendente" || sug.status === "aprovada") && (
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                disabled={working}
+                                onClick={() => acoes.onPrevia(sug)}
+                            >
+                                {ehNova ? "👁️ Pré-visualizar" : "👁️ Ver ficha"}
+                            </button>
+                        )}
+                        {ehNova && sug.status === "aprovada" && (
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                disabled={working}
+                                onClick={() => acoes.onEditar(sug)}
+                            >
+                                ✏️ Editar dados
+                            </button>
+                        )}
                         <label htmlFor={`anotacao-${sug._id}`} className="visually-hidden">Anotação</label>
                         <input
                             id={`anotacao-${sug._id}`}
@@ -148,7 +170,10 @@ export default function SugestaoModeracao() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [aba, setAba] = useState("pendente")
+    const [filtroTipo, setFiltroTipo] = useState("todos")
     const [aviso, setAviso] = useState("")
+    const [previaSug, setPreviaSug] = useState(null)
+    const [edicaoSug, setEdicaoSug] = useState(null)
 
     useEffect(() => {
         async function load() {
@@ -172,9 +197,10 @@ export default function SugestaoModeracao() {
         load()
     }, [])
 
-    const pendentes = todas.filter(s => s.status === "pendente")
-    const emProcesso = todas.filter(s => s.status === "aprovada")
-    const encerradas = todas.filter(s => s.status === "rejeitada" || s.status === "concluida")
+    const visiveis = filtroTipo === "todos" ? todas : todas.filter(s => s.tipo === filtroTipo)
+    const pendentes = visiveis.filter(s => s.status === "pendente")
+    const emProcesso = visiveis.filter(s => s.status === "aprovada")
+    const encerradas = visiveis.filter(s => s.status === "rejeitada" || s.status === "concluida")
 
     async function executar(sug, acao, anotacao) {
         setAviso("")
@@ -224,6 +250,32 @@ export default function SugestaoModeracao() {
         }
     }
 
+    async function salvarDados(sug, dados) {
+        setAviso("")
+        try {
+            const res = await authFetch(`${API_URL}/suggestions/${sug._id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ data: dados })
+            })
+            if (!res) {
+                setError("Sessão expirada. Faça login novamente.")
+                return false
+            }
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) {
+                setError(data.message || "Erro ao salvar os dados da sugestão.")
+                return false
+            }
+            setTodas(prev => prev.map(s => s._id === sug._id ? { ...s, data: { ...(s.data || {}), ...dados } } : s))
+            setAviso("Dados da sugestão atualizados!")
+            return true
+        } catch {
+            setError("Erro ao conectar com o servidor")
+            return false
+        }
+    }
+
     const listaAtual = aba === "pendente" ? pendentes : aba === "aprovada" ? emProcesso : encerradas
 
     return (
@@ -239,6 +291,31 @@ export default function SugestaoModeracao() {
                 </button>
                 <button type="button" className={`sugestao-tabs__tab ${aba === "encerradas" ? "is-active" : ""}`} onClick={() => setAba("encerradas")}>
                     Encerradas ({encerradas.length})
+                </button>
+            </div>
+
+            <div className="sugestao-filtro mb-3 mx-2">
+                <span className="sugestao-filtro__label">Filtrar por tipo:</span>
+                <button
+                    type="button"
+                    className={`sugestao-filtro__chip ${filtroTipo === "todos" ? "is-active" : ""}`}
+                    onClick={() => setFiltroTipo("todos")}
+                >
+                    Todos
+                </button>
+                <button
+                    type="button"
+                    className={`sugestao-filtro__chip ${filtroTipo === "nova" ? "is-active" : ""}`}
+                    onClick={() => setFiltroTipo("nova")}
+                >
+                    🌱 Nova planta
+                </button>
+                <button
+                    type="button"
+                    className={`sugestao-filtro__chip ${filtroTipo === "correcao" ? "is-active" : ""}`}
+                    onClick={() => setFiltroTipo("correcao")}
+                >
+                    ✏️ Correção
                 </button>
             </div>
 
@@ -262,11 +339,28 @@ export default function SugestaoModeracao() {
                         <SugestaoCard
                             key={String(sug._id)}
                             sug={sug}
-                            acoes={{ executar }}
+                            acoes={{
+                                executar,
+                                onPrevia: setPreviaSug,
+                                onEditar: setEdicaoSug,
+                            }}
                         />
                     ))}
                 </div>
             )}
+
+            <PreviaFicha
+                aberto={Boolean(previaSug)}
+                sug={previaSug}
+                modo={previaSug && previaSug.tipo === "correcao" ? "correcao" : "nova"}
+                onFechar={() => setPreviaSug(null)}
+            />
+            <EditarSugestao
+                aberto={Boolean(edicaoSug)}
+                sug={edicaoSug}
+                onFechar={() => setEdicaoSug(null)}
+                onSalvar={(dados) => salvarDados(edicaoSug, dados)}
+            />
         </div>
     )
 }
