@@ -107,7 +107,7 @@ function SugestaoCard({ sug, acoes }) {
                             type="button"
                             className="btn btn-sm btn-success"
                             disabled={working}
-                            onClick={() => executar(sug, sug.status === "pendente" ? "aprovar" : ehNova ? "publicar" : "concluir")}
+                            onClick={() => executar(sug.status === "pendente" ? "aprovar" : ehNova ? "publicar" : "concluir")}
                         >
                             {sug.status === "pendente"
                                 ? "Aprovar → Em processo"
@@ -116,22 +116,22 @@ function SugestaoCard({ sug, acoes }) {
                                     : "Marcar como corrigida"}
                         </button>
                         {sug.status === "aprovada" && (
-                            <button type="button" className="btn btn-sm btn-outline-success" disabled={working} onClick={() => executar(sug, "rejeitar")}>
+                            <button type="button" className="btn btn-sm btn-outline-success" disabled={working} onClick={() => executar("rejeitar")}>
                                 Rejeitar
                             </button>
                         )}
                         {(sug.status === "aprovada" || sug.status === "pendente") && (
-                            <button type="button" className="btn btn-sm btn-outline-secondary" disabled={working} onClick={() => executar(sug, "voltar")}>
+                            <button type="button" className="btn btn-sm btn-outline-secondary" disabled={working} onClick={() => executar("voltar")}>
                                 Voltar para pendente
                             </button>
                         )}
                         {sug.status === "pendente" && (
-                            <button type="button" className="btn btn-sm btn-outline-danger" disabled={working} onClick={() => executar(sug, "rejeitar")}>
+                            <button type="button" className="btn btn-sm btn-outline-danger" disabled={working} onClick={() => executar("rejeitar")}>
                                 Rejeitar
                             </button>
                         )}
                         {sug.status !== "pendente" && sug.status !== "aprovada" && (
-                            <button type="button" className="btn btn-sm btn-outline-secondary" disabled={working} onClick={() => executar(sug, "voltar")}>
+                            <button type="button" className="btn btn-sm btn-outline-secondary" disabled={working} onClick={() => executar("voltar")}>
                                 Reabrir
                             </button>
                         )}
