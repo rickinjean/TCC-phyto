@@ -5510,11 +5510,15 @@ html[data-theme="dark"] .paleta-cores__swatch.is-active {
 }
 
 .sugestao-page__title {
-  color: var(--phyto-green-600);
+  color: #a05c2b;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 1.7rem;
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+
+html[data-theme="dark"] .sugestao-page__title {
+  color: #e0a063;
 }
 
 .sugestao-page__sub {
