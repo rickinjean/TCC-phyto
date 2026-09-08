@@ -7,6 +7,7 @@ import PlantImage from "./PlantImage"
 import sortPorNome from "../sortOptions"
 import usePageTitle from "../usePageTitle"
 import getImageVariants from "../getImageVariants"
+import ListaPicker from "./ListaPicker"
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' fill='%23dceee3'%3E%3Crect width='400' height='250'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='62%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E"
 
@@ -30,7 +31,7 @@ const PlantCard = (props) => {
     const carouselId = `plantImagesCarousel-${props.record._id}`
     const images = props.record.imagesPath?.length > 0 ? props.record.imagesPath : props.record.imagePath ? [props.record.imagePath] : []
     const isAdmin = props.role === "ADM"
-    const isFav = props.favoriteIds?.has(props.record._id)
+    const corColecao = props.corColecao || null
 
     function imgVariantProps(path) {
         const v = getImageVariants(props.record.imagesMeta, path, API_URL)
@@ -54,32 +55,6 @@ const PlantCard = (props) => {
             instance.pause()
         }
     }, [])
-
-    async function toggleFavorite(e) {
-        e.preventDefault()
-        e.stopPropagation()
-        try {
-            if (isFav) {
-                const res = await authFetch(`${API_URL}/favorites/${props.record._id}`, {
-                    method: "DELETE"
-                })
-                if (res && res.ok) {
-                    props.onFavoriteToggle(props.record._id, false)
-                }
-            } else {
-                const res = await authFetch(`${API_URL}/favorites`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ plantId: props.record._id })
-                })
-                if (res && res.ok) {
-                    props.onFavoriteToggle(props.record._id, true)
-                }
-            }
-        } catch (err) {
-            console.error("Erro ao atualizar favorito:", err)
-        }
-    }
 
     return (
         <div className="col-12 col-md-6 col-lg-4 mb-4">
@@ -154,12 +129,14 @@ const PlantCard = (props) => {
 
                     {props.canFavorite && (
                         <button
-                            className={`plant-list-card__favorite ${isFav ? "is-favorite" : ""}`}
-                            onClick={toggleFavorite}
+                            className={`plant-list-card__favorite ${corColecao ? "is-favorite" : ""}`}
+                            onClick={() => props.onOpenPicker(props.record)}
                             type="button"
-                            aria-label={isFav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                            aria-label="Adicionar a uma coleção"
+                            title={corColecao ? "Em uma coleção — tocar para gerenciar" : "Adicionar a uma coleção"}
+                            style={corColecao ? { color: corColecao } : undefined}
                         >
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill={isFav ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill={corColecao ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                             </svg>
                         </button>
@@ -211,7 +188,7 @@ className="plant-list-card__delete btn btn-sm"
                             </>
                         ) : null}
                     </div>
-                </div>
+</div>
             </div>
         </div>
     )
@@ -243,7 +220,9 @@ export default function PlantList({ role, canFavorite = false }) {
     const [loading, setLoading] = useState(true)
     const [fetchError, setFetchError] = useState(null)
     const [collectionOptions, setCollectionOptions] = useState({})
-    const [favoriteIds, setFavoriteIds] = useState(new Set())
+    const [listasMeta, setListasMeta] = useState([])
+    const [membership, setMembership] = useState({})
+    const [pickerPlanta, setPickerPlanta] = useState(null)
     const [searchParams, setSearchParams] = useSearchParams()
 
     const filtersFromURL = {}
@@ -294,21 +273,20 @@ export default function PlantList({ role, canFavorite = false }) {
 
     useEffect(() => {
         if (!canFavorite) return;
-        async function loadFavorites() {
+        async function loadMembership() {
             try {
-                const res = await authFetch(`${API_URL}/favorites`)
+                const res = await authFetch(`${API_URL}/userlists/membership`)
                 if (res && res.ok) {
                     const data = await res.json()
-                    setFavoriteIds(new Set(data.map(f => String(f.plantId))))
-                } else if (res) {
-                    console.warn("Falha ao carregar favoritos:", res.status)
+                    setListasMeta(data.lists || [])
+                    setMembership(data.membership || {})
                 }
             } catch (err) {
-                console.error("Erro ao carregar favoritos:", err)
+                console.error("Erro ao carregar coleções:", err)
             }
         }
-        loadFavorites()
-    }, [canFavorite])
+        loadMembership()
+    }, [canFavorite, pickerPlanta])
 
     const fetchPlants = useCallback(async (activeFilters, searchQuery) => {
         setLoading(true)
@@ -409,16 +387,11 @@ export default function PlantList({ role, canFavorite = false }) {
         }
     }
 
-    function handleFavoriteToggle(plantId, added) {
-        setFavoriteIds(prev => {
-            const next = new Set(prev)
-            if (added) {
-                next.add(plantId)
-            } else {
-                next.delete(plantId)
-            }
-            return next
-        })
+    function corDaPlanta(plantId) {
+        const ids = membership[String(plantId)]
+        if (!ids || ids.length === 0) return null
+        const meta = listasMeta.find(l => String(l._id) === ids[0])
+        return meta && meta.color ? meta.color : null
     }
 
     async function deleteRecord(id) {
@@ -566,8 +539,8 @@ export default function PlantList({ role, canFavorite = false }) {
                             role={role}
                             canFavorite={canFavorite}
                             deleteRecord={deleteRecord}
-                            favoriteIds={favoriteIds}
-                            onFavoriteToggle={handleFavoriteToggle}
+                            corColecao={corDaPlanta(record._id)}
+                            onOpenPicker={setPickerPlanta}
                         />
                     ))
                 ) : (
@@ -603,6 +576,15 @@ export default function PlantList({ role, canFavorite = false }) {
                         </button>
                     </div>
                 </nav>
+            )}
+
+            {canFavorite && pickerPlanta && (
+                <ListaPicker
+                    aberto={Boolean(pickerPlanta)}
+                    plantaId={String(pickerPlanta._id)}
+                    plantaNome={pickerPlanta.name}
+                    onFechar={() => setPickerPlanta(null)}
+                />
             )}
         </div>
     )

@@ -69,12 +69,7 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                     </li>
                     {token && (
                         <li className="nav-item">
-                            <NavLink className="custom-navbar__link" to="/favoritos">Favoritos</NavLink>
-                        </li>
-                    )}
-                    {token && (
-                        <li className="nav-item">
-                            <NavLink className="custom-navbar__link" to="/minhas-listas">Listas</NavLink>
+                            <NavLink className="custom-navbar__link" to="/minhas-listas">Minhas Listas</NavLink>
                         </li>
                     )}
 <li className="nav-item">
@@ -145,9 +140,6 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
 
                             <div className="custom-navbar__user-panel-section">
                                 <span className="custom-navbar__user-panel-caption">Minha Conta</span>
-                                <NavLink className="custom-navbar__user-panel-link" to="/minhas-listas" onClick={closeUserMenu}>
-                                    📚 Minhas Listas
-                                </NavLink>
                                 <NavLink className="custom-navbar__user-panel-link" to="/sugerir" onClick={closeUserMenu}>
                                     💡 Sugerir Planta / Reportar Erro
                                 </NavLink>
@@ -284,23 +276,19 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/Sobre" onClick={closeMenu}>
-                                            Sobre
-                                        </NavLink>
-                                    </li>
-                                    <li className="nav-item">
                                         <NavLink className="custom-navbar__offcanvas-link" to="/minhas-listas" onClick={closeMenu}>
                                             Minhas Listas
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/sugerir" onClick={closeMenu}>
-                                            Sugerir / Reportar
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/Sobre" onClick={closeMenu}>
+                                            Sobre
                                         </NavLink>
                                     </li>
+                                    <hr className="custom-navbar__separator" />
                                     <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/favoritos" onClick={closeMenu}>
-                                            Favoritos
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/sugerir" onClick={closeMenu}>
+                                            Sugerir / Reportar
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">

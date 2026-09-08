@@ -6,6 +6,7 @@ import { decodeId } from "../idCodec";
 import PlantImage from "./PlantImage";
 import getImageVariants from "../getImageVariants";
 import usePageTitle from "../usePageTitle";
+import ListaPicker from "./ListaPicker";
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' fill='%23dceee3'%3E%3Crect width='600' height='400'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E";
 
@@ -111,18 +112,15 @@ const TEXT_FIELDS = [
   "Filo", "Classe", "Ordem", "Family", "Genero", "Especie",
 ];
 
-export default function PlantDetails({ onFavChange, canFavorite = false }) {
+export default function PlantDetails({ canFavorite = false }) {
   const { id } = useParams();
   const [plant, setPlant] = useState(null);
   usePageTitle(plant ? plant.name : "Planta", plant?.simpleDescription, `/plantdetails/${id}`)
   const [notFound, setNotFound] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [listasOpen, setListasOpen] = useState(false);
-  const [listas, setListas] = useState([]);
-  const [listasLoading, setListasLoading] = useState(true);
-  const [novaListaNome, setNovaListaNome] = useState("");
+  const [pickerAberto, setPickerAberto] = useState(false);
+  const [corColecao, setCorColecao] = useState(null);
   const navigate = useNavigate();
   const realId = decodeId(id);
 
@@ -157,16 +155,6 @@ export default function PlantDetails({ onFavChange, canFavorite = false }) {
           setPlant({ ...data, ...resolved });
         }
 
-        if (canFavorite) {
-          try {
-            const favRes = await authFetch(`${API_URL}/favorites`);
-            if (!cancelled && favRes && favRes.ok) {
-              const favs = await favRes.json();
-              setIsFavorite(favs.some(f => String(f.plantId) === realId));
-            }
-          } catch { /* ignore */ }
-        }
-
       } catch (error) {
         console.error("Erro ao carregar planta:", error);
         if (!cancelled) setNotFound(true);
@@ -177,95 +165,26 @@ export default function PlantDetails({ onFavChange, canFavorite = false }) {
 
     load();
     return () => { cancelled = true; };
-  }, [realId, canFavorite]);
+  }, [realId]);
 
+  // Cor do coração = cor da coleção mais recente que contém esta planta.
+  // Também reexecuta ao abrir/fechar o picker para refletir mudanças.
   useEffect(() => {
     if (!canFavorite) return;
     let cancelled = false;
-    async function loadListas() {
+    async function carregarCor() {
       try {
         const res = await authFetch(`${API_URL}/userlists?plantId=${realId}`);
-        if (!cancelled && res && res.ok) setListas(await res.json());
-      } catch { /* ignore */ } finally {
-        if (!cancelled) setListasLoading(false);
-      }
+        if (!cancelled && res && res.ok) {
+          const data = await res.json();
+          const comPlanta = data.filter(l => l.contains && l.color);
+          setCorColecao(comPlanta.length ? comPlanta[0].color : null);
+        }
+      } catch { /* ignore */ }
     }
-    loadListas();
+    carregarCor();
     return () => { cancelled = true; };
-  }, [canFavorite, realId]);
-
-  async function toggleFavorite() {
-    try {
-      if (isFavorite) {
-        const res = await authFetch(`${API_URL}/favorites/${realId}`, { method: "DELETE" });
-        if (res && res.ok) { setIsFavorite(false); onFavChange?.(); }
-      } else {
-        const res = await authFetch(`${API_URL}/favorites`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plantId: realId })
-        });
-        if (res && res.ok) { setIsFavorite(true); onFavChange?.(); }
-      }
-    } catch (err) {
-      console.error("Erro ao atualizar favorito:", err);
-    }
-  }
-
-  async function alternarLista(lista) {
-    try {
-      if (lista.contains) {
-        const res = await authFetch(`${API_URL}/userlists/${lista._id}/plants/${realId}`, { method: "DELETE" });
-        if (res && res.ok) {
-          setListas(prev => prev.map(l => l._id === lista._id
-            ? { ...l, contains: false, count: Math.max(0, l.count - 1) }
-            : l));
-        }
-      } else {
-        const res = await authFetch(`${API_URL}/userlists/${lista._id}/plants`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plantId: realId })
-        });
-        if (res && res.ok) {
-          setListas(prev => prev.map(l => l._id === lista._id
-            ? { ...l, contains: true, count: l.count + 1 }
-            : l));
-        }
-      }
-    } catch (err) {
-      console.error("Erro ao atualizar lista:", err);
-    }
-  }
-
-  async function criarListaComPlanta(e) {
-    e.preventDefault();
-    const name = novaListaNome.trim();
-    if (!name) return;
-    try {
-      const res = await authFetch(`${API_URL}/userlists`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
-      });
-      if (!res || !res.ok) return;
-      const data = await res.json();
-      const res2 = await authFetch(`${API_URL}/userlists/${data._id}/plants`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plantId: realId })
-      });
-      setListas(prev => [{
-        _id: data._id,
-        name,
-        count: res2 && res2.ok ? 1 : 0,
-        contains: Boolean(res2 && res2.ok)
-      }, ...prev]);
-      setNovaListaNome("");
-    } catch (err) {
-      console.error("Erro ao criar lista:", err);
-    }
-  }
+  }, [canFavorite, realId, pickerAberto]);
 
   if (notFound) {
     return (
@@ -322,67 +241,18 @@ export default function PlantDetails({ onFavChange, canFavorite = false }) {
             </div>
             {canFavorite && (
               <button
-                className={`plant-details-favorite-btn ${isFavorite ? "is-favorite" : ""}`}
-                onClick={toggleFavorite}
+                className={`plant-details-favorite-btn ${corColecao ? "is-favorite" : ""}`}
+                onClick={() => setPickerAberto(true)}
                 type="button"
-                aria-label={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                aria-label="Adicionar a uma coleção"
+                style={corColecao ? { color: corColecao, borderColor: corColecao } : undefined}
               >
-                <svg viewBox="0 0 24 24" width="24" height="24" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill={corColecao ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
               </button>
             )}
-            {canFavorite && (
-              <button
-                className={`plant-details-favorite-btn ${listasOpen ? "is-open" : ""}`}
-                onClick={() => setListasOpen(o => !o)}
-                type="button"
-                aria-expanded={listasOpen}
-                aria-label={listasOpen ? "Fechar adicionar à lista" : "Adicionar à lista"}
-              >
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 4h4v4H5V4zm10 0h4v4h-4V4zM5 14h4v4H5v-4zm10 0h4v4h-4v-4zM9 6h6M9 16h6" />
-                </svg>
-              </button>
-            )}
           </div>
-          {listasOpen && (
-            <div className="addtolist-panel" role="region" aria-label="Adicionar planta às listas">
-              {listasLoading ? (
-                <p className="addtolist-panel__empty">Carregando suas listas...</p>
-              ) : listas.length === 0 ? (
-                <p className="addtolist-panel__empty">Você ainda não tem listas. Crie uma abaixo.</p>
-              ) : (
-                <div className="addtolist-panel__list">
-                  {listas.map(lista => (
-                    <label key={String(lista._id)} className="addtolist-panel__item">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(lista.contains)}
-                        onChange={() => alternarLista(lista)}
-                      />
-                      <span className="addtolist-panel__nome">{lista.name}</span>
-                      <span className="addtolist-panel__qtd">({lista.count})</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-              <form className="addtolist-panel__new" onSubmit={criarListaComPlanta}>
-                <label className="visually-hidden" htmlFor="nova-lista-planta">Nome da nova lista</label>
-                <input
-                  id="nova-lista-planta"
-                  className="form-control form-control-sm"
-                  placeholder="Criar nova lista e adicionar esta planta"
-                  value={novaListaNome}
-                  maxLength={80}
-                  onChange={(e) => setNovaListaNome(e.target.value)}
-                />
-                <button type="submit" className="btn btn-sm btn-success" disabled={!novaListaNome.trim()}>
-                  Criar
-                </button>
-              </form>
-            </div>
-          )}
         </div>
       </header>
 
@@ -606,6 +476,15 @@ export default function PlantDetails({ onFavChange, canFavorite = false }) {
 
         </div>
       </main>
+
+      {canFavorite && (
+        <ListaPicker
+          aberto={pickerAberto}
+          plantaId={realId}
+          plantaNome={plant.name}
+          onFechar={() => setPickerAberto(false)}
+        />
+      )}
     </div>
   );
 }

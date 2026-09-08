@@ -27,7 +27,7 @@ export default function Footer() {
               <li><NavLink className="site-footer__link" to="/inicio">Início</NavLink></li>
               <li><NavLink className="site-footer__link" to="/plantlist">Catálogo</NavLink></li>
               <li><NavLink className="site-footer__link" to="/Sobre">Sobre</NavLink></li>
-              <li><NavLink className="site-footer__link" to="/favoritos">Favoritos</NavLink></li>
+              <li><NavLink className="site-footer__link" to="/minhas-listas">Minhas Listas</NavLink></li>
             </ul>
           </div>
 

@@ -113,14 +113,8 @@ const QUICK_ACCESS_CARDS = [
         icon: "🔍",
     },
     {
-        title: "Favoritos",
-        text: "Acesse suas plantas favoritas salvas para consulta rápida",
-        href: "/favoritos",
-        icon: "💚",
-    },
-    {
         title: "Minhas Listas",
-        text: "Organize plantas em coleções como 'Jardim' ou 'TCC'",
+        text: "Organize plantas em coleções personalizadas com cores, como 'Jardim' ou 'TCC'",
         href: "/minhas-listas",
         icon: "📚",
     },
@@ -253,7 +247,7 @@ export default function Home({ token = null }) {
                 <div className="container">
                     <h3 className="home-section__title text-center mb-5">Acesso Rápido</h3>
                     <div className="row g-4">
-                        {(token ? QUICK_ACCESS_CARDS : QUICK_ACCESS_CARDS.filter(c => !["/favoritos", "/minhas-listas", "/sugerir"].includes(c.href))).map((card, index) => {
+                        {(token ? QUICK_ACCESS_CARDS : QUICK_ACCESS_CARDS.filter(c => !["/minhas-listas", "/sugerir"].includes(c.href))).map((card, index) => {
                             return (
                                 <div key={index} className="col-12 col-md-4">
                                     <div className="quick-card card h-100 shadow-sm">
@@ -322,7 +316,7 @@ export default function Home({ token = null }) {
                             label="Famílias Botânicas"
                             loading={loadingPlants}
                         />
-                        <StatBox value={stats.favoriteCount || 0} label="Favoritos no Sistema" loading={loadingStats} />
+                        <StatBox value={stats.collectionItemCount || 0} label="Plantas em Coleções" loading={loadingStats} />
                     </div>
                 </div>
             </section>

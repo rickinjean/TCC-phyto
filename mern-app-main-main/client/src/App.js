@@ -14,7 +14,6 @@ import Verify from "./components/Verify"
 import PlantDetails from './components/PlantDetails';
 import Inicio from './components/inicio'
 import Sobre from './components/Sobre'
-import Favorites from './components/Favorites'
 import ClientLists from './components/ClientLists'
 import ClientListDetail from './components/ClientListDetail'
 import Sugestao from './components/Sugestao'
@@ -92,7 +91,6 @@ const App = () => {
         const storedToken = localStorage.getItem('token')
         return parseJwt(storedToken)?.avatar || null
     });
-    const [favTick, setFavTick] = useState(0);
     const [hydrating, setHydrating] = useState(() => {
         const stored = localStorage.getItem('token')
         const storedRefresh = localStorage.getItem('refreshToken')
@@ -156,8 +154,6 @@ const App = () => {
         hydrate()
         return () => { cancelled = true }
     }, [])
-
-    const notifyFavChange = () => setFavTick(t => t + 1);
 
     useEffect(() => {
         if (token && isTokenExpired(token)) {
@@ -223,19 +219,19 @@ const App = () => {
                         <Route path="/register" element={token ? <Navigate to="/inicio" replace /> : <Register />} />
                         <Route path="/verify" element={<Verify />} />
                         <Route exact path="/" element={token ? (role === "ADM" ? <UserList /> : <Navigate to="/inicio" replace />) : <Inicio token={token} />} />
-                        <Route path="/plantlist" element={<PlantList role={role} canFavorite={Boolean(token)} favTick={favTick} />} />
+                        <Route path="/plantlist" element={<PlantList role={role} canFavorite={Boolean(token)} />} />
                         <Route path="/userlist" element={token && role === "ADM" ? <UserList /> : <Navigate to={token ? "/" : "/login"} replace />} />
                         <Route path="/messages" element={token && role === "ADM" ? <MessageList /> : <Navigate to={token ? "/" : "/login"} replace />} />
                         <Route path="/edit/:id" element={token && role === "ADM" ? <Edit /> : <Navigate to={token ? "/" : "/login"} replace />} />
                         <Route path="/editplant/:id" element={token && role === "ADM" ? <Editplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
                         <Route path="/createplant" element={token && role === "ADM" ? <Createplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
 
-                        <Route path="/plantdetails/:id" element={<PlantDetails onFavChange={notifyFavChange} canFavorite={Boolean(token)} />} />
+                        <Route path="/plantdetails/:id" element={<PlantDetails canFavorite={Boolean(token)} />} />
                         <Route path="/home" element={<Navigate to="/" replace />} />
                         <Route path="/inicio" element={<Inicio token={token} />} />
                         <Route path="/Sobre" element={<Sobre />} />
                         <Route path="/sobre" element={<Navigate to="/Sobre" replace />} />
-                        <Route path="/favoritos" element={token ? <Favorites key={favTick} /> : <Navigate to="/login" replace />} />
+                        <Route path="/favoritos" element={<Navigate to="/minhas-listas" replace />} />
                         <Route path="/minhas-listas" element={token ? <ClientLists /> : <Navigate to="/login" replace />} />
                         <Route path="/minhas-listas/:id" element={token ? <ClientListDetail /> : <Navigate to="/login" replace />} />
                         <Route path="/sugerir" element={token ? <Sugestao /> : <Navigate to="/login" replace />} />

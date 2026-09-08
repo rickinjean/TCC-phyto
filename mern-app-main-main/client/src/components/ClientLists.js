@@ -3,10 +3,13 @@ import { Link } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
+import { COR_PADRAO } from "../listaCores"
+import PaletaCores from "./PaletaCores"
 
 function ListaCard({ lista, onRename, onDelete }) {
     const [editing, setEditing] = useState(false)
     const [nome, setNome] = useState(lista.name)
+    const [cor, setCor] = useState(lista.color || COR_PADRAO)
     const [saving, setSaving] = useState(false)
 
     async function salvar() {
@@ -17,7 +20,7 @@ function ListaCard({ lista, onRename, onDelete }) {
             return
         }
         setSaving(true)
-        const ok = await onRename(lista._id, trimmed)
+        const ok = await onRename(lista._id, trimmed, cor)
         setSaving(false)
         if (ok) setEditing(false)
     }
@@ -30,7 +33,11 @@ function ListaCard({ lista, onRename, onDelete }) {
                     to={`/minhas-listas/${lista._id}`}
                     aria-label={`Abrir lista ${lista.name}`}
                 >
-                    <span className="userlist-card__icon" aria-hidden="true">📚</span>
+                    <span
+                        className="userlist-card__dot"
+                        style={{ backgroundColor: lista.color || COR_PADRAO }}
+                        aria-hidden="true"
+                    />
                     <span className="userlist-card__meta">
                         <span className="userlist-card__name">{lista.name}</span>
                         <span className="userlist-card__count">
@@ -49,13 +56,14 @@ function ListaCard({ lista, onRename, onDelete }) {
                                 maxLength={80}
                                 aria-label="Novo nome da lista"
                             />
+                            <PaletaCores valor={cor} onChange={setCor} />
                             <button type="button" className="btn btn-sm btn-success" onClick={salvar} disabled={saving}>
                                 Salvar
                             </button>
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary"
-                                onClick={() => { setNome(lista.name); setEditing(false) }}
+                                onClick={() => { setNome(lista.name); setCor(lista.color || COR_PADRAO); setEditing(false) }}
                             >
                                 Cancelar
                             </button>
@@ -67,7 +75,7 @@ function ListaCard({ lista, onRename, onDelete }) {
                                 className="btn btn-sm btn-outline-success"
                                 onClick={() => setEditing(true)}
                             >
-                                Renomear
+                                Renomear / Cor
                             </button>
                             <button
                                 type="button"
@@ -90,6 +98,7 @@ export default function ClientLists() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [novaLista, setNovaLista] = useState("")
+    const [novaCor, setNovaCor] = useState(COR_PADRAO)
     const [criando, setCriando] = useState(false)
 
     useEffect(() => {
@@ -123,7 +132,7 @@ export default function ClientLists() {
             const res = await authFetch(`${API_URL}/userlists`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name })
+                body: JSON.stringify({ name, color: novaCor })
             })
             if (!res) {
                 setError("Sessão expirada. Faça login novamente.")
@@ -135,8 +144,9 @@ export default function ClientLists() {
                 return
             }
             const data = await res.json()
-            setLists(prev => [{ _id: data._id, name, count: 0 }, ...prev])
+            setLists(prev => [{ _id: data._id, name, color: data.color || novaCor, count: 0 }, ...prev])
             setNovaLista("")
+            setNovaCor(COR_PADRAO)
         } catch {
             setError("Erro ao conectar com o servidor")
         } finally {
@@ -144,12 +154,12 @@ export default function ClientLists() {
         }
     }
 
-    async function renomear(id, name) {
+    async function renomear(id, name, cor) {
         try {
             const res = await authFetch(`${API_URL}/userlists/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name })
+                body: JSON.stringify({ name, color: cor })
             })
             if (!res) {
                 setError("Sessão expirada. Faça login novamente.")
@@ -160,7 +170,7 @@ export default function ClientLists() {
                 setError(data.message || "Erro ao renomear a lista.")
                 return false
             }
-            setLists(prev => prev.map(l => l._id === id ? { ...l, name } : l))
+            setLists(prev => prev.map(l => l._id === id ? { ...l, name, color: cor } : l))
             return true
         } catch {
             setError("Erro ao conectar com o servidor")
@@ -196,18 +206,23 @@ export default function ClientLists() {
             </p>
 
             <form className="userlists-newform mb-4" onSubmit={criar}>
-                <label className="visually-hidden" htmlFor="nova-lista">Nome da nova lista</label>
-                <input
-                    id="nova-lista"
-                    className="form-control"
-                    placeholder="Nome da nova lista (ex.: Jardim, TCC)"
-                    value={novaLista}
-                    maxLength={80}
-                    onChange={(e) => setNovaLista(e.target.value)}
-                />
-                <button type="submit" className="btn btn-success" disabled={criando || !novaLista.trim()}>
-                    Criar lista
-                </button>
+                <div className="userlists-newform__row">
+                    <label className="visually-hidden" htmlFor="nova-lista">Nome da nova lista</label>
+                    <input
+                        id="nova-lista"
+                        className="form-control"
+                        placeholder="Nome da nova lista (ex.: Jardim, TCC)"
+                        value={novaLista}
+                        maxLength={80}
+                        onChange={(e) => setNovaLista(e.target.value)}
+                    />
+                    <button type="submit" className="btn btn-success" disabled={criando || !novaLista.trim()}>
+                        Criar lista
+                    </button>
+                </div>
+                <div className="userlists-newform__cor">
+                    <PaletaCores valor={novaCor} onChange={setNovaCor} />
+                </div>
             </form>
 
             {loading ? (

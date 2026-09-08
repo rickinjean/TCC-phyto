@@ -10,9 +10,50 @@ function escapeRegex(str) {
 
 const NOME_LIMITE = 80
 
+const COR_PADRAO = "#2f8a5d"
+const CORES_PALETA = [
+    "#e74c3c", "#e67e22", "#f1c40f", "#2ecc71",
+    "#2f8a5d", "#3498db", "#9b59b6", "#e91e63",
+]
+
 function nomeValido(nome) {
     const n = String(nome || "").trim()
     return n && n.length <= NOME_LIMITE ? n : null
+}
+
+function corValida(cor) {
+    const c = String(cor || "").trim()
+    return /^#[0-9a-fA-F]{6}$/.test(c) ? c.toLowerCase() : null
+}
+
+/* Migração preguiçosa: usuários que tinham favoritos no modelo antigo ganham
+   automaticamente uma coleção "Favoritos" com as plantas que já haviam marcado. */
+async function migrarFavoritosParaLista(db, userId) {
+    const temFavoritos = await db.collection("favorites").countDocuments({ userId }).catch(() => 0)
+    if (!temFavoritos) return
+    const temLista = await db.collection("userlists").findOne({ userId })
+    if (temLista) return
+    const antigos = await db.collection("favorites").find({ userId }).toArray().catch(() => [])
+    if (antigos.length === 0) return
+
+    const result = await db.collection("userlists").insertOne({
+        userId,
+        name: "Favoritos",
+        color: COR_PADRAO,
+        createdAt: new Date(),
+    })
+    const listId = result.insertedId
+    const itens = antigos
+        .filter(f => f.plantId)
+        .map(f => ({ listId, plantId: f.plantId, createdAt: f.createdAt || new Date() }))
+    if (itens.length) {
+        await db.collection("userlist_items").insertMany(itens)
+    }
+    await db.collection("favorites").deleteMany({ userId }).catch(() => {})
+}
+
+function corDe(lista) {
+    return lista && lista.color && corValida(lista.color) ? lista.color : COR_PADRAO
 }
 
 /* ==================================================
@@ -24,11 +65,12 @@ userListsRoutes.route("/userlists").get(authenticateToken, async function (req, 
     const db_connect = dbo.getDb()
     try {
         const userId = new ObjectId(req.user.userId)
+        await migrarFavoritosParaLista(db_connect, userId)
 
         const lists = await db_connect.collection("userlists").aggregate([
             { $match: { userId } },
             { $lookup: { from: "userlist_items", localField: "_id", foreignField: "listId", as: "items" } },
-            { $project: { _id: 1, name: 1, createdAt: 1, count: { $size: "$items" } } },
+            { $project: { _id: 1, name: 1, color: 1, createdAt: 1, count: { $size: "$items" } } },
             { $sort: { createdAt: -1 } }
         ]).toArray()
 
@@ -47,11 +89,56 @@ userListsRoutes.route("/userlists").get(authenticateToken, async function (req, 
         const result = lists.map(l => ({
             _id: l._id,
             name: l.name,
+            color: corDe(l),
             createdAt: l.createdAt,
             count: l.count,
             contains: membership ? membership.has(String(l._id)) : null
         }))
         res.status(200).json(result)
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
+/* ==================================================
+   MEMBERSHIP: lista quais plantas estão em quais coleções
+   do usuário. Uso: GET /userlists/membership
+   Retorno: { lists, membership } onde membership[plantId] =
+   array de ids de listas (mais recente primeiro).
+================================================== */
+userListsRoutes.route("/userlists/membership").get(authenticateToken, async function (req, res) {
+    const db_connect = dbo.getDb()
+    try {
+        const userId = new ObjectId(req.user.userId)
+        await migrarFavoritosParaLista(db_connect, userId)
+
+        const lists = await db_connect.collection("userlists").find(
+            { userId },
+            { projection: { _id: 1, name: 1, color: 1 } }
+        ).toArray()
+        if (lists.length === 0) {
+            return res.status(200).json({ lists: [], membership: {} })
+        }
+
+        const listIds = lists.map(l => l._id)
+        const itens = await db_connect.collection("userlist_items").aggregate([
+            { $match: { listId: { $in: listIds } } },
+            { $sort: { createdAt: -1 } },
+            { $project: { _id: 0, listId: 1, plantId: 1 } }
+        ]).toArray()
+
+        const membership = {}
+        for (const it of itens) {
+            const key = String(it.plantId)
+            if (!membership[key]) membership[key] = []
+            const listId = String(it.listId)
+            if (membership[key].indexOf(listId) === -1) membership[key].push(listId)
+        }
+
+        res.status(200).json({
+            lists: lists.map(l => ({ _id: l._id, name: l.name, color: corDe(l) })),
+            membership,
+        })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -77,9 +164,9 @@ userListsRoutes.route("/userlists").post(authenticateToken, async function (req,
             return res.status(409).json({ message: "Você já tem uma lista com esse nome." })
         }
 
-        const myobj = { userId, name, createdAt: new Date() }
+        const myobj = { userId, name, color: corValida(req.body.color) || COR_PADRAO, createdAt: new Date() }
         const result = await db_connect.collection("userlists").insertOne(myobj)
-        res.status(201).json({ _id: result.insertedId, name })
+        res.status(201).json({ _id: result.insertedId, name, color: myobj.color })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -112,12 +199,12 @@ userListsRoutes.route("/userlists/:id").put(authenticateToken, async function (r
 
         const result = await db_connect.collection("userlists").updateOne(
             { _id: listId, userId },
-            { $set: { name } }
+            { $set: { name, color: corValida(req.body.color) || COR_PADRAO } }
         )
         if (result.matchedCount === 0) {
             return res.status(404).json({ message: "Lista não encontrada" })
         }
-        res.status(200).json({ message: "Lista renomeada com sucesso", name })
+        res.status(200).json({ message: "Lista atualizada com sucesso", name })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -160,11 +247,12 @@ userListsRoutes.route("/userlists/:id/plants").get(authenticateToken, async func
 
         const lista = await db_connect.collection("userlists").findOne(
             { _id: listId, userId },
-            { projection: { _id: 1, name: 1, createdAt: 1 } }
+            { projection: { _id: 1, name: 1, color: 1, createdAt: 1 } }
         )
         if (!lista) {
             return res.status(404).json({ message: "Lista não encontrada" })
         }
+        lista.color = corDe(lista)
 
         const plants = await db_connect.collection("userlist_items").aggregate([
             { $match: { listId } },

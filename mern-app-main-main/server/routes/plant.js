@@ -508,6 +508,8 @@ plantRoutes.route("/plant/:id").delete(authenticateToken, authorizeRoles("ADM"),
         await db_connect.collection("plants").deleteOne({ _id: new ObjectId(id) })
         // Remove favoritos órfãos mantendo a contagem de favoritos fiel
         await db_connect.collection("favorites").deleteMany({ plantId: new ObjectId(id) }).catch(() => {})
+        // Remove a planta de todas as coleções pessoais (userlist_items)
+        await db_connect.collection("userlist_items").deleteMany({ plantId: new ObjectId(id) }).catch(() => {})
         await deletarImagensGridFS([...imagens, ...metas])
         res.status(200).json({ message: "Planta deletada com sucesso" })
     } catch (err) {

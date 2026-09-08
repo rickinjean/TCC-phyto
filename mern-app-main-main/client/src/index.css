@@ -3865,10 +3865,15 @@ html[data-theme="dark"] .about-section .alert-success {
   background: rgba(231, 76, 60, 0.08);
 }
 
+/* O coração "cheio" herda a cor da coleção via style inline; aqui só o
+   toque visual neutro de destaque. */
 .plant-details-favorite-btn.is-favorite {
-  border-color: #e74c3c;
-  color: #e74c3c;
-  background: rgba(231, 76, 60, 0.1);
+  border-color: currentColor;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.plant-details-favorite-btn.is-favorite:hover {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 /* =====================================================
@@ -3903,6 +3908,19 @@ html[data-theme="dark"] .about-section .alert-success {
 
 .plant-list-card__favorite.is-favorite {
   color: #e74c3c;
+}
+
+/* Coração colorido (herda a cor da coleção via style inline): hover mantém a cor. */
+.plant-list-card__favorite.is-favorite:hover {
+  color: inherit;
+}
+
+html[data-theme="dark"] .plant-list-card__favorite {
+  background: var(--phyto-card-bg);
+}
+
+html[data-theme="dark"] .plant-list-card__favorite:hover {
+  background: var(--phyto-card-bg);
 }
 
 /* =====================================================
@@ -5186,13 +5204,24 @@ html[data-theme="dark"] .password-strength {
    Listas personalizadas (Minhas Listas)
    ========================================================================== */
 .userlists-newform {
+  max-width: 620px;
   display: flex;
-  gap: 8px;
-  max-width: 560px;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.userlists-newform .form-control {
+.userlists-newform__row {
+  display: flex;
+  gap: 8px;
+}
+
+.userlists-newform__row .form-control {
   flex: 1;
+}
+
+.userlists-newform__cor {
+  display: flex;
+  align-items: center;
 }
 
 .userlist-card {
@@ -5221,9 +5250,12 @@ html[data-theme="dark"] .password-strength {
   color: inherit;
 }
 
-.userlist-card__icon {
-  font-size: 28px;
-  line-height: 1;
+.userlist-card__dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.65);
 }
 
 .userlist-card__meta {
@@ -5267,64 +5299,201 @@ html[data-theme="dark"] .userlist-card {
   border-color: var(--phyto-border);
 }
 
-/* Painel "Adicionar à lista" no detalhe da planta */
-.addtolist-panel {
-  margin-top: 12px;
-  background: var(--phyto-card-bg);
-  border: 1px solid var(--phyto-border);
-  border-radius: var(--phyto-radius-sm);
-  padding: 12px;
-  box-sizing: border-box;
+/* =====================================================
+   MODAL "SALVAR EM COLEÇÃO" (ListaPicker)
+   ===================================================== */
+.lista-picker__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
 
-.addtolist-panel__list {
+.lista-picker__modal {
+  width: 100%;
+  max-width: 420px;
+  max-height: min(85vh, 640px);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
+  background: var(--phyto-card-bg);
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-md);
+  box-shadow: var(--phyto-shadow);
+  color: var(--phyto-ink);
+  outline: none;
+  animation: listaPickerIn 180ms var(--phyto-ease);
 }
 
-.addtolist-panel__item {
+@keyframes listaPickerIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.lista-picker__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--phyto-border);
+}
+
+.lista-picker__title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.lista-picker__subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--phyto-ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lista-picker__close {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--phyto-ink-soft);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.lista-picker__close:hover {
+  color: var(--phyto-ink);
+}
+
+.lista-picker__body {
+  overflow-y: auto;
+  padding: 8px;
+  flex: 1;
+}
+
+.lista-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-picker__item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 8px;
-  border-radius: 8px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--phyto-ink);
+  padding: 10px 8px;
+  border-radius: var(--phyto-radius-sm);
   cursor: pointer;
+  text-align: left;
+  font: inherit;
 }
 
-.addtolist-panel__item:hover {
+.lista-picker__item:hover {
   background: var(--phyto-green-100);
 }
 
-.addtolist-panel__item input {
+.lista-picker__dot {
   width: 18px;
   height: 18px;
-  accent-color: var(--phyto-green-600);
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
-.addtolist-panel__nome {
+.lista-picker__nome {
+  flex: 1;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.addtolist-panel__qtd {
+.lista-picker__qtd {
   color: var(--phyto-ink-soft);
   font-size: 13px;
 }
 
-.addtolist-panel__empty {
-  color: var(--phyto-ink-soft);
-  margin-bottom: 10px;
+.lista-picker__check {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #ffffff;
+  background: var(--phyto-green-600);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 160ms var(--phyto-ease), transform 160ms var(--phyto-ease);
 }
 
-.addtolist-panel__new {
+.lista-picker__check.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.lista-picker__empty {
+  color: var(--phyto-ink-soft);
+  text-align: center;
+  padding: 16px 8px;
+}
+
+.lista-picker__footer {
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--phyto-border);
+}
+
+.lista-picker__new {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lista-picker__paleta {
+  display: flex;
+  align-items: center;
+}
+
+.lista-picker__aviso {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--phyto-ink-soft);
+}
+
+/* Paleta de cores das coleções (usada no ListaPicker e em Minhas Listas) */
+.paleta-cores {
+  display: inline-flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-.addtolist-panel__new .form-control {
-  flex: 1;
+.paleta-cores__swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paleta-cores__swatch.is-active {
+  border-color: var(--phyto-ink);
+}
+
+html[data-theme="dark"] .paleta-cores__swatch.is-active {
+  border-color: #ffffff;
 }
 
 /* ==========================================================================

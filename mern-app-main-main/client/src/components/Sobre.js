@@ -223,9 +223,9 @@ export default function About() {
                                 itens: ['Informações científicas acessíveis', 'Dados de conservação', 'Curiosidades sobre espécies', 'Referências bibliográficas'],
                             },
                             {
-                                icon: 'fa-heart', titulo: 'Sistema de Favoritos',
-                                texto: 'Salve suas plantas favoritas para consulta rápida.',
-                                itens: ['Adição e remoção rápida', 'Lista personalizada', 'Acesso direto ao catálogo', 'Sincronização com a conta'],
+                                icon: 'fa-list', titulo: 'Coleções de Plantas',
+                                texto: 'Organize as plantas em coleções personalizadas (ex.: "Jardim", "TCC"), cada uma com sua cor para identificação rápida.',
+                                itens: ['Criação de coleções com cores', 'Adicionar e remover plantas', 'Acesso rápido pelo catálogo', 'Sincronização com a conta'],
                             },
                             {
                                 icon: 'fa-shield-alt', titulo: 'Segurança e Privacidade',
