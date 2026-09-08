@@ -5723,7 +5723,7 @@ html[data-theme="dark"] .sugestao-badge--rejeitada {
 }
 
 /* ==========================================================================
-   Modais da moderação: pré-visualização da ficha + edição de dados
+   Modal da moderação: pré-visualização da ficha da planta (correção)
    ========================================================================== */
 .preview-modal__overlay {
   position: fixed;
@@ -5736,9 +5736,9 @@ html[data-theme="dark"] .sugestao-badge--rejeitada {
   padding: 1rem;
 }
 
-.preview-modal,
-.edit-modal {
+.preview-modal {
   width: 100%;
+  max-width: 680px;
   max-height: min(88vh, 760px);
   display: flex;
   flex-direction: column;
@@ -5749,14 +5749,6 @@ html[data-theme="dark"] .sugestao-badge--rejeitada {
   color: var(--phyto-ink);
   outline: none;
   animation: previewModalIn 180ms var(--phyto-ease);
-}
-
-.preview-modal {
-  max-width: 680px;
-}
-
-.edit-modal {
-  max-width: 620px;
 }
 
 @keyframes previewModalIn {
@@ -5792,16 +5784,6 @@ html[data-theme="dark"] .sugestao-badge--rejeitada {
 
 .preview-modal__close:hover {
   opacity: 1;
-}
-
-.preview-modal__aviso {
-  margin: 12px 16px 0;
-  padding: 8px 12px;
-  border-radius: var(--phyto-radius-sm);
-  background: var(--phyto-green-100);
-  color: var(--phyto-green-700);
-  font-size: 0.82rem;
-  font-weight: 500;
 }
 
 .preview-modal__body {

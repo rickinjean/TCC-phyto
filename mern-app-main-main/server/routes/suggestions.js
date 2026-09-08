@@ -91,6 +91,25 @@ suggestionsRoutes.route("/suggestions").get(authenticateToken, authorizeRoles("A
 })
 
 /* ==================================================
+   BUSCAR UMA SUGESTÃO (ADM) — usada para pré-preencher o createplant
+================================================== */
+suggestionsRoutes.route("/suggestions/:id").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
+    const db_connect = dbo.getDb()
+    try {
+        if (!ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "ID inválido" })
+        }
+        const sug = await db_connect.collection("suggestions").findOne({ _id: new ObjectId(req.params.id) })
+        if (!sug) {
+            return res.status(404).json({ message: "Sugestão não encontrada" })
+        }
+        res.status(200).json(sug)
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
+/* ==================================================
    APROVAR / REJEITAR / CONCLUIR SUGESTÃO (ADM)
    body: { status, anotacao? }
 ================================================== */

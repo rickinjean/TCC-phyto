@@ -309,6 +309,29 @@ plantRoutes.route("/plant/add").post(authenticateToken, authorizeRoles("ADM"), u
     const files = req.files?.images || []
     let imagensSalvas = []
     try {
+        // Fluxo de moderação: criar a planta a partir de uma sugestão "nova" em processo
+        // conclui a sugestão automaticamente. Validado ANTES do insert para evitar planta órfã.
+        let sugestaoId = null
+        if (req.body.sugestaoId) {
+            if (!ObjectId.isValid(req.body.sugestaoId)) {
+                return res.status(400).json({ message: "ID de sugestão inválido." })
+            }
+            const sugestao = await db_connect.collection("suggestions").findOne({ _id: new ObjectId(req.body.sugestaoId) })
+            if (!sugestao) {
+                return res.status(404).json({ message: "Sugestão não encontrada." })
+            }
+            if (sugestao.tipo !== "nova") {
+                return res.status(400).json({ message: "Apenas sugestões de nova planta podem ser criadas por este fluxo." })
+            }
+            if (sugestao.status !== "aprovada") {
+                return res.status(409).json({ message: "A sugestão precisa estar em processo (aprovada) para criar a planta." })
+            }
+            if (sugestao.plantaCriadaId) {
+                return res.status(409).json({ message: "A planta já foi publicada a partir desta sugestão." })
+            }
+            sugestaoId = new ObjectId(req.body.sugestaoId)
+        }
+
         if (files.length > 0) {
             imagensSalvas = await salvarImagensGridFS(files)
         }
@@ -368,6 +391,12 @@ plantRoutes.route("/plant/add").post(authenticateToken, authorizeRoles("ADM"), u
         }
 
         const result = await db_connect.collection("plants").insertOne(myobj)
+        if (sugestaoId) {
+            await db_connect.collection("suggestions").updateOne(
+                { _id: sugestaoId },
+                { $set: { status: "concluida", plantaCriadaId: result.insertedId, resolved: new Date() } }
+            )
+        }
         res.status(201).json({ result, imagesReceived: files.length, imagesPath: imagePaths })
     } catch (error) {
         if (imagensSalvas.length > 0) await deletarImagensGridFS(imagensSalvas)

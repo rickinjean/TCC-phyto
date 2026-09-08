@@ -75,10 +75,8 @@ function DentroFicha({ nome, scientificName, tipo, origem, descricao, taxonomia 
   )
 }
 
-export default function PreviaFicha({ aberto, onFechar, sug, modo = "nova" }) {
-  const ehNova = modo !== "correcao"
+export default function PreviaFicha({ aberto, onFechar, sug }) {
   const plantaId = (sug && sug.plantaId) || null
-  const d = (sug && sug.data) || {}
   const [planta, setPlanta] = useState(null)
   const [carregando, setCarregando] = useState(false)
   const [erroFicha, setErroFicha] = useState("")
@@ -86,13 +84,9 @@ export default function PreviaFicha({ aberto, onFechar, sug, modo = "nova" }) {
   useEffect(() => {
     if (!aberto) return
     let cancelled = false
-
-    if (ehNova) {
-      setPlanta(null)
-      setCarregando(false)
-      setErroFicha("")
-      return
-    }
+    setPlanta(null)
+    setCarregando(true)
+    setErroFicha("")
 
     async function load() {
       setCarregando(true)
@@ -133,41 +127,27 @@ export default function PreviaFicha({ aberto, onFechar, sug, modo = "nova" }) {
     }
     load()
     return () => { cancelled = true }
-  }, [aberto, ehNova, plantaId])
+  }, [aberto, plantaId])
 
   if (!aberto) return null
 
-  const nome = ehNova ? d.name : planta && planta.name
-  const scientificName = ehNova ? d.scientificName : planta && planta.scientificName
-  const tipo = ehNova ? d.type : planta && planta.type
-  const origem = ehNova ? d.origin : planta && planta.origin
-  const descricao = ehNova
-    ? (d.description || d.simpleDescription)
-    : (planta && (planta.description || planta.simpleDescription))
-  const taxo = ehNova
-    ? [["Família", "Family"], ["Gênero", "Genero"], ["Espécie", "Especie"]]
-        .map(([label, k]) => ({ label, value: d[k] }))
-        .filter(t => t.value)
-    : (planta && planta.taxo) || []
+  const nome = planta && planta.name
+  const scientificName = planta && planta.scientificName
+  const tipo = planta && planta.type
+  const origem = planta && planta.origin
+  const descricao = planta && (planta.description || planta.simpleDescription)
+  const taxo = (planta && planta.taxo) || []
 
   return (
     <div className="preview-modal__overlay" onClick={(e) => e.target === e.currentTarget && onFechar()}>
-      <div className="preview-modal" role="dialog" aria-modal="true" aria-label="Pré-visualização da ficha">
+      <div className="preview-modal" role="dialog" aria-modal="true" aria-label="Ficha da planta">
         <div className="preview-modal__header">
-          <h4 className="preview-modal__title">👁️ Pré-visualização da ficha</h4>
+          <h4 className="preview-modal__title">🔍 Ficha da planta</h4>
           <button type="button" className="preview-modal__close" onClick={onFechar} aria-label="Fechar">×</button>
         </div>
 
-        {ehNova && (
-          <div className="preview-modal__aviso">
-            Pré-visualização — a sugestão ainda não foi publicada no catálogo.
-          </div>
-        )}
-
         <div className="preview-modal__body">
-          {ehNova ? (
-            <DentroFicha nome={nome} scientificName={scientificName} tipo={tipo} origem={origem} descricao={descricao} taxonomia={taxo} />
-          ) : carregando ? (
+          {carregando ? (
             <div className="text-center py-5 text-muted">Carregando ficha da planta...</div>
           ) : erroFicha ? (
             <div className="alert alert-danger mb-0">{erroFicha}</div>
@@ -186,7 +166,7 @@ export default function PreviaFicha({ aberto, onFechar, sug, modo = "nova" }) {
 
         <div className="preview-modal__footer">
           <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onFechar}>Fechar</button>
-          {!ehNova && planta && sug && (
+          {planta && sug && (
             <Link to={`/editplant/${sug.plantaId}`} className="btn btn-sm btn-success">Editar ficha</Link>
           )}
         </div>

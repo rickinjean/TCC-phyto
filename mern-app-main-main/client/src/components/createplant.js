@@ -218,6 +218,38 @@ export default function Create() {
         loadClone()
     }, [cloneParam])
 
+    // Criar a partir de sugestão (moderação): pré-preenche com os dados da sugestão
+    const sugestaoParam = searchParams.get("sugestao")
+    useEffect(() => {
+        if (!sugestaoParam) return
+        async function loadSugestao() {
+            try {
+                const token = localStorage.getItem("token")
+                const headers = {}
+                if (token) headers.Authorization = `Bearer ${token}`
+                const res = await fetch(`${API_URL}/suggestions/${sugestaoParam}`, { headers })
+                if (!res.ok) {
+                    showToast("Erro ao carregar a sugestão.", "error")
+                    return
+                }
+                const sug = await res.json()
+                const data = sug.data || {}
+                const preenchidos = {}
+                for (const campo of ["name", "scientificName", "simpleDescription", "description", "origin", "type", "Family", "Genero", "Especie"]) {
+                    if (data[campo] !== undefined && data[campo] !== null) {
+                        preenchidos[campo] = data[campo]
+                    }
+                }
+                setForm(prev => ({ ...prev, ...preenchidos }))
+                showToast(`Formulário preenchido com os dados da sugestão de ${sug.userName || "um usuário"}.`)
+            } catch {
+                showToast("Erro ao conectar ao servidor para carregar a sugestão.", "error")
+            }
+        }
+        loadSugestao()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sugestaoParam])
+
     useEffect(() => {
         async function load() {
             setLoading(true)
@@ -241,6 +273,7 @@ export default function Create() {
 
     // Restore draft on mount
     useEffect(() => {
+        if (sugestaoParam) return
         try {
             const saved = localStorage.getItem(AUTOSAVE_KEY)
             if (saved) {
@@ -258,13 +291,14 @@ export default function Create() {
     // Auto-save to localStorage
     useEffect(() => {
         if (loading) return
+        if (sugestaoParam) return
         clearTimeout(autoSaveTimer.current)
         autoSaveTimer.current = setTimeout(() => {
             const draft = { form, imageNames: imageFiles.map(f => f.name), currentStep }
             localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(draft))
         }, AUTOSAVE_DELAY)
         return () => clearTimeout(autoSaveTimer.current)
-    }, [form, imageFiles, currentStep, loading])
+    }, [form, imageFiles, currentStep, loading, sugestaoParam])
 
     function clearDraft() {
         localStorage.removeItem(AUTOSAVE_KEY)
@@ -360,6 +394,7 @@ export default function Create() {
         const formData = new FormData()
         Object.keys(form).forEach(key => formData.append(key, form[key]))
         imageFiles.forEach(file => formData.append("images", file))
+        if (sugestaoParam) formData.append("sugestaoId", sugestaoParam)
 
         try {
             const token = localStorage.getItem("token")
@@ -379,14 +414,19 @@ export default function Create() {
             }
 
             localStorage.removeItem(AUTOSAVE_KEY)
-            showToast("Planta cadastrada com sucesso!")
-            setTimeout(() => navigate("/plantlist"), 1200)
+            if (sugestaoParam) {
+                showToast("Planta criada e sugestão concluída!")
+                setTimeout(() => navigate("/moderar-sugestoes"), 1200)
+            } else {
+                showToast("Planta cadastrada com sucesso!")
+                setTimeout(() => navigate("/plantlist"), 1200)
+            }
         } catch {
             showToast("Erro ao conectar ao servidor", "error")
         } finally {
             setSubmitting(false)
         }
-    }, [form, imageFiles, navigate])
+    }, [form, imageFiles, navigate, sugestaoParam])
 
     // Validação dos campos obrigatórios do step atual
     const requiredForStep = REQUIRED_BY_STEP[currentStep] || []

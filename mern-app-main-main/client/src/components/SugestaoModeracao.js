@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
 import PreviaFicha from "./PreviaFicha"
-import EditarSugestao from "./EditarSugestao"
 
 const STATUS_LABEL = {
     pendente: "Pendente",
@@ -96,14 +95,14 @@ function SugestaoCard({ sug, acoes }) {
                     )}
 
                     <div className="sugestao-card__acoes">
-                        {(sug.status === "pendente" || sug.status === "aprovada") && (
+                        {!ehNova && (sug.status === "pendente" || sug.status === "aprovada") && (
                             <button
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary"
                                 disabled={working}
                                 onClick={() => acoes.onPrevia(sug)}
                             >
-                                {ehNova ? "👁️ Pré-visualizar" : "👁️ Ver ficha"}
+                                👁️ Ver ficha
                             </button>
                         )}
                         {ehNova && sug.status === "aprovada" && (
@@ -166,6 +165,7 @@ function SugestaoCard({ sug, acoes }) {
 
 export default function SugestaoModeracao() {
     usePageTitle("Moderar Sugestões")
+    const navigate = useNavigate()
     const [todas, setTodas] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -173,7 +173,6 @@ export default function SugestaoModeracao() {
     const [filtroTipo, setFiltroTipo] = useState("todos")
     const [aviso, setAviso] = useState("")
     const [previaSug, setPreviaSug] = useState(null)
-    const [edicaoSug, setEdicaoSug] = useState(null)
 
     useEffect(() => {
         async function load() {
@@ -250,32 +249,6 @@ export default function SugestaoModeracao() {
         }
     }
 
-    async function salvarDados(sug, dados) {
-        setAviso("")
-        try {
-            const res = await authFetch(`${API_URL}/suggestions/${sug._id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ data: dados })
-            })
-            if (!res) {
-                setError("Sessão expirada. Faça login novamente.")
-                return false
-            }
-            const data = await res.json().catch(() => ({}))
-            if (!res.ok) {
-                setError(data.message || "Erro ao salvar os dados da sugestão.")
-                return false
-            }
-            setTodas(prev => prev.map(s => s._id === sug._id ? { ...s, data: { ...(s.data || {}), ...dados } } : s))
-            setAviso("Dados da sugestão atualizados!")
-            return true
-        } catch {
-            setError("Erro ao conectar com o servidor")
-            return false
-        }
-    }
-
     const listaAtual = aba === "pendente" ? pendentes : aba === "aprovada" ? emProcesso : encerradas
 
     return (
@@ -342,7 +315,7 @@ export default function SugestaoModeracao() {
                             acoes={{
                                 executar,
                                 onPrevia: setPreviaSug,
-                                onEditar: setEdicaoSug,
+                                onEditar: (sug) => navigate(`/createplant?sugestao=${sug._id}`),
                             }}
                         />
                     ))}
@@ -352,14 +325,7 @@ export default function SugestaoModeracao() {
             <PreviaFicha
                 aberto={Boolean(previaSug)}
                 sug={previaSug}
-                modo={previaSug && previaSug.tipo === "correcao" ? "correcao" : "nova"}
                 onFechar={() => setPreviaSug(null)}
-            />
-            <EditarSugestao
-                aberto={Boolean(edicaoSug)}
-                sug={edicaoSug}
-                onFechar={() => setEdicaoSug(null)}
-                onSalvar={(dados) => salvarDados(edicaoSug, dados)}
             />
         </div>
     )
