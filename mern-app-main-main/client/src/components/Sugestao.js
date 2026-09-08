@@ -15,18 +15,34 @@ const CAMPOS_CORRECAO = [
 
 const NOVA_INICIAL = {
     name: "", scientificName: "", simpleDescription: "", description: "",
-    origin: "", type: "", Filo: "", Classe: "", Ordem: "", Family: "", Genero: "", Especie: "",
+    origin: "", type: "", Family: "", Genero: "", Especie: "",
 }
 
-function CampoTexto({ id, label, value, onChange, textarea = false, maxLength, placeholder = "" }) {
+function Secao({ emoji, titulo, dica, children }) {
+    return (
+        <div className="sugestao-section">
+            <div className="sugestao-section__head">
+                <span className="sugestao-section__emoji" aria-hidden="true">{emoji}</span>
+                <h4 className="sugestao-section__title">{titulo}</h4>
+            </div>
+            {dica && <p className="sugestao-section__dica">{dica}</p>}
+            <div className="sugestao-section__body">{children}</div>
+        </div>
+    )
+}
+
+function CampoTexto({ id, label, value, onChange, textarea = false, maxLength, placeholder = "", obrigatorio = false, contador = false }) {
     return (
         <div className="mb-3">
-            <label htmlFor={id} className="form-label fw-semibold">{label}</label>
+            <label htmlFor={id} className="form-label fw-semibold">
+                {label}
+                {obrigatorio && <span className="sugestao-required" title="Obrigatório"> *</span>}
+            </label>
             {textarea ? (
                 <textarea
                     id={id}
                     className="form-control"
-                    rows="3"
+                    rows="5"
                     value={value}
                     maxLength={maxLength}
                     placeholder={placeholder}
@@ -43,6 +59,7 @@ function CampoTexto({ id, label, value, onChange, textarea = false, maxLength, p
                     onChange={(e) => onChange(e.target.value)}
                 />
             )}
+            {contador && <small className="sugestao-charcount">{value.length}/{maxLength}</small>}
         </div>
     )
 }
@@ -52,6 +69,7 @@ export default function Sugestao() {
     const [aba, setAba] = useState("nova")
 
     const [nova, setNova] = useState({ ...NOVA_INICIAL })
+    const [tipos, setTipos] = useState([])
     const [plantas, setPlantas] = useState([])
     const [plantaId, setPlantaId] = useState("")
     const [plantaNome, setPlantaNome] = useState("")
@@ -63,19 +81,26 @@ export default function Sugestao() {
     const [erro, setErro] = useState("")
 
     useEffect(() => {
-        async function loadPlants() {
+        async function loadOpcoes() {
             try {
-                const res = await fetch(`${API_URL}/plant`)
-                if (res.ok) {
-                    const data = await res.json()
+                const [plantRes, typeRes] = await Promise.all([
+                    fetch(`${API_URL}/plant`),
+                    fetch(`${API_URL}/collections/type`)
+                ])
+                if (plantRes.ok) {
+                    const data = await plantRes.json()
                     setPlantas(data.map(p => ({
                         _id: p._id,
                         name: p.scientificName ? `${p.name} — ${p.scientificName}` : p.name
                     })))
                 }
-            } catch { /* lista de plantas indisponivel adia a escolha */ }
+                if (typeRes.ok) {
+                    const data = await typeRes.json()
+                    setTipos(Array.isArray(data) ? data.filter(t => t && t.name) : [])
+                }
+            } catch { /* lista de plantas/opções indisponível adia a escolha */ }
         }
-        loadPlants()
+        loadOpcoes()
     }, [])
 
     function setCampoNova(campo, valor) {
@@ -175,35 +200,86 @@ export default function Sugestao() {
             <form onSubmit={enviar} className="sugestao-form card border-0 p-4 col-lg-8">
                 {erro && <div className="alert alert-danger">{erro}</div>}
 
-                {aba === "nova" && (
+                {aba === "nova" ? (
                     <>
-                        <CampoTexto id="nova-name" label="Nome popular *" value={nova.name} onChange={v => setCampoNova("name", v)} maxLength={200} placeholder="Ex.: Hortelã" />
-                        <CampoTexto id="nova-sci" label="Nome científico" value={nova.scientificName} onChange={v => setCampoNova("scientificName", v)} maxLength={200} placeholder="Ex.: Mentha spicata" />
-                        <CampoTexto id="nova-simples" label="Descrição curta (aparece no catálogo)" value={nova.simpleDescription} onChange={v => setCampoNova("simpleDescription", v)} maxLength={200} />
-                        <CampoTexto id="nova-desc" label="Descrição completa" textarea value={nova.description} onChange={v => setCampoNova("description", v)} maxLength={2000} />
-                        <div className="row">
-                            <div className="col-md-6">
-                                <CampoTexto id="nova-origem" label="Origem" value={nova.origin} onChange={v => setCampoNova("origin", v)} maxLength={120} />
+                        <Secao
+                            emoji="🌱"
+                            titulo="Identificação"
+                            dica="Como a planta é conhecida e uma breve apresentação para o catálogo."
+                        >
+                            <CampoTexto id="nova-name" label="Nome popular" obrigatorio value={nova.name} onChange={v => setCampoNova("name", v)} maxLength={200} placeholder="Ex.: Hortelã" />
+                            <div className="row">
+                                <div className="col-md-6">
+                                    <CampoTexto id="nova-sci" label="Nome científico" value={nova.scientificName} onChange={v => setCampoNova("scientificName", v)} maxLength={200} placeholder="Ex.: Mentha spicata" />
+                                </div>
+                                <div className="col-md-6">
+                                    <CampoTexto id="nova-simples" label="Descrição curta (aparece no catálogo)" contador value={nova.simpleDescription} onChange={v => setCampoNova("simpleDescription", v)} maxLength={200} placeholder="Ex.: Erva aromática de hortas e quintais." />
+                                </div>
                             </div>
-                            <div className="col-md-6">
-                                <CampoTexto id="nova-tipo" label="Tipo de planta" value={nova.type} onChange={v => setCampoNova("type", v)} maxLength={120} />
-                            </div>
-                        </div>
-                        <div className="row">
-                            <div className="col-md-6"><CampoTexto id="nova-genero" label="Gênero" value={nova.Genero} onChange={v => setCampoNova("Genero", v)} maxLength={120} /></div>
-                            <div className="col-md-6"><CampoTexto id="nova-especie" label="Espécie" value={nova.Especie} onChange={v => setCampoNova("Especie", v)} maxLength={120} /></div>
-                        </div>
-                        <div className="row">
-                            <div className="col-md-6"><CampoTexto id="nova-familia" label="Família" value={nova.Family} onChange={v => setCampoNova("Family", v)} maxLength={120} /></div>
-                            <div className="col-md-6"><CampoTexto id="nova-ordem" label="Ordem" value={nova.Ordem} onChange={v => setCampoNova("Ordem", v)} maxLength={120} /></div>
-                        </div>
-                    </>
-                )}
+                        </Secao>
 
-                {aba === "correcao" && (
-                    <>
+                        <Secao
+                            emoji="📋"
+                            titulo="Classificação"
+                            dica="As opções de tipo vêm do catálogo. O restante pode ser complementado pela equipe depois."
+                        >
+                            <div className="row">
+                                <div className="col-md-6 mb-3">
+                                    <label htmlFor="nova-tipo" className="form-label fw-semibold">Tipo de planta</label>
+                                    <select
+                                        id="nova-tipo"
+                                        className="form-select"
+                                        value={nova.type}
+                                        disabled={tipos.length === 0}
+                                        onChange={e => setCampoNova("type", e.target.value)}
+                                    >
+                                        <option value="">Selecione o tipo…</option>
+                                        {tipos.map(t => (
+                                            <option key={t._id} value={t.name}>{t.name}</option>
+                                        ))}
+                                    </select>
+                                    {tipos.length === 0 && (
+                                        <small className="sugestao-field-hint">
+                                            Sem opções de tipo no momento. A equipe complementa depois.
+                                        </small>
+                                    )}
+                                </div>
+                                <div className="col-md-6">
+                                    <CampoTexto id="nova-origem" label="Origem" value={nova.origin} onChange={v => setCampoNova("origin", v)} maxLength={120} placeholder="Ex.: Mata Atlântica, Sul do Brasil" />
+                                </div>
+                            </div>
+                            <div className="row">
+                                <div className="col-md-4"><CampoTexto id="nova-genero" label="Gênero" value={nova.Genero} onChange={v => setCampoNova("Genero", v)} maxLength={120} placeholder="Ex.: Mentha" /></div>
+                                <div className="col-md-4"><CampoTexto id="nova-especie" label="Espécie" value={nova.Especie} onChange={v => setCampoNova("Especie", v)} maxLength={120} placeholder="Ex.: spicata" /></div>
+                                <div className="col-md-4"><CampoTexto id="nova-familia" label="Família" value={nova.Family} onChange={v => setCampoNova("Family", v)} maxLength={120} placeholder="Ex.: Lamiaceae" /></div>
+                            </div>
+                        </Secao>
+
+                        <Secao
+                            emoji="📝"
+                            titulo="Descrição completa"
+                            dica="Conte o que você sabe: porte, folhas, flores, frutos, usos e onde costuma aparecer."
+                        >
+                            <CampoTexto
+                                id="nova-desc"
+                                label="Descrição"
+                                textarea
+                                contador
+                                value={nova.description}
+                                onChange={v => setCampoNova("description", v)}
+                                maxLength={2000}
+                                placeholder="Descreva a planta com o máximo de detalhes que souber."
+                            />
+                        </Secao>
+                    </>
+                ) : (
+                    <Secao
+                        emoji="✏️"
+                        titulo="Correção"
+                        dica="Identifique a planta e descreva o que está errado na ficha."
+                    >
                         <div className="mb-3">
-                            <label htmlFor="select-planta" className="form-label fw-semibold">Planta com erro *</label>
+                            <label htmlFor="select-planta" className="form-label fw-semibold">Planta com erro <span className="sugestao-required" title="Obrigatório">*</span></label>
                             <SearchableSelect
                                 campo="planta"
                                 placeholder="Buscar planta..."
@@ -217,7 +293,7 @@ export default function Sugestao() {
                             />
                         </div>
                         <div className="mb-3">
-                            <label htmlFor="correcao-campo" className="form-label fw-semibold">O que está errado? *</label>
+                            <label htmlFor="correcao-campo" className="form-label fw-semibold">O que está errado? <span className="sugestao-required" title="Obrigatório">*</span></label>
                             <select id="correcao-campo" className="form-select" value={campo} onChange={e => setCampo(e.target.value)}>
                                 <option value="">Selecione...</option>
                                 {CAMPOS_CORRECAO.map(c => (
@@ -227,14 +303,16 @@ export default function Sugestao() {
                         </div>
                         <CampoTexto
                             id="correcao-texto"
-                            label="Descreva o erro *"
+                            label="Descreva o erro"
+                            obrigatorio
                             textarea
+                            contador
                             value={texto}
                             onChange={setTexto}
                             maxLength={2000}
                             placeholder="Explique o que está incorreto e, se possível, informe a informação correta."
                         />
-                    </>
+                    </Secao>
                 )}
 
                 <div className="d-flex gap-2 mt-2">

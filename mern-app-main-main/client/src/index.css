@@ -5535,6 +5535,66 @@ html[data-theme="dark"] .sugestao-tabs__tab {
   background: var(--phyto-card-bg);
 }
 
+.sugestao-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--phyto-border);
+}
+
+.sugestao-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.sugestao-section__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.sugestao-section__emoji {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.sugestao-section__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--phyto-ink);
+}
+
+.sugestao-section__dica {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--phyto-ink-soft);
+}
+
+.sugestao-section__body {
+  display: flow-root;
+}
+
+.sugestao-required {
+  color: #dc3545;
+}
+
+.sugestao-field-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--phyto-ink-soft);
+}
+
+.sugestao-charcount {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  text-align: right;
+  color: var(--phyto-ink-soft);
+}
+
 .sugestao-badge {
   display: inline-block;
   font-size: 11px;

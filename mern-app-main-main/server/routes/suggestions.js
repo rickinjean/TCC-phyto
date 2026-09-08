@@ -18,7 +18,7 @@ const STATUS_VALIDOS = ["pendente", "aprovada", "rejeitada", "concluida"]
 // Campos de "nova planta" que viram a ficha no catálogo ao publicar.
 const CAMPOS_NOVA = [
     "name", "scientificName", "simpleDescription", "description",
-    "origin", "type", "Filo", "Classe", "Ordem", "Family", "Genero", "Especie"
+    "origin", "type", "Family", "Genero", "Especie"
 ]
 
 /* ==================================================
