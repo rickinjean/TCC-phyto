@@ -17,7 +17,7 @@ if (!process.env.JWT_SECRET) {
 
 const port = process.env.PORT || 5050
 
-app.set('trust proxy', true)
+app.set('trust proxy', 1)
 
 const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER
 
