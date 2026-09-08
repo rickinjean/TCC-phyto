@@ -198,7 +198,7 @@ export default function ClientLists() {
 
     return (
         <div className="userlists-page container mt-4">
-            <h3 className="plant-list-page__title fw-semibold mb-1">
+            <h3 className="page-title-ambar fw-semibold mb-1">
                 Minhas Listas
             </h3>
             <p className="plant-list-page__count mb-4">

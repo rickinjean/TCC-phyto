@@ -5509,15 +5509,20 @@ html[data-theme="dark"] .paleta-cores__swatch.is-active {
   justify-content: center;
 }
 
-.sugestao-page__title {
+.sugestao-page__title,
+.page-title-ambar {
   color: #a05c2b;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.7rem;
-  font-weight: 700;
   letter-spacing: -0.01em;
 }
 
-html[data-theme="dark"] .sugestao-page__title {
+.sugestao-page__title {
+  font-size: 1.7rem;
+  font-weight: 700;
+}
+
+html[data-theme="dark"] .sugestao-page__title,
+html[data-theme="dark"] .page-title-ambar {
   color: #e0a063;
 }
 
