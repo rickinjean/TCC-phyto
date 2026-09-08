@@ -91,6 +91,25 @@ suggestionsRoutes.route("/suggestions").get(authenticateToken, authorizeRoles("A
 })
 
 /* ==================================================
+   MINHAS SUGESTÕES (usuário logado)
+   Lista apenas as sugestões enviadas pelo próprio usuário.
+   Declarada ANTES de /suggestions/:id para não casar com o ":id".
+================================================== */
+suggestionsRoutes.route("/suggestions/minhas").get(authenticateToken, async function (req, res) {
+    const db_connect = dbo.getDb()
+    try {
+        const result = await db_connect.collection("suggestions")
+            .find({ userId: new ObjectId(req.user.userId) })
+            .sort({ created: -1 })
+            .limit(100)
+            .toArray()
+        res.status(200).json(result)
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
+/* ==================================================
    BUSCAR UMA SUGESTÃO (ADM) — usada para pré-preencher o createplant
 ================================================== */
 suggestionsRoutes.route("/suggestions/:id").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
@@ -224,4 +243,20 @@ suggestionsRoutes.route("/suggestions/:id/publicar").post(authenticateToken, aut
     }
 })
 
+/* ==================================================
+   LIMPEZA AUTOMÁTICA DE SUGESTÕES ENCERRADAS
+   Remove rejeitadas/concluídas com resolved mais antigo que o TTL.
+   TTL configuravel via SUGGESTION_TTL_DAYS (padrão: 30 dias).
+================================================== */
+function limparSugestoesEncerradas() {
+    const db_connect = dbo.getDb()
+    const ttlDias = parseInt(process.env.SUGGESTION_TTL_DAYS, 10) || 30
+    const corte = new Date(Date.now() - ttlDias * 24 * 60 * 60 * 1000)
+    return db_connect.collection("suggestions").deleteMany({
+        status: { $in: ["rejeitada", "concluida"] },
+        resolved: { $lt: corte },
+    })
+}
+
 module.exports = suggestionsRoutes
+module.exports.limparSugestoesEncerradas = limparSugestoesEncerradas

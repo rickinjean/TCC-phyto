@@ -4,6 +4,21 @@ import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
 import SearchableSelect from "./SearchableSelect"
+import { encodeId } from "../idCodec"
+
+const STATUS_LABEL = {
+    pendente: "Pendente",
+    aprovada: "Em processo",
+    rejeitada: "Rejeitada",
+    concluida: "Concluída",
+}
+
+function formatarData(iso) {
+    if (!iso) return ""
+    return new Date(iso).toLocaleDateString("pt-BR", {
+        day: "2-digit", month: "2-digit", year: "numeric",
+    })
+}
 
 const CAMPOS_CORRECAO = [
     { value: "nome", label: "Nome / Nome científico" },
@@ -80,6 +95,39 @@ export default function Sugestao() {
     const [enviando, setEnviando] = useState(false)
     const [ok, setOk] = useState(false)
     const [erro, setErro] = useState("")
+
+    const [minhas, setMinhas] = useState([])
+    const [carregandoMinhas, setCarregandoMinhas] = useState(false)
+    const [erroMinhas, setErroMinhas] = useState("")
+    const [atualizarMinhas, setAtualizarMinhas] = useState(0)
+
+    useEffect(() => {
+        if (aba !== "minhas") return
+        let cancelled = false
+        async function loadMinhas() {
+            setCarregandoMinhas(true)
+            try {
+                const res = await authFetch(`${API_URL}/suggestions/minhas`)
+                if (cancelled) return
+                if (!res) {
+                    setErroMinhas("Sessão expirada. Faça login novamente.")
+                    return
+                }
+                if (!res.ok) {
+                    setErroMinhas("Erro ao carregar suas sugestões.")
+                    return
+                }
+                setMinhas(await res.json())
+                setErroMinhas("")
+            } catch {
+                if (!cancelled) setErroMinhas("Erro ao conectar com o servidor.")
+            } finally {
+                if (!cancelled) setCarregandoMinhas(false)
+            }
+        }
+        loadMinhas()
+        return () => { cancelled = true }
+    }, [aba, atualizarMinhas])
 
     useEffect(() => {
         async function loadOpcoes() {
@@ -167,6 +215,10 @@ export default function Sugestao() {
                     <Link to="/sugerir" className="btn btn-sm btn-outline-success me-2" onClick={limparTudo}>
                         Enviar outra sugestão
                     </Link>
+                    <Link to="/sugerir" className="btn btn-sm btn-outline-secondary me-2"
+                        onClick={() => { setAba("minhas"); limparTudo(); }}>
+                        📬 Ver minhas sugestões
+                    </Link>
                     <Link to="/plantlist" className="btn btn-sm btn-success">
                         Explorar o catálogo
                     </Link>
@@ -201,9 +253,79 @@ export default function Sugestao() {
                 >
                     ✏️ Reportar erro
                 </button>
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={aba === "minhas"}
+                    className={`sugestao-tabs__tab ${aba === "minhas" ? "is-active" : ""}`}
+                    onClick={() => setAba("minhas")}
+                >
+                    📬 Minhas sugestões
+                </button>
             </div>
 
-            <form onSubmit={enviar} className="sugestao-form card border-0 p-4 col-lg-8 mx-auto">
+            {aba === "minhas" ? (
+                <div className="sugestao-form card border-0 p-4 col-lg-8 mx-auto">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                        <h4 className="fw-semibold mb-0">📬 Minhas sugestões</h4>
+                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setAtualizarMinhas(x => x + 1)}>
+                            Atualizar
+                        </button>
+                    </div>
+                    <p className="sugestao-page__sub text-muted small mb-3">
+                        Acompanhe o status: pendente, em processo, rejeitada ou publicada no catálogo.
+                        Encerradas (publicadas ou rejeitadas) são removidas após 30 dias.
+                    </p>
+
+                    {carregandoMinhas ? (
+                        <div className="text-center py-5">
+                            <div className="spinner-border spinner-border-sm me-2" role="status" />
+                            Carregando suas sugestões...
+                        </div>
+                    ) : erroMinhas ? (
+                        <div className="alert alert-danger">{erroMinhas}</div>
+                    ) : minhas.length === 0 ? (
+                        <div className="text-center py-5 text-muted">
+                            <i className="fas fa-inbox fa-2x mb-3 d-block" style={{ opacity: 0.3 }}></i>
+                            Você ainda não enviou sugestões.
+                        </div>
+                    ) : (
+                        <div className="minhas-sugestoes">
+                            {minhas.map(s => (
+                                <div key={String(s._id)} className="minhas-sugestoes__card">
+                                    <div className="admin-message-card__meta">
+                                        <span className="admin-message-card__name">
+                                            {s.tipo === "nova"
+                                                ? (s.data && s.data.name) || "Nova planta"
+                                                : s.plantaNome || "Correção"}
+                                        </span>
+                                        <span className={`sugestao-badge sugestao-badge--${s.status}`}>
+                                            {STATUS_LABEL[s.status] || s.status}
+                                        </span>
+                                    </div>
+                                    <div className="admin-message-card__meta">
+                                        <span className="admin-message-card__date">{formatarData(s.created)}</span>
+                                        <span>{s.tipo === "nova" ? "🌱 Nova planta" : "✏️ Correção"}</span>
+                                    </div>
+                                    {s.campo && <div className="minhas-sugestoes__linha"><strong>Campo:</strong> {s.campo}</div>}
+                                    {s.texto && <p className="minhas-sugestoes__texto">{s.texto}</p>}
+                                    {s.anotacao && (
+                                        <p className="minhas-sugestoes__nota">
+                                            <strong>Nota da equipe:</strong> {s.anotacao}
+                                        </p>
+                                    )}
+                                    {s.tipo === "nova" && s.status === "concluida" && s.plantaCriadaId && (
+                                        <Link to={`/plantdetails/${encodeId(s.plantaCriadaId)}`} className="btn btn-sm btn-success mt-2">
+                                            Ver ficha no catálogo
+                                        </Link>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <form onSubmit={enviar} className="sugestao-form card border-0 p-4 col-lg-8 mx-auto">
                 {erro && <div className="alert alert-danger">{erro}</div>}
 
                 {aba === "nova" ? (
@@ -356,6 +478,7 @@ export default function Sugestao() {
                     </button>
                 </div>
             </form>
+            )}
         </div>
     )
 }

@@ -158,7 +158,8 @@ app.use(require("./routes/user"))
 app.use(require("./routes/sessions"))
 app.use(require("./routes/plant"))
 app.use(require("./routes/userLists"))
-app.use(require("./routes/suggestions"))
+const suggestionsRoutes = require("./routes/suggestions")
+app.use(suggestionsRoutes)
 app.use(require("./routes/messages"))
 app.use(require("./routes/stats"))
 
@@ -245,8 +246,21 @@ if (isProduction) {
     })
 }
 
+function agendarLimpezaSugestoes() {
+    suggestionsRoutes.limparSugestoesEncerradas()
+        .then(r => {
+            if (r.deletedCount > 0) {
+                console.log(`[suggestions] ${r.deletedCount} sugestão(ões) encerrada(s) antiga(s) removida(s)`)
+            }
+        })
+        .catch(err => console.error("[suggestions] Erro na limpeza automática:", err))
+    setInterval(agendarLimpezaSugestoes, 6 * 60 * 60 * 1000)
+}
+
 dbo.connectToMongoDB(function (error) {
     if (error) throw error
+
+    agendarLimpezaSugestoes()
 
     app.listen(port, () => {
         console.log("Servidor rodando na porta: " + port)
