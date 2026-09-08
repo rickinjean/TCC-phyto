@@ -123,9 +123,6 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                             {role === "ADM" && (
                                 <div className="custom-navbar__user-panel-section">
                                     <span className="custom-navbar__user-panel-caption">Administração</span>
-                                    <NavLink className="custom-navbar__user-panel-link" to="/create" onClick={closeUserMenu}>
-                                        👤 Cadastrar Usuário
-                                    </NavLink>
                                     <NavLink className="custom-navbar__user-panel-link" to="/userlist" onClick={closeUserMenu}>
                                         📋 Lista de Usuários
                                     </NavLink>
@@ -220,11 +217,6 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                         <ul className="navbar-nav flex-column gap-1">
                             {token && role === "ADM" && (
                                 <>
-                                    <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/create" onClick={closeMenu}>
-                                            C. Usuários
-                                        </NavLink>
-                                    </li>
                                     <li className="nav-item">
                                         <NavLink className="custom-navbar__offcanvas-link" to="/userlist" onClick={closeMenu}>
                                             L. Usuários

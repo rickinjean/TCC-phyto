@@ -221,48 +221,6 @@ userRoutes.route("/user/:id").get(authenticateToken, authorizeRoles("ADM"), asyn
     }
 })
 
-// This section will help you create a new user.
-userRoutes.route("/user/add").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
-    const db_connect = dbo.getDb()
-    const { name, user, email, function: tipo, senha } = req.body
-    const ROLES_VALIDAS = ["User", "ADM"]
-
-    if (!name || !email || !senha) {
-        return res.status(400).json({ message: "Nome, email e senha são obrigatórios" })
-    }
-
-    if (tipo && !ROLES_VALIDAS.includes(tipo)) {
-        return res.status(400).json({ message: "Função inválida. Use 'User' ou 'ADM'" })
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return res.status(400).json({ message: "Email inválido" })
-    }
-
-    const erroSenha = validarSenha(senha)
-    if (erroSenha) {
-        return res.status(400).json({ message: erroSenha })
-    }
-
-    try {
-        const salt = await bcrypt.genSalt(10)
-        const senhaHash = await bcrypt.hash(senha, salt)
-        const myobj = {
-            name,
-            user,
-            email,
-            senha: senhaHash,
-            function: tipo || "User",
-            emailVerified: true
-        }
-        const result = await db_connect.collection("users").insertOne(myobj)
-        console.log("1 document created")
-        res.status(201).json(result)
-    } catch (error) {
-        res.status(409).json({ message: error.message })
-    }
-})
-
 // This section will help you update a user by id.
 userRoutes.route("/update/:id").put(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
