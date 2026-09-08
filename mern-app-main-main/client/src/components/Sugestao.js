@@ -70,6 +70,7 @@ export default function Sugestao() {
 
     const [nova, setNova] = useState({ ...NOVA_INICIAL })
     const [tipos, setTipos] = useState([])
+    const [origens, setOrigens] = useState([])
     const [plantas, setPlantas] = useState([])
     const [plantaId, setPlantaId] = useState("")
     const [plantaNome, setPlantaNome] = useState("")
@@ -83,9 +84,10 @@ export default function Sugestao() {
     useEffect(() => {
         async function loadOpcoes() {
             try {
-                const [plantRes, typeRes] = await Promise.all([
+                const [plantRes, typeRes, originRes] = await Promise.all([
                     fetch(`${API_URL}/plant`),
-                    fetch(`${API_URL}/collections/type`)
+                    fetch(`${API_URL}/collections/type`),
+                    fetch(`${API_URL}/collections/origin`)
                 ])
                 if (plantRes.ok) {
                     const data = await plantRes.json()
@@ -97,6 +99,10 @@ export default function Sugestao() {
                 if (typeRes.ok) {
                     const data = await typeRes.json()
                     setTipos(Array.isArray(data) ? data.filter(t => t && t.name) : [])
+                }
+                if (originRes.ok) {
+                    const data = await originRes.json()
+                    setOrigens(Array.isArray(data) ? data.filter(o => o && o.name) : [])
                 }
             } catch { /* lista de plantas/opções indisponível adia a escolha */ }
         }
@@ -171,12 +177,12 @@ export default function Sugestao() {
 
     return (
         <div className="container sugestao-page mt-4">
-            <h3 className="plant-list-page__title fw-semibold mb-1">Sugerir planta / Reportar erro</h3>
-            <p className="plant-list-page__count mb-4">
+            <h3 className="sugestao-page__title mb-1 text-center">Sugerir planta / Reportar erro</h3>
+            <p className="sugestao-page__sub mb-4 text-center">
                 Sua sugestão passa por revisão antes de ser publicada. Apenas texto — fotos podem ser adicionadas depois pela equipe.
             </p>
 
-            <div className="sugestao-tabs mb-4" role="tablist" aria-label="Tipo de sugestão">
+            <div className="sugestao-tabs sugestao-tabs--center mb-4" role="tablist" aria-label="Tipo de sugestão">
                 <button
                     type="button"
                     role="tab"
@@ -197,7 +203,7 @@ export default function Sugestao() {
                 </button>
             </div>
 
-            <form onSubmit={enviar} className="sugestao-form card border-0 p-4 col-lg-8">
+            <form onSubmit={enviar} className="sugestao-form card border-0 p-4 col-lg-8 mx-auto">
                 {erro && <div className="alert alert-danger">{erro}</div>}
 
                 {aba === "nova" ? (
@@ -207,13 +213,12 @@ export default function Sugestao() {
                             titulo="Identificação"
                             dica="Como a planta é conhecida e uma breve apresentação para o catálogo."
                         >
-                            <CampoTexto id="nova-name" label="Nome popular" obrigatorio value={nova.name} onChange={v => setCampoNova("name", v)} maxLength={200} placeholder="Ex.: Hortelã" />
                             <div className="row">
                                 <div className="col-md-6">
-                                    <CampoTexto id="nova-sci" label="Nome científico" value={nova.scientificName} onChange={v => setCampoNova("scientificName", v)} maxLength={200} placeholder="Ex.: Mentha spicata" />
+                                    <CampoTexto id="nova-name" label="Nome popular" obrigatorio value={nova.name} onChange={v => setCampoNova("name", v)} maxLength={200} placeholder="Ex.: Hortelã" />
                                 </div>
                                 <div className="col-md-6">
-                                    <CampoTexto id="nova-simples" label="Descrição curta (aparece no catálogo)" contador value={nova.simpleDescription} onChange={v => setCampoNova("simpleDescription", v)} maxLength={200} placeholder="Ex.: Erva aromática de hortas e quintais." />
+                                    <CampoTexto id="nova-sci" label="Nome científico" value={nova.scientificName} onChange={v => setCampoNova("scientificName", v)} maxLength={200} placeholder="Ex.: Mentha spicata" />
                                 </div>
                             </div>
                         </Secao>
@@ -244,8 +249,25 @@ export default function Sugestao() {
                                         </small>
                                     )}
                                 </div>
-                                <div className="col-md-6">
-                                    <CampoTexto id="nova-origem" label="Origem" value={nova.origin} onChange={v => setCampoNova("origin", v)} maxLength={120} placeholder="Ex.: Mata Atlântica, Sul do Brasil" />
+                                <div className="col-md-6 mb-3">
+                                    <label htmlFor="nova-origem" className="form-label fw-semibold">Origem</label>
+                                    <select
+                                        id="nova-origem"
+                                        className="form-select"
+                                        value={nova.origin}
+                                        disabled={origens.length === 0}
+                                        onChange={e => setCampoNova("origin", e.target.value)}
+                                    >
+                                        <option value="">Selecione a origem…</option>
+                                        {origens.map(o => (
+                                            <option key={o._id} value={o.name}>{o.name}</option>
+                                        ))}
+                                    </select>
+                                    {origens.length === 0 && (
+                                        <small className="sugestao-field-hint">
+                                            Sem opções de origem no momento. A equipe complementa depois.
+                                        </small>
+                                    )}
                                 </div>
                             </div>
                             <div className="row">
@@ -261,8 +283,17 @@ export default function Sugestao() {
                             dica="Conte o que você sabe: porte, folhas, flores, frutos, usos e onde costuma aparecer."
                         >
                             <CampoTexto
+                                id="nova-simples"
+                                label="Descrição curta (aparece no catálogo)"
+                                contador
+                                value={nova.simpleDescription}
+                                onChange={v => setCampoNova("simpleDescription", v)}
+                                maxLength={200}
+                                placeholder="Ex.: Erva aromática de hortas e quintais."
+                            />
+                            <CampoTexto
                                 id="nova-desc"
-                                label="Descrição"
+                                label="Descrição completa"
                                 textarea
                                 contador
                                 value={nova.description}
