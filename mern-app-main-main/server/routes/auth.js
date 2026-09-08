@@ -76,6 +76,7 @@ authRoutes.get("/auth/google", (req, res) => {
 })
 
 authRoutes.get("/auth/google/callback", async (req, res) => {
+    const db_connect = dbo.getDb()
     const { code } = req.query
 
     if (!code) {
@@ -126,6 +127,7 @@ authRoutes.get("/auth/github", (req, res) => {
 })
 
 authRoutes.get("/auth/github/callback", async (req, res) => {
+    const db_connect = dbo.getDb()
     const { code } = req.query
 
     if (!code) {
