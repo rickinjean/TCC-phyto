@@ -3,6 +3,7 @@ import { Route, Routes, Navigate, useLocation } from "react-router-dom"
 import Navbar from "./components/navbar"
 import Footer from "./components/footer"
 import UserList from "./components/userList"
+import MessageList from "./components/MessageList"
 import PlantList from "./components/PlantList"          
 import Edit from "./components/edit"
 import Editplant from './components/editplant';
@@ -221,6 +222,7 @@ const App = () => {
                         <Route exact path="/" element={token ? (role === "ADM" ? <UserList /> : <Navigate to="/inicio" replace />) : <Inicio token={token} />} />
                         <Route path="/plantlist" element={<PlantList role={role} canFavorite={Boolean(token)} favTick={favTick} />} />
                         <Route path="/userlist" element={token && role === "ADM" ? <UserList /> : <Navigate to={token ? "/" : "/login"} replace />} />
+                        <Route path="/messages" element={token && role === "ADM" ? <MessageList /> : <Navigate to={token ? "/" : "/login"} replace />} />
                         <Route path="/edit/:id" element={token && role === "ADM" ? <Edit /> : <Navigate to={token ? "/" : "/login"} replace />} />
                         <Route path="/editplant/:id" element={token && role === "ADM" ? <Editplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
                         <Route path="/create" element={token && role === "ADM" ? <Create /> : <Navigate to={token ? "/" : "/login"} replace />} />

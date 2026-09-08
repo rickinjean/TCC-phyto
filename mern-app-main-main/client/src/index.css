@@ -2561,6 +2561,98 @@ html[data-theme="dark"] .btn-primary:focus {
   text-decoration: underline;
 }
 
+.admin-messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-width: 820px;
+}
+
+.admin-message-card {
+  overflow: hidden;
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-md);
+  background: var(--phyto-surface);
+  box-shadow: var(--phyto-shadow);
+}
+
+.admin-message-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1.1rem;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.admin-message-card__header:hover {
+  background: var(--phyto-green-100);
+}
+
+.admin-message-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.admin-message-card__name {
+  font-weight: 700;
+  color: var(--phyto-ink);
+}
+
+.admin-message-card__badge {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--phyto-green-100);
+  color: var(--phyto-green-700);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: capitalize;
+}
+
+.admin-message-card__date {
+  color: var(--phyto-ink-soft);
+  font-size: 0.8rem;
+}
+
+.admin-message-card__chevron {
+  display: inline-block;
+  color: var(--phyto-green-700);
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: transform 180ms var(--phyto-ease);
+}
+
+.admin-message-card__chevron.is-open {
+  transform: rotate(90deg);
+}
+
+.admin-message-card__body {
+  padding: 1.1rem;
+  border-top: 1px solid var(--phyto-border);
+}
+
+.admin-message-card__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.8rem;
+  font-size: 0.85rem;
+  color: var(--phyto-ink-soft);
+}
+
+.admin-message-card__text {
+  margin-bottom: 1rem;
+  white-space: pre-wrap;
+  color: var(--phyto-ink);
+  background: var(--phyto-green-100);
+  border-radius: var(--phyto-radius-sm);
+  padding: 0.8rem 1rem;
+}
+
 .modal-content {
   border: 1px solid var(--phyto-border);
   border-radius: var(--phyto-radius-md);
@@ -2729,6 +2821,24 @@ html[data-theme="dark"] .admin-table thead th {
 
 html[data-theme="dark"] .admin-table .btn-link {
   color: #8fdfaa;
+}
+
+html[data-theme="dark"] .admin-message-card {
+  border-color: rgba(133, 214, 158, 0.18);
+  background: rgba(20, 44, 31, 0.92);
+}
+
+html[data-theme="dark"] .admin-message-card__header:hover {
+  background: rgba(77, 187, 120, 0.14);
+}
+
+html[data-theme="dark"] .admin-message-card__body {
+  border-color: rgba(133, 214, 158, 0.18);
+}
+
+html[data-theme="dark"] .admin-message-card__text {
+  background: rgba(77, 187, 120, 0.14);
+  color: #d9f2e1;
 }
 
 html[data-theme="dark"] .plant-admin-form h5 {

@@ -2,6 +2,7 @@ const express = require("express")
 const messagesRoutes = express.Router()
 const rateLimit = require("express-rate-limit")
 const dbo = require("../db/conn")
+const ObjectId = require("mongodb").ObjectId
 const { authenticateToken, authorizeRoles } = require("../middleware/auth")
 
 const messageLimiter = rateLimit({
@@ -41,6 +42,22 @@ messagesRoutes.route("/messages").get(authenticateToken, authorizeRoles("ADM"), 
     try {
         const result = await db_connect.collection("messages").find({}).sort({ createdAt: -1 }).toArray()
         res.status(200).json(result)
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
+messagesRoutes.route("/messages/:id").delete(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
+    const db_connect = dbo.getDb()
+    if (!ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ message: "ID inválido" })
+    }
+    try {
+        const result = await db_connect.collection("messages").deleteOne({ _id: new ObjectId(req.params.id) })
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: "Mensagem não encontrada" })
+        }
+        res.status(200).json({ message: "Mensagem removida" })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }

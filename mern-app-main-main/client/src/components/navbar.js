@@ -129,6 +129,9 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     <NavLink className="custom-navbar__user-panel-link" to="/userlist" onClick={closeUserMenu}>
                                         📋 Lista de Usuários
                                     </NavLink>
+                                    <NavLink className="custom-navbar__user-panel-link" to="/messages" onClick={closeUserMenu}>
+                                        ✉️ Mensagens
+                                    </NavLink>
                                     <NavLink className="custom-navbar__user-panel-link" to="/createplant" onClick={closeUserMenu}>
                                         🌱 Cadastrar Planta
                                     </NavLink>
@@ -225,6 +228,11 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     <li className="nav-item">
                                         <NavLink className="custom-navbar__offcanvas-link" to="/userlist" onClick={closeMenu}>
                                             L. Usuários
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/messages" onClick={closeMenu}>
+                                            Mensagens
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
