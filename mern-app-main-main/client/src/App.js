@@ -15,6 +15,7 @@ import PlantDetails from './components/PlantDetails';
 import Inicio from './components/inicio'
 import Sobre from './components/Sobre'
 import Favorites from './components/Favorites'
+import FavoritesPrint from './components/FavoritesPrint'
 import ErrorBoundary from './ErrorBoundary'
 import API_URL from "./config"
 
@@ -206,6 +207,13 @@ const App = () => {
                 </div>
             </div>
         )
+    }
+
+    // Rota de impressão fica FORA do layout padrão (sem navbar/footer) para
+    // gerar um PDF limpo. Nenhum script inline: usa o bundle externo do CRA,
+    // compatível com o CSP do servidor.
+    if (location.pathname === "/favoritos/imprimir") {
+        return <FavoritesPrint />
     }
 
     return (
