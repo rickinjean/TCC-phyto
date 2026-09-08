@@ -5510,7 +5510,7 @@ html[data-theme="dark"] .paleta-cores__swatch.is-active {
 }
 
 .sugestao-page__title {
-  color: var(--phyto-green-700);
+  color: var(--phyto-green-600);
   font-family: Georgia, "Times New Roman", serif;
   font-size: 1.7rem;
   font-weight: 700;
