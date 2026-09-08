@@ -5183,193 +5183,252 @@ html[data-theme="dark"] .password-strength {
 }
 
 /* ==========================================================================
-   Página de impressão dos favoritos (rota /favoritos/imprimir)
+   Listas personalizadas (Minhas Listas)
    ========================================================================== */
-.print-page {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 24px;
-  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif;
-  color: #1b2a23;
-  background: #f4f7f5;
-  min-height: 100vh;
-}
-
-html[data-theme="dark"] .print-page {
-  background: #f4f7f5;
-  color: #1b2a23;
-}
-
-.print-page__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
-  border-bottom: 3px solid var(--phyto-green-600);
-  padding-bottom: 12px;
-}
-
-.print-page__brand {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--phyto-green-600);
-  letter-spacing: 0.3px;
-}
-
-.print-page__header h1 {
-  margin: 6px 0 0;
-  font-size: 24px;
-}
-
-.print-page__meta {
-  font-size: 12px;
-  color: #5d6b63;
-  text-align: right;
-}
-
-.print-page__count {
-  margin: 14px 0;
-  font-size: 13px;
-  color: #5d6b63;
-}
-
-.print-page__status {
-  margin-top: 24px;
-  font-size: 14px;
-  color: #3c4c44;
-}
-
-.print-page__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 14px;
-}
-
-.print-page__card {
-  border: 1px solid #e0e7e2;
-  border-radius: 10px;
-  background: #ffffff;
-  overflow: hidden;
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-
-.print-page__imgwrap {
-  aspect-ratio: 4 / 3;
-  background: #e8f1ec;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 42px;
-}
-
-.print-page__imgwrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.print-page__noimg {
-  color: var(--phyto-green-600);
-  opacity: 0.5;
-}
-
-.print-page__body {
-  padding: 10px 12px 12px;
-}
-
-.print-page__name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1b2a23;
-  margin: 0;
-}
-
-.print-page__sci {
-  font-size: 12px;
-  font-style: italic;
-  color: #4a5a52;
-  margin-top: 2px;
-}
-
-.print-page__desc {
-  font-size: 12px;
-  color: #3c4c44;
-  margin-top: 6px;
-  line-height: 1.45;
-  margin-bottom: 0;
-}
-
-.print-page__date {
-  font-size: 11px;
-  color: #8a9a90;
-  margin-top: 8px;
-}
-
-.print-page__footer-note {
-  margin-top: 24px;
-  padding-top: 10px;
-  border-top: 1px solid #e0e7e2;
-  font-size: 11px;
-  color: #8a9a90;
-  text-align: center;
-}
-
-.print-page__toolbar {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
+.userlists-newform {
   display: flex;
   gap: 8px;
-  z-index: 999;
+  max-width: 560px;
 }
 
-.print-page__btn {
-  display: inline-block;
-  background: var(--phyto-green-600);
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
+.userlists-newform .form-control {
+  flex: 1;
+}
+
+.userlist-card {
+  padding: 0;
+  overflow: hidden;
+  background: var(--phyto-card-bg);
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-sm);
+  transition: box-shadow 0.2s var(--phyto-ease);
+}
+
+.userlist-card:hover {
+  box-shadow: var(--phyto-shadow-hover);
+}
+
+.userlist-card__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  color: inherit;
   text-decoration: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.print-page__btn:hover {
+.userlist-card__main:hover {
+  color: inherit;
+}
+
+.userlist-card__icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.userlist-card__meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.userlist-card__name {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.userlist-card__count {
+  font-size: 13px;
+  color: var(--phyto-ink-soft);
+}
+
+.userlist-card__actions {
+  border-top: 1px solid var(--phyto-border);
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.userlist-card__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+}
+
+.userlist-card__form .form-control {
+  max-width: 220px;
+}
+
+html[data-theme="dark"] .userlist-card {
+  background: var(--phyto-card-bg);
+  border-color: var(--phyto-border);
+}
+
+/* Painel "Adicionar à lista" no detalhe da planta */
+.addtolist-panel {
+  margin-top: 12px;
+  background: var(--phyto-card-bg);
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-sm);
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.addtolist-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.addtolist-panel__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.addtolist-panel__item:hover {
+  background: var(--phyto-green-100);
+}
+
+.addtolist-panel__item input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--phyto-green-600);
+  flex-shrink: 0;
+}
+
+.addtolist-panel__nome {
+  font-weight: 500;
+}
+
+.addtolist-panel__qtd {
+  color: var(--phyto-ink-soft);
+  font-size: 13px;
+}
+
+.addtolist-panel__empty {
+  color: var(--phyto-ink-soft);
+  margin-bottom: 10px;
+}
+
+.addtolist-panel__new {
+  display: flex;
+  gap: 8px;
+}
+
+.addtolist-panel__new .form-control {
+  flex: 1;
+}
+
+/* ==========================================================================
+   Sugestões (Sugestao + SugestaoModeracao)
+   ========================================================================== */
+.sugestao-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sugestao-tabs__tab {
+  border: 1px solid var(--phyto-border);
+  background: transparent;
+  color: var(--phyto-ink);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sugestao-tabs__tab:hover {
+  background: var(--phyto-green-100);
+}
+
+.sugestao-tabs__tab.is-active {
+  background: var(--phyto-green-600);
+  border-color: var(--phyto-green-600);
   color: #ffffff;
-  filter: brightness(1.05);
 }
 
-.print-page__btn--secondary {
-  background: rgba(31, 107, 73, 0.12);
+html[data-theme="dark"] .sugestao-tabs__tab {
+  color: var(--phyto-ink);
+  border-color: var(--phyto-border);
+}
+
+.sugestao-form {
+  background: var(--phyto-card-bg);
+}
+
+.sugestao-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 10px;
+  margin-left: 8px;
+}
+
+.sugestao-badge--pendente {
+  background: var(--phyto-green-100);
   color: var(--phyto-green-700);
 }
 
-.print-page__btn--secondary:hover {
+.sugestao-badge--aprovada {
+  background: rgba(47, 138, 93, 0.14);
   color: var(--phyto-green-700);
-  background: rgba(31, 107, 73, 0.18);
 }
 
-@media print {
-  html[data-theme="dark"] .print-page {
-    background: #ffffff !important;
-  }
-
-  .print-page {
-    max-width: 100%;
-    padding: 0;
-  }
-
-  .print-page__toolbar {
-    display: none;
-  }
+.sugestao-badge--concluida {
+  background: rgba(60, 120, 224, 0.12);
+  color: #2c5fb8;
 }
 
-@page {
-  margin: 12mm 10mm;
+html[data-theme="dark"] .sugestao-badge--concluida {
+  color: #8ab4f8;
+}
+
+.sugestao-badge--rejeitada {
+  background: rgba(200, 60, 60, 0.12);
+  color: #b04242;
+}
+
+html[data-theme="dark"] .sugestao-badge--rejeitada {
+  color: #ef9a9a;
+}
+
+.sugestao-card__detalhes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.sugestao-card__nota {
+  font-size: 13px;
+  color: var(--phyto-ink-soft);
+  background: var(--phyto-green-100);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.sugestao-card__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.sugestao-card__acoes .form-control {
+  flex: 1;
+  min-width: 180px;
 }
 

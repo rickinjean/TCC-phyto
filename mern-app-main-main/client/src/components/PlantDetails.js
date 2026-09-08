@@ -119,6 +119,10 @@ export default function PlantDetails({ onFavChange, canFavorite = false }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [listasOpen, setListasOpen] = useState(false);
+  const [listas, setListas] = useState([]);
+  const [listasLoading, setListasLoading] = useState(true);
+  const [novaListaNome, setNovaListaNome] = useState("");
   const navigate = useNavigate();
   const realId = decodeId(id);
 
@@ -175,6 +179,21 @@ export default function PlantDetails({ onFavChange, canFavorite = false }) {
     return () => { cancelled = true; };
   }, [realId, canFavorite]);
 
+  useEffect(() => {
+    if (!canFavorite) return;
+    let cancelled = false;
+    async function loadListas() {
+      try {
+        const res = await authFetch(`${API_URL}/userlists?plantId=${realId}`);
+        if (!cancelled && res && res.ok) setListas(await res.json());
+      } catch { /* ignore */ } finally {
+        if (!cancelled) setListasLoading(false);
+      }
+    }
+    loadListas();
+    return () => { cancelled = true; };
+  }, [canFavorite, realId]);
+
   async function toggleFavorite() {
     try {
       if (isFavorite) {
@@ -190,6 +209,61 @@ export default function PlantDetails({ onFavChange, canFavorite = false }) {
       }
     } catch (err) {
       console.error("Erro ao atualizar favorito:", err);
+    }
+  }
+
+  async function alternarLista(lista) {
+    try {
+      if (lista.contains) {
+        const res = await authFetch(`${API_URL}/userlists/${lista._id}/plants/${realId}`, { method: "DELETE" });
+        if (res && res.ok) {
+          setListas(prev => prev.map(l => l._id === lista._id
+            ? { ...l, contains: false, count: Math.max(0, l.count - 1) }
+            : l));
+        }
+      } else {
+        const res = await authFetch(`${API_URL}/userlists/${lista._id}/plants`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plantId: realId })
+        });
+        if (res && res.ok) {
+          setListas(prev => prev.map(l => l._id === lista._id
+            ? { ...l, contains: true, count: l.count + 1 }
+            : l));
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao atualizar lista:", err);
+    }
+  }
+
+  async function criarListaComPlanta(e) {
+    e.preventDefault();
+    const name = novaListaNome.trim();
+    if (!name) return;
+    try {
+      const res = await authFetch(`${API_URL}/userlists`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+      });
+      if (!res || !res.ok) return;
+      const data = await res.json();
+      const res2 = await authFetch(`${API_URL}/userlists/${data._id}/plants`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plantId: realId })
+      });
+      setListas(prev => [{
+        _id: data._id,
+        name,
+        count: res2 && res2.ok ? 1 : 0,
+        contains: Boolean(res2 && res2.ok)
+      }, ...prev]);
+      setNovaListaNome("");
+    } catch (err) {
+      console.error("Erro ao criar lista:", err);
     }
   }
 
@@ -258,7 +332,57 @@ export default function PlantDetails({ onFavChange, canFavorite = false }) {
                 </svg>
               </button>
             )}
+            {canFavorite && (
+              <button
+                className={`plant-details-favorite-btn ${listasOpen ? "is-open" : ""}`}
+                onClick={() => setListasOpen(o => !o)}
+                type="button"
+                aria-expanded={listasOpen}
+                aria-label={listasOpen ? "Fechar adicionar à lista" : "Adicionar à lista"}
+              >
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 4h4v4H5V4zm10 0h4v4h-4V4zM5 14h4v4H5v-4zm10 0h4v4h-4v-4zM9 6h6M9 16h6" />
+                </svg>
+              </button>
+            )}
           </div>
+          {listasOpen && (
+            <div className="addtolist-panel" role="region" aria-label="Adicionar planta às listas">
+              {listasLoading ? (
+                <p className="addtolist-panel__empty">Carregando suas listas...</p>
+              ) : listas.length === 0 ? (
+                <p className="addtolist-panel__empty">Você ainda não tem listas. Crie uma abaixo.</p>
+              ) : (
+                <div className="addtolist-panel__list">
+                  {listas.map(lista => (
+                    <label key={String(lista._id)} className="addtolist-panel__item">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(lista.contains)}
+                        onChange={() => alternarLista(lista)}
+                      />
+                      <span className="addtolist-panel__nome">{lista.name}</span>
+                      <span className="addtolist-panel__qtd">({lista.count})</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              <form className="addtolist-panel__new" onSubmit={criarListaComPlanta}>
+                <label className="visually-hidden" htmlFor="nova-lista-planta">Nome da nova lista</label>
+                <input
+                  id="nova-lista-planta"
+                  className="form-control form-control-sm"
+                  placeholder="Criar nova lista e adicionar esta planta"
+                  value={novaListaNome}
+                  maxLength={80}
+                  onChange={(e) => setNovaListaNome(e.target.value)}
+                />
+                <button type="submit" className="btn btn-sm btn-success" disabled={!novaListaNome.trim()}>
+                  Criar
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </header>
 

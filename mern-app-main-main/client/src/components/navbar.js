@@ -72,6 +72,11 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                             <NavLink className="custom-navbar__link" to="/favoritos">Favoritos</NavLink>
                         </li>
                     )}
+                    {token && (
+                        <li className="nav-item">
+                            <NavLink className="custom-navbar__link" to="/minhas-listas">Listas</NavLink>
+                        </li>
+                    )}
 <li className="nav-item">
                         <NavLink className="custom-navbar__link" to="/Sobre">Sobre</NavLink>
                     </li>
@@ -129,11 +134,24 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     <NavLink className="custom-navbar__user-panel-link" to="/messages" onClick={closeUserMenu}>
                                         ✉️ Mensagens
                                     </NavLink>
+                                    <NavLink className="custom-navbar__user-panel-link" to="/moderar-sugestoes" onClick={closeUserMenu}>
+                                        🗂 Moderar Sugestões
+                                    </NavLink>
                                     <NavLink className="custom-navbar__user-panel-link" to="/createplant" onClick={closeUserMenu}>
                                         🌱 Cadastrar Planta
                                     </NavLink>
                                 </div>
                             )}
+
+                            <div className="custom-navbar__user-panel-section">
+                                <span className="custom-navbar__user-panel-caption">Minha Conta</span>
+                                <NavLink className="custom-navbar__user-panel-link" to="/minhas-listas" onClick={closeUserMenu}>
+                                    📚 Minhas Listas
+                                </NavLink>
+                                <NavLink className="custom-navbar__user-panel-link" to="/sugerir" onClick={closeUserMenu}>
+                                    💡 Sugerir Planta / Reportar Erro
+                                </NavLink>
+                            </div>
 
                             <div className="custom-navbar__user-panel-section">
                                 <span className="custom-navbar__user-panel-caption">Preferências</span>
@@ -228,6 +246,11 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/moderar-sugestoes" onClick={closeMenu}>
+                                            Moderar Sugestões
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
                                         <NavLink className="custom-navbar__offcanvas-link" to="/createplant" onClick={closeMenu}>
                                             C. Plantas
                                         </NavLink>
@@ -263,6 +286,16 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     <li className="nav-item">
                                         <NavLink className="custom-navbar__offcanvas-link" to="/Sobre" onClick={closeMenu}>
                                             Sobre
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/minhas-listas" onClick={closeMenu}>
+                                            Minhas Listas
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/sugerir" onClick={closeMenu}>
+                                            Sugerir / Reportar
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">

@@ -158,6 +158,8 @@ app.use(require("./routes/user"))
 app.use(require("./routes/sessions"))
 app.use(require("./routes/plant"))
 app.use(require("./routes/favorites"))
+app.use(require("./routes/userLists"))
+app.use(require("./routes/suggestions"))
 app.use(require("./routes/messages"))
 app.use(require("./routes/stats"))
 

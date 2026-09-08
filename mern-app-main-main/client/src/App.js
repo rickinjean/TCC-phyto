@@ -15,7 +15,10 @@ import PlantDetails from './components/PlantDetails';
 import Inicio from './components/inicio'
 import Sobre from './components/Sobre'
 import Favorites from './components/Favorites'
-import FavoritesPrint from './components/FavoritesPrint'
+import ClientLists from './components/ClientLists'
+import ClientListDetail from './components/ClientListDetail'
+import Sugestao from './components/Sugestao'
+import SugestaoModeracao from './components/SugestaoModeracao'
 import ErrorBoundary from './ErrorBoundary'
 import API_URL from "./config"
 
@@ -209,13 +212,6 @@ const App = () => {
         )
     }
 
-    // Rota de impressão fica FORA do layout padrão (sem navbar/footer) para
-    // gerar um PDF limpo. Nenhum script inline: usa o bundle externo do CRA,
-    // compatível com o CSP do servidor.
-    if (location.pathname === "/favoritos/imprimir") {
-        return <FavoritesPrint />
-    }
-
     return (
         <div className="d-flex flex-column min-vh-100">
             <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
@@ -240,6 +236,10 @@ const App = () => {
                         <Route path="/Sobre" element={<Sobre />} />
                         <Route path="/sobre" element={<Navigate to="/Sobre" replace />} />
                         <Route path="/favoritos" element={token ? <Favorites key={favTick} /> : <Navigate to="/login" replace />} />
+                        <Route path="/minhas-listas" element={token ? <ClientLists /> : <Navigate to="/login" replace />} />
+                        <Route path="/minhas-listas/:id" element={token ? <ClientListDetail /> : <Navigate to="/login" replace />} />
+                        <Route path="/sugerir" element={token ? <Sugestao /> : <Navigate to="/login" replace />} />
+                        <Route path="/moderar-sugestoes" element={token && role === "ADM" ? <SugestaoModeracao /> : <Navigate to={token ? "/" : "/login"} replace />} />
                         <Route path="*" element={<Navigate to={token ? (role === "ADM" ? "/" : "/inicio") : "/inicio"} replace />} />
                     </Routes>
                 </ErrorBoundary>

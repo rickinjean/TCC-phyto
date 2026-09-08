@@ -6,7 +6,6 @@ import { encodeId } from "../idCodec"
 import PlantImage from "./PlantImage"
 import usePageTitle from "../usePageTitle"
 import getImageVariants from "../getImageVariants"
-import abrirImpressaoFavoritos from "./FavoritesExport"
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' fill='%23dceee3'%3E%3Crect width='400' height='250'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='62%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E"
 
@@ -107,28 +106,14 @@ export default function Favorites() {
 
     return (
         <div className="plant-list-page container mt-4">
-            <div className="mb-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <div>
-                    <h3 className="plant-list-page__title mb-0 fw-semibold">
-                        Minhas Plantas Favoritas
-                    </h3>
-                    {!loading && (
-                        <span className="plant-list-page__count">
-                            {favorites.length} {favorites.length === 1 ? "planta favorita" : "plantas favoritas"}
-                        </span>
-                    )}
-                </div>
-                {!loading && favorites.length > 0 && (
-                    <button
-                        type="button"
-                        className="btn btn-sm btn-outline-success"
-                        onClick={() => abrirImpressaoFavoritos()}
-                    >
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" style={{ verticalAlign: "-2px", marginRight: 6 }} aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v6H6v-6z" />
-                        </svg>
-                        Salvar como PDF
-                    </button>
+            <div className="mb-4">
+                <h3 className="plant-list-page__title mb-0 fw-semibold">
+                    Minhas Plantas Favoritas
+                </h3>
+                {!loading && (
+                    <span className="plant-list-page__count">
+                        {favorites.length} {favorites.length === 1 ? "planta favorita" : "plantas favoritas"}
+                    </span>
                 )}
             </div>
 
