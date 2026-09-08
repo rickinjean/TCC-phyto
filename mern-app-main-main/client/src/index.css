@@ -901,11 +901,16 @@ html[data-theme="dark"] .custom-navbar__user-panel-action:hover {
   background: #dceee3;
 }
 
+.plant-details-carousel-inner picture {
+  display: block;
+  height: 100%;
+}
+
 .plant-details-image {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   background: #dceee3;
 }
