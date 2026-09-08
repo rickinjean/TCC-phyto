@@ -167,6 +167,56 @@ app.get("/health", function(req, res) {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() })
 })
 
+const SITEMAP_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
+const SITEMAP_PADDING = "~"
+const SITE_URL = process.env.SITE_URL || "https://tcc-phyto.onrender.com"
+
+function encodeId(id) {
+    if (!id) return id
+    const hex = String(id)
+    let num = BigInt("0x" + hex)
+    let result = ""
+    const base = BigInt(SITEMAP_ALPHABET.length)
+    while (num > 0n) {
+        result = SITEMAP_ALPHABET[Number(num % base)] + result
+        num = num / base
+    }
+    return (result || "0") + SITEMAP_PADDING
+}
+
+// Sitemap dinâmico: inclui páginas estáticas + todas as fichas de plantas.
+// Substitui o sitemap.xml estático, que não cobria /plantdetails/:id.
+app.get("/sitemap.xml", async function (req, res) {
+    const db_connect = dbo.getDb()
+    const today = new Date().toISOString().slice(0, 10)
+    let plants = []
+    try {
+        plants = await db_connect.collection("plants").find({}, { projection: { _id: 1 } }).toArray()
+    } catch (error) {
+        console.error("Erro ao gerar sitemap:", error)
+    }
+
+    const urls = []
+    const staticUrls = [
+        { path: "/", priority: "1.0", freq: "weekly" },
+        { path: "/inicio", priority: "0.9", freq: "weekly" },
+        { path: "/plantlist", priority: "0.9", freq: "daily" },
+        { path: "/Sobre", priority: "0.6", freq: "monthly" },
+    ]
+    for (const u of staticUrls) {
+        urls.push(`  <url>\n    <loc>${SITE_URL}${u.path}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${u.freq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`)
+    }
+    for (const p of plants) {
+        const encoded = encodeId(p._id)
+        urls.push(`  <url>\n    <loc>${SITE_URL}/plantdetails/${encoded}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`)
+    }
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`
+    res.setHeader("Content-Type", "application/xml")
+    res.setHeader("Cache-Control", "no-cache")
+    res.send(xml)
+})
+
 if (isProduction) {
     const clientBuildPath = path.join(__dirname, "..", "client", "build")
 

@@ -28,7 +28,7 @@ function FotoOuInicial({ foto, nome }) {
 }
 
 export default function About() {
-    usePageTitle("Sobre", "Conheça o Phytografia: sistema de pesquisa botânica desenvolvido no IFC Campus Sombrio para democratizar o acesso ao conhecimento sobre a biodiversidade de plantas.")
+    usePageTitle("Sobre", "Conheça o Phytografia: sistema de pesquisa botânica desenvolvido no IFC Campus Sombrio para democratizar o acesso ao conhecimento sobre a biodiversidade de plantas.", "/Sobre")
     const [formData, setFormData] = useState({ nome: '', email: '', assunto: '', mensagem: '' });
     const [enviado, setEnviado] = useState(false);
     const [enviando, setEnviando] = useState(false);

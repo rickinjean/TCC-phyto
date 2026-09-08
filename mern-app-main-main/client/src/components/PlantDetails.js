@@ -112,13 +112,13 @@ const TEXT_FIELDS = [
 ];
 
 export default function PlantDetails({ onFavChange, canFavorite = false }) {
+  const { id } = useParams();
   const [plant, setPlant] = useState(null);
-  usePageTitle(plant ? plant.name : "Planta", plant?.simpleDescription)
+  usePageTitle(plant ? plant.name : "Planta", plant?.simpleDescription, `/plantdetails/${id}`)
   const [notFound, setNotFound] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const { id } = useParams();
   const navigate = useNavigate();
   const realId = decodeId(id);
 

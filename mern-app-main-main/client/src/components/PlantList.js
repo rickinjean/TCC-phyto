@@ -238,7 +238,7 @@ const EmptyState = ({ hasActiveFilters, onClear }) => (
 )
 
 export default function PlantList({ role, canFavorite = false }) {
-    usePageTitle("Catálogo de Plantas", "Explore o catálogo digital de plantas do Phytografia: fichas técnicas de cultivo, origem e classificação botânica.")
+    usePageTitle("Catálogo de Plantas", "Explore o catálogo digital de plantas do Phytografia: fichas técnicas de cultivo, origem e classificação botânica.", "/plantlist")
     const [plants, setPlants] = useState([])
     const [loading, setLoading] = useState(true)
     const [fetchError, setFetchError] = useState(null)
