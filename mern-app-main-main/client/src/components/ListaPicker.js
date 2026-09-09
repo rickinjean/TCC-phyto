@@ -12,6 +12,7 @@ export default function ListaPicker({ aberto, plantaId, plantaNome, onFechar }) 
     const [salvando, setSalvando] = useState(false)
     const [novoNome, setNovoNome] = useState("")
     const [novaCor, setNovaCor] = useState(COR_PADRAO)
+    const [formAberto, setFormAberto] = useState(false)
     const dialogRef = useRef(null)
     const corpoRef = useRef(null)
 
@@ -42,7 +43,11 @@ export default function ListaPicker({ aberto, plantaId, plantaNome, onFechar }) 
                 if (!res) {
                     if (!cancelled) setErro("Sessão expirada. Faça login novamente.")
                 } else if (res.ok) {
-                    if (!cancelled) setListas(await res.json())
+                    const dados = await res.json()
+                    if (!cancelled) {
+                        setListas(dados)
+                        setFormAberto(dados.length === 0)
+                    }
                 } else if (!cancelled) {
                     setErro(`Erro ao carregar coleções: ${res.status}`)
                 }
@@ -125,6 +130,7 @@ export default function ListaPicker({ aberto, plantaId, plantaNome, onFechar }) 
             }, ...prev])
             setNovoNome("")
             setNovaCor(COR_PADRAO)
+            setFormAberto(false)
         } catch {
             setAviso("Erro ao conectar com o servidor")
         } finally {
@@ -194,23 +200,34 @@ export default function ListaPicker({ aberto, plantaId, plantaNome, onFechar }) 
                 </div>
 
                 <div className="lista-picker__footer">
-                    <form className="lista-picker__new" onSubmit={criar}>
-                        <label className="visually-hidden" htmlFor="lista-picker-novo">Nome da nova coleção</label>
-                        <input
-                            id="lista-picker-novo"
-                            className="form-control"
-                            placeholder="Nova coleção (ex.: Jardim, TCC)"
-                            value={novoNome}
-                            maxLength={80}
-                            onChange={(e) => setNovoNome(e.target.value)}
-                        />
-                        <div className="lista-picker__paleta">
-                            <PaletaCores valor={novaCor} onChange={setNovaCor} />
-                        </div>
-                        <button type="submit" className="btn btn-success" disabled={salvando || !novoNome.trim()}>
-                            {salvando ? "Criando..." : "Criar e adicionar"}
+                    {formAberto ? (
+                        <form className="lista-picker__new" onSubmit={criar}>
+                            <label className="visually-hidden" htmlFor="lista-picker-novo">Nome da nova coleção</label>
+                            <input
+                                id="lista-picker-novo"
+                                className="form-control"
+                                placeholder="Nova coleção (ex.: Jardim, TCC)"
+                                value={novoNome}
+                                maxLength={80}
+                                onChange={(e) => setNovoNome(e.target.value)}
+                            />
+                            <div className="lista-picker__paleta">
+                                <PaletaCores valor={novaCor} onChange={setNovaCor} />
+                            </div>
+                            <div className="d-flex gap-2">
+                                <button type="submit" className="btn btn-success flex-grow-1" disabled={salvando || !novoNome.trim()}>
+                                    {salvando ? "Criando..." : "Criar e adicionar"}
+                                </button>
+                                <button type="button" className="btn btn-outline-secondary" onClick={() => setFormAberto(false)}>
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    ) : (
+                        <button type="button" className="lista-picker__toggle-nova" onClick={() => setFormAberto(true)}>
+                            ＋ Nova coleção
                         </button>
-                    </form>
+                    )}
                     {aviso && <p className="lista-picker__aviso mt-2" role="status">{aviso}</p>}
                 </div>
             </div>

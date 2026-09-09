@@ -5482,6 +5482,29 @@ html[data-theme="dark"] .userlist-card {
   gap: 10px;
 }
 
+.lista-picker__toggle-nova {
+  display: block;
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px dashed var(--phyto-border);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--accent, #2f8a5d);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lista-picker__toggle-nova:hover {
+  border-color: var(--accent, #2f8a5d);
+  background: rgba(47, 138, 93, 0.06);
+}
+
+html[data-theme="dark"] .lista-picker__toggle-nova {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .lista-picker__paleta {
   display: flex;
   align-items: center;
