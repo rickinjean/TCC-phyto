@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
@@ -22,7 +23,7 @@ function formatarData(iso) {
     })
 }
 
-function SugestaoCard({ sug, executar }) {
+function SugestaoCard({ sug, executar, onEditar }) {
     const [working, setWorking] = useState(false)
 
     const ehNova = sug.tipo === "nova"
@@ -94,6 +95,14 @@ function SugestaoCard({ sug, executar }) {
                         <>
                             <button
                                 type="button"
+                                className="btn btn-sm btn-outline-primary"
+                                disabled={working}
+                                onClick={() => onEditar(sug)}
+                            >
+                                ✏️ Editar
+                            </button>
+                            <button
+                                type="button"
                                 className="btn btn-sm btn-outline-secondary"
                                 disabled={working}
                                 onClick={() => handleExecutar("voltar")}
@@ -118,6 +127,7 @@ function SugestaoCard({ sug, executar }) {
 
 export default function SugestaoModeracao() {
     usePageTitle("Moderar Sugestões")
+    const navigate = useNavigate()
     const [todas, setTodas] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -185,6 +195,14 @@ export default function SugestaoModeracao() {
 
     const listaAtual = aba === "pendente" ? pendentes : aba === "aprovada" ? emProcesso : encerradas
 
+    function editar(sug) {
+        if (sug.tipo === "nova") {
+            navigate(`/createplant?sugestao=${sug._id}`)
+        } else {
+            navigate(`/editplant/${sug.plantaId}`)
+        }
+    }
+
     return (
         <div className="admin-page admin-page--messages">
             <h3 className="admin-page__title ps-2">Moderar Sugestões</h3>
@@ -241,12 +259,13 @@ export default function SugestaoModeracao() {
                     Nenhuma sugestão nesta seção.
                 </div>
             ) : (
-                <div className="admin-messages-list mx-2">
+                <div className="sugestao-cards mx-2">
                     {listaAtual.map(sug => (
                         <SugestaoCard
                             key={String(sug._id)}
                             sug={sug}
                             executar={executar}
+                            onEditar={editar}
                         />
                     ))}
                 </div>

@@ -5714,6 +5714,41 @@ html[data-theme="dark"] .sugestao-badge--rejeitada {
   align-items: center;
 }
 
+.sugestao-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.sugestao-cards .admin-message-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.sugestao-cards .admin-message-card__header {
+  cursor: default;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+html[data-theme="dark"] .sugestao-cards .admin-message-card__header,
+html[data-theme="dark"] .sugestao-cards .admin-message-card__header:hover {
+  background: transparent;
+}
+
+.sugestao-cards .admin-message-card__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.sugestao-cards .sugestao-card__acoes {
+  margin-top: auto;
+  padding-top: 10px;
+}
+
 /* ==========================================================================
    Minhas sugestões (aba na página /sugerir)
    ========================================================================== */
