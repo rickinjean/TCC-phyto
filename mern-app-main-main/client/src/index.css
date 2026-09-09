@@ -3843,6 +3843,7 @@ html[data-theme="dark"] .about-section .alert-success {
    ===================================================== */
 
 .plant-details-favorite-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3921,6 +3922,29 @@ html[data-theme="dark"] .plant-list-card__favorite {
 
 html[data-theme="dark"] .plant-list-card__favorite:hover {
   background: var(--phyto-card-bg);
+}
+
+/* Selo com a contagem de coleções no coração do catálogo e na página da planta.
+   Aparece apenas quando a planta está em mais de uma coleção. */
+.plant-list-card__favorite-badge,
+.plant-details-favorite-btn-badge {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  z-index: 3;
+  min-width: 0.95rem;
+  height: 0.95rem;
+  padding: 0 0.25rem;
+  border-radius: 10rem;
+  border: 2px solid var(--phyto-card-bg, #fff);
+  background: var(--accent, #2f8a5d);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 0.85rem;
+  text-align: center;
+  pointer-events: none;
+  box-sizing: content-box;
 }
 
 /* =====================================================

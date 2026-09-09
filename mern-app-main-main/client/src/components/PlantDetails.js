@@ -121,6 +121,7 @@ export default function PlantDetails({ canFavorite = false }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [pickerAberto, setPickerAberto] = useState(false);
   const [corColecao, setCorColecao] = useState(null);
+  const [colecoes, setColecoes] = useState([]);
   const navigate = useNavigate();
   const realId = decodeId(id);
 
@@ -177,7 +178,8 @@ export default function PlantDetails({ canFavorite = false }) {
         const res = await authFetch(`${API_URL}/userlists?plantId=${realId}`);
         if (!cancelled && res && res.ok) {
           const data = await res.json();
-          const comPlanta = data.filter(l => l.contains && l.color);
+          const comPlanta = data.filter(l => l.contains);
+          setColecoes(comPlanta);
           setCorColecao(comPlanta.length ? comPlanta[0].color : null);
         }
       } catch { /* ignore */ }
@@ -222,6 +224,11 @@ export default function PlantDetails({ canFavorite = false }) {
   const hasSingleImage = !hasImages && plant.imagePath;
   const hasAnyImage = hasImages || hasSingleImage;
   const total = hasImages ? plant.imagesPath.length : 0;
+  const textoColecoes = colecoes.length > 1
+    ? `Em ${colecoes.length} coleções: ${colecoes.map(c => c.name).filter(Boolean).join(", ")}`
+    : colecoes.length === 1
+      ? "Em uma coleção — tocar para gerenciar"
+      : "Adicionar a uma coleção";
 
   const goPrev = () => setActiveIndex(a => (a - 1 + total) % total);
   const goNext = () => setActiveIndex(a => (a + 1) % total);
@@ -244,12 +251,16 @@ export default function PlantDetails({ canFavorite = false }) {
                 className={`plant-details-favorite-btn ${corColecao ? "is-favorite" : ""}`}
                 onClick={() => setPickerAberto(true)}
                 type="button"
-                aria-label="Adicionar a uma coleção"
+                aria-label={textoColecoes}
+                title={textoColecoes}
                 style={corColecao ? { color: corColecao, borderColor: corColecao } : undefined}
               >
                 <svg viewBox="0 0 24 24" width="24" height="24" fill={corColecao ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
+                {colecoes.length > 1 && (
+                  <span className="plant-details-favorite-btn-badge">{colecoes.length}</span>
+                )}
               </button>
             )}
           </div>

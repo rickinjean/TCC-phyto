@@ -32,6 +32,13 @@ const PlantCard = (props) => {
     const images = props.record.imagesPath?.length > 0 ? props.record.imagesPath : props.record.imagePath ? [props.record.imagePath] : []
     const isAdmin = props.role === "ADM"
     const corColecao = props.corColecao || null
+    const qtdColecoes = props.qtdColecoes || 0
+    const nomesColecoes = props.nomesColecoes || []
+    const textoColecoes = qtdColecoes > 1
+        ? `Em ${qtdColecoes} coleções: ${nomesColecoes.join(", ")}`
+        : qtdColecoes === 1
+            ? "Em uma coleção — tocar para gerenciar"
+            : "Adicionar a uma coleção"
 
     function imgVariantProps(path) {
         const v = getImageVariants(props.record.imagesMeta, path, API_URL)
@@ -132,13 +139,16 @@ const PlantCard = (props) => {
                             className={`plant-list-card__favorite ${corColecao ? "is-favorite" : ""}`}
                             onClick={() => props.onOpenPicker(props.record)}
                             type="button"
-                            aria-label="Adicionar a uma coleção"
-                            title={corColecao ? "Em uma coleção — tocar para gerenciar" : "Adicionar a uma coleção"}
+                            aria-label={textoColecoes}
+                            title={textoColecoes}
                             style={corColecao ? { color: corColecao } : undefined}
                         >
                             <svg viewBox="0 0 24 24" width="18" height="18" fill={corColecao ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                             </svg>
+                            {qtdColecoes > 1 && (
+                                <span className="plant-list-card__favorite-badge">{qtdColecoes}</span>
+                            )}
                         </button>
                     )}
                     </div>
@@ -394,6 +404,19 @@ export default function PlantList({ role, canFavorite = false }) {
         return meta && meta.color ? meta.color : null
     }
 
+    function colecoesDaPlanta(plantId) {
+        return membership[String(plantId)] || []
+    }
+
+    function nomesDasColecoes(plantId) {
+        return colecoesDaPlanta(plantId)
+            .map(id => {
+                const meta = listasMeta.find(l => String(l._id) === id)
+                return meta ? meta.name : null
+            })
+            .filter(Boolean)
+    }
+
     async function deleteRecord(id) {
         if (!window.confirm("Deseja remover esta planta da lista?")) return
 
@@ -540,6 +563,8 @@ export default function PlantList({ role, canFavorite = false }) {
                             canFavorite={canFavorite}
                             deleteRecord={deleteRecord}
                             corColecao={corDaPlanta(record._id)}
+                            qtdColecoes={colecoesDaPlanta(record._id).length}
+                            nomesColecoes={nomesDasColecoes(record._id)}
                             onOpenPicker={setPickerPlanta}
                         />
                     ))
