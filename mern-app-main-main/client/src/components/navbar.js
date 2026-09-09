@@ -138,12 +138,14 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                 </div>
                             )}
 
-                            <div className="custom-navbar__user-panel-section">
-                                <span className="custom-navbar__user-panel-caption">Minha Conta</span>
-                                <NavLink className="custom-navbar__user-panel-link" to="/sugerir" onClick={closeUserMenu}>
-                                    💡 Sugerir Planta / Reportar Erro
-                                </NavLink>
-                            </div>
+                            {role !== "ADM" && (
+                                <div className="custom-navbar__user-panel-section">
+                                    <span className="custom-navbar__user-panel-caption">Minha Conta</span>
+                                    <NavLink className="custom-navbar__user-panel-link" to="/sugerir" onClick={closeUserMenu}>
+                                        💡 Sugerir Planta / Reportar Erro
+                                    </NavLink>
+                                </div>
+                            )}
 
                             <div className="custom-navbar__user-panel-section">
                                 <span className="custom-navbar__user-panel-caption">Preferências</span>
@@ -286,11 +288,13 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                         </NavLink>
                                     </li>
                                     <hr className="custom-navbar__separator" />
-                                    <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/sugerir" onClick={closeMenu}>
-                                            Sugerir / Reportar
-                                        </NavLink>
-                                    </li>
+                                    {role !== "ADM" && (
+                                        <li className="nav-item">
+                                            <NavLink className="custom-navbar__offcanvas-link" to="/sugerir" onClick={closeMenu}>
+                                                Sugerir / Reportar
+                                            </NavLink>
+                                        </li>
+                                    )}
                                     <li className="nav-item">
                                         <button
                                             className="custom-navbar__offcanvas-button"
