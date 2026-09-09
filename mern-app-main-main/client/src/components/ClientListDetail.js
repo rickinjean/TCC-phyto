@@ -113,7 +113,7 @@ export default function ClientListDetail() {
                 setError("Erro ao remover a planta da lista.")
                 return
             }
-            setItems(prev => prev.filter(it => it._id !== itemId))
+            setItems(prev => prev.filter(it => it.plantId !== itemId))
         } catch {
             setError("Erro ao conectar com o servidor")
         }
