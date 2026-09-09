@@ -5749,6 +5749,13 @@ html[data-theme="dark"] .sugestao-cards .admin-message-card__header:hover {
   padding-top: 10px;
 }
 
+.sugestao-cards .sugestao-card__acoes .btn {
+  flex: 1 1 auto;
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.85rem;
+}
+
 /* ==========================================================================
    Minhas sugestões (aba na página /sugerir)
    ========================================================================== */
