@@ -56,7 +56,6 @@ suggestionsRoutes.route("/suggestions").post(authenticateToken, suggestionLimite
             plantaNome: tipo === "correcao" ? String(plantaNome || "") : null,
             campo: tipo === "correcao" ? String(campo || "") : null,
             texto: tipo === "correcao" ? String(texto || "").trim() : null,
-            anotacao: "",
             plantaCriadaId: null,
             created: new Date(),
             resolved: null
@@ -130,7 +129,7 @@ suggestionsRoutes.route("/suggestions/:id").get(authenticateToken, authorizeRole
 
 /* ==================================================
    APROVAR / REJEITAR / CONCLUIR SUGESTÃO (ADM)
-   body: { status, anotacao? }
+   body: { status }
 ================================================== */
 suggestionsRoutes.route("/suggestions/:id").patch(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
@@ -154,8 +153,7 @@ suggestionsRoutes.route("/suggestions/:id").patch(authenticateToken, authorizeRo
 
         if (temStatus) {
             update.$set = {
-                status,
-                anotacao: String(req.body.anotacao || "").trim().slice(0, 500)
+                status
             }
             if (status === "rejeitada" || status === "concluida") {
                 update.$set.resolved = new Date()

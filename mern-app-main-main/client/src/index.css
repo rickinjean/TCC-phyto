@@ -5701,12 +5701,10 @@ html[data-theme="dark"] .sugestao-badge--rejeitada {
   margin-bottom: 10px;
 }
 
-.sugestao-card__nota {
+.sugestao-card__info {
   font-size: 13px;
   color: var(--phyto-ink-soft);
-  background: var(--phyto-green-100);
-  border-radius: 8px;
-  padding: 8px 10px;
+  margin-bottom: 8px;
 }
 
 .sugestao-card__acoes {
@@ -5714,12 +5712,6 @@ html[data-theme="dark"] .sugestao-badge--rejeitada {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-  margin-top: 10px;
-}
-
-.sugestao-card__acoes .form-control {
-  flex: 1;
-  min-width: 180px;
 }
 
 /* ==========================================================================
@@ -5748,20 +5740,6 @@ html[data-theme="dark"] .sugestao-badge--rejeitada {
   font-size: 0.88rem;
   white-space: pre-wrap;
   color: var(--phyto-ink);
-}
-
-.minhas-sugestoes__nota {
-  margin: 8px 0 0;
-  font-size: 0.88rem;
-  padding: 6px 10px;
-  border-left: 3px solid #e0a063;
-  border-radius: var(--phyto-radius-sm);
-  background: rgba(224, 160, 99, 0.12);
-  color: #a05c2b;
-}
-
-html[data-theme="dark"] .minhas-sugestoes__nota {
-  color: #e0a063;
 }
 
 /* ==========================================================================

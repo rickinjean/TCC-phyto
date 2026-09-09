@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react"
-import { Link, useNavigate } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
-import PreviaFicha from "./PreviaFicha"
 
 const STATUS_LABEL = {
     pendente: "Pendente",
@@ -24,155 +22,108 @@ function formatarData(iso) {
     })
 }
 
-function SugestaoCard({ sug, acoes }) {
-    const [expanded, setExpanded] = useState(false)
-    const [anotacao, setAnotacao] = useState(sug.anotacao || "")
+function SugestaoCard({ sug, executar }) {
     const [working, setWorking] = useState(false)
 
     const ehNova = sug.tipo === "nova"
     const d = sug.data || {}
+    const status = sug.status
 
-    async function executar(acao, valorAnotacao) {
+    async function handleExecutar(acao) {
         setWorking(true)
-        await acoes.executar(sug, acao, valorAnotacao === undefined ? anotacao : valorAnotacao)
+        await executar(sug, acao)
         setWorking(false)
     }
 
     return (
         <div className="admin-message-card">
-            <div
-                className="admin-message-card__header"
-                onClick={() => setExpanded(!expanded)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && setExpanded(!expanded)}
-            >
+            <div className="admin-message-card__header">
                 <div className="admin-message-card__meta">
                     <span className="admin-message-card__name">
                         {ehNova ? d.name || "Sem nome" : sug.plantaNome || "Correção"}
                     </span>
-                    <span className={`sugestao-badge sugestao-badge--${sug.status}`}>
-                        {TIPO_LABEL[sug.tipo] || sug.tipo} · {STATUS_LABEL[sug.status] || sug.status}
+                    <span className={`sugestao-badge sugestao-badge--${status}`}>
+                        {TIPO_LABEL[sug.tipo]} · {STATUS_LABEL[status]}
                     </span>
                 </div>
-                <div className="admin-message-card__meta">
-                    <span className="admin-message-card__date">{formatarData(sug.created)}</span>
-                    <span className={`admin-message-card__chevron ${expanded ? "is-open" : ""}`} aria-hidden="true">›</span>
-                </div>
+                <span className="admin-message-card__date">{formatarData(sug.created)}</span>
             </div>
 
-            {expanded && (
-                <div className="admin-message-card__body">
-                    <div className="admin-message-card__fields">
-                        <div><strong>Enviado por:</strong> {sug.userName || "—"}</div>
-                        <div><strong>Status:</strong> {STATUS_LABEL[sug.status]}</div>
-                        {!ehNova && sug.campo && <div><strong>Campo:</strong> {sug.campo}</div>}
-                        {sug.plantaCriadaId && (
-                            <div>
-                                <strong>Planta publicada:</strong>{" "}
-                                <Link to={`/editplant/${sug.plantaCriadaId}`}>abrir ficha</Link>
-                            </div>
+            <div className="admin-message-card__body">
+                {ehNova ? (
+                    <div className="sugestao-card__detalhes">
+                        {d.scientificName && <div><strong>Nome científico:</strong> {d.scientificName}</div>}
+                        {d.simpleDescription && <div><strong>Descrição:</strong> {d.simpleDescription}</div>}
+                        {[d.Genero, d.Especie, d.Family].filter(Boolean).length > 0 && (
+                            <div><strong>Taxonomia:</strong> {[d.Genero, d.Especie, d.Family].filter(Boolean).join(" · ")}</div>
                         )}
                     </div>
+                ) : (
+                    <div className="sugestao-card__detalhes">
+                        {sug.campo && <div><strong>Campo:</strong> {sug.campo}</div>}
+                        {sug.texto && <div><strong>Texto:</strong> {sug.texto}</div>}
+                    </div>
+                )}
 
-                    {ehNova ? (
-                        <div className="sugestao-card__detalhes">
-                            <div><strong>Nome científico:</strong> {d.scientificName || "—"}</div>
-                            <div><strong>Descrição curta:</strong> {d.simpleDescription || "—"}</div>
-                            <div><strong>Descrição:</strong> {d.description || "—"}</div>
-                            <div><strong>Origem / Tipo:</strong> {[d.origin, d.type].filter(Boolean).join(" · ") || "—"}</div>
-                            <div>
-                                <strong>Taxonomia:</strong>{" "}
-                                {[d.Genero, d.Especie, d.Family, d.Ordem].filter(Boolean).join(" · ") || "—"}
-                            </div>
-                        </div>
-                    ) : (
-                        <p className="admin-message-card__text">{sug.texto || "—"}</p>
-                    )}
+                <div className="sugestao-card__info">
+                    <span>Enviado por: {sug.userName || "—"}</span>
+                </div>
 
-                    {sug.anotacao && (
-                        <p className="sugestao-card__nota"><strong>Nota ADM:</strong> {sug.anotacao}</p>
-                    )}
-
-                    <div className="sugestao-card__acoes">
-                        {!ehNova && (sug.status === "pendente" || sug.status === "aprovada") && (
+                <div className="sugestao-card__acoes">
+                    {status === "pendente" && (
+                        <>
                             <button
                                 type="button"
-                                className="btn btn-sm btn-outline-secondary"
+                                className="btn btn-sm btn-success"
                                 disabled={working}
-                                onClick={() => acoes.onPrevia(sug)}
+                                onClick={() => handleExecutar("aprovar")}
                             >
-                                👁️ Ver ficha
+                                Aprovar → Em processo
                             </button>
-                        )}
-                        {ehNova && sug.status === "aprovada" && (
                             <button
                                 type="button"
-                                className="btn btn-sm btn-outline-secondary"
+                                className="btn btn-sm btn-outline-danger"
                                 disabled={working}
-                                onClick={() => acoes.onEditar(sug)}
+                                onClick={() => handleExecutar("rejeitar")}
                             >
-                                ✏️ Editar dados
-                            </button>
-                        )}
-                        <label htmlFor={`anotacao-${sug._id}`} className="visually-hidden">Anotação</label>
-                        <input
-                            id={`anotacao-${sug._id}`}
-                            type="text"
-                            className="form-control form-control-sm"
-                            placeholder="Anotação opcional"
-                            value={anotacao}
-                            onChange={(e) => setAnotacao(e.target.value)}
-                        />
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-success"
-                            disabled={working}
-                            onClick={() => executar(sug.status === "pendente" ? "aprovar" : ehNova ? "publicar" : "concluir")}
-                        >
-                            {sug.status === "pendente"
-                                ? "Aprovar → Em processo"
-                                : ehNova
-                                    ? "Publicar no catálogo"
-                                    : "Marcar como corrigida"}
-                        </button>
-                        {sug.status === "aprovada" && (
-                            <button type="button" className="btn btn-sm btn-outline-success" disabled={working} onClick={() => executar("rejeitar")}>
                                 Rejeitar
                             </button>
-                        )}
-                        {(sug.status === "aprovada" || sug.status === "pendente") && (
-                            <button type="button" className="btn btn-sm btn-outline-secondary" disabled={working} onClick={() => executar("voltar")}>
+                        </>
+                    )}
+                    {status === "aprovada" && (
+                        <>
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                disabled={working}
+                                onClick={() => handleExecutar("voltar")}
+                            >
                                 Voltar para pendente
                             </button>
-                        )}
-                        {sug.status === "pendente" && (
-                            <button type="button" className="btn btn-sm btn-outline-danger" disabled={working} onClick={() => executar("rejeitar")}>
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-danger"
+                                disabled={working}
+                                onClick={() => handleExecutar("rejeitar")}
+                            >
                                 Rejeitar
                             </button>
-                        )}
-                        {sug.status !== "pendente" && sug.status !== "aprovada" && (
-                            <button type="button" className="btn btn-sm btn-outline-secondary" disabled={working} onClick={() => executar("voltar")}>
-                                Reabrir
-                            </button>
-                        )}
-                    </div>
+                        </>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     )
 }
 
 export default function SugestaoModeracao() {
     usePageTitle("Moderar Sugestões")
-    const navigate = useNavigate()
     const [todas, setTodas] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [aba, setAba] = useState("pendente")
     const [filtroTipo, setFiltroTipo] = useState("todos")
     const [aviso, setAviso] = useState("")
-    const [previaSug, setPreviaSug] = useState(null)
 
     useEffect(() => {
         async function load() {
@@ -201,24 +152,18 @@ export default function SugestaoModeracao() {
     const emProcesso = visiveis.filter(s => s.status === "aprovada")
     const encerradas = visiveis.filter(s => s.status === "rejeitada" || s.status === "concluida")
 
-    async function executar(sug, acao, anotacao) {
+    async function executar(sug, acao) {
         setAviso("")
         try {
-            let res
-            if (acao === "publicar") {
-                if (!window.confirm("Publicar esta planta no catálogo com os dados sugeridos? Ela ficará visível para todos.")) return
-                res = await authFetch(`${API_URL}/suggestions/${sug._id}/publicar`, { method: "POST" })
-            } else {
-                const status = acao === "aprovar" ? "aprovada"
-                    : acao === "concluir" ? "concluida"
-                        : acao === "rejeitar" ? "rejeitada"
-                            : "pendente"
-                res = await authFetch(`${API_URL}/suggestions/${sug._id}`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ status, anotacao })
-                })
-            }
+            const status = acao === "aprovar" ? "aprovada"
+                : acao === "rejeitar" ? "rejeitada"
+                    : "pendente"
+
+            const res = await authFetch(`${API_URL}/suggestions/${sug._id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status })
+            })
 
             if (!res) {
                 setError("Sessão expirada. Faça login novamente.")
@@ -230,20 +175,9 @@ export default function SugestaoModeracao() {
                 return
             }
 
-            const novoStatus = acao === "publicar" || acao === "concluir" ? "concluida"
-                : acao === "aprovar" ? "aprovada"
-                    : acao === "rejeitar" ? "rejeitada"
-                        : "pendente"
-
-            setTodas(prev => prev.map(s => {
-                if (s._id !== sug._id) return s
-                if (acao === "publicar") {
-                    return { ...s, status: "concluida", anotacao, plantaCriadaId: data.plantId }
-                }
-                return { ...s, status: novoStatus, anotacao }
-            }))
-
-            if (acao === "publicar") setAviso(`Planta publicada no catálogo! Abra a ficha em edição para completar os dados.`)
+            setTodas(prev => prev.map(s =>
+                s._id === sug._id ? { ...s, status } : s
+            ))
         } catch {
             setError("Erro ao conectar com o servidor")
         }
@@ -312,21 +246,11 @@ export default function SugestaoModeracao() {
                         <SugestaoCard
                             key={String(sug._id)}
                             sug={sug}
-                            acoes={{
-                                executar,
-                                onPrevia: setPreviaSug,
-                                onEditar: (sug) => navigate(`/createplant?sugestao=${sug._id}`),
-                            }}
+                            executar={executar}
                         />
                     ))}
                 </div>
             )}
-
-            <PreviaFicha
-                aberto={Boolean(previaSug)}
-                sug={previaSug}
-                onFechar={() => setPreviaSug(null)}
-            />
         </div>
     )
 }

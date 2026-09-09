@@ -309,11 +309,6 @@ export default function Sugestao() {
                                     </div>
                                     {s.campo && <div className="minhas-sugestoes__linha"><strong>Campo:</strong> {s.campo}</div>}
                                     {s.texto && <p className="minhas-sugestoes__texto">{s.texto}</p>}
-                                    {s.anotacao && (
-                                        <p className="minhas-sugestoes__nota">
-                                            <strong>Nota da equipe:</strong> {s.anotacao}
-                                        </p>
-                                    )}
                                     {s.tipo === "nova" && s.status === "concluida" && s.plantaCriadaId && (
                                         <Link to={`/plantdetails/${encodeId(s.plantaCriadaId)}`} className="btn btn-sm btn-success mt-2">
                                             Ver ficha no catálogo
