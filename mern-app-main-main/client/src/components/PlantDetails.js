@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API_URL from "../config";
-import authFetch from "../authFetch";
 import { decodeId } from "../idCodec";
 import PlantImage from "./PlantImage";
 import usePageTitle from "../usePageTitle";
@@ -9,6 +8,7 @@ import ListaPicker from "./ListaPicker";
 import { PLACEHOLDER_DETAIL } from "../placeholderImg";
 import { imgVariantProps } from "../getImageVariants";
 import FavoriteButton from "./FavoriteButton";
+import useColecoes from "../useColecoes";
 
 function QuickBadge({ icon, label, value }) {
   if (!value || value === "—") return null;
@@ -108,10 +108,13 @@ export default function PlantDetails({ canFavorite = false }) {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [pickerAberto, setPickerAberto] = useState(false);
-  const [corColecao, setCorColecao] = useState(null);
-  const [colecoes, setColecoes] = useState([]);
   const navigate = useNavigate();
   const realId = decodeId(id);
+  const { listasDe, corDaPlanta, textoDe } = useColecoes({
+    plantaId: realId,
+    ativo: canFavorite,
+    refreshKey: pickerAberto,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -156,25 +159,8 @@ export default function PlantDetails({ canFavorite = false }) {
     return () => { cancelled = true; };
   }, [realId]);
 
-  // Cor do coração = cor da coleção mais recente que contém esta planta.
-  // Também reexecuta ao abrir/fechar o picker para refletir mudanças.
-  useEffect(() => {
-    if (!canFavorite) return;
-    let cancelled = false;
-    async function carregarCor() {
-      try {
-        const res = await authFetch(`${API_URL}/userlists?plantId=${realId}`);
-        if (!cancelled && res && res.ok) {
-          const data = await res.json();
-          const comPlanta = data.filter(l => l.contains);
-          setColecoes(comPlanta);
-          setCorColecao(comPlanta.length ? comPlanta[0].color : null);
-        }
-      } catch { /* ignore */ }
-    }
-    carregarCor();
-    return () => { cancelled = true; };
-  }, [canFavorite, realId, pickerAberto]);
+  // Cor do coração = cor da coleção mais recente que contém esta planta;
+  // os valores vêm do hook useColecoes, que reexecuta ao abrir/fechar o picker.
 
   if (notFound) {
     return (
@@ -212,11 +198,9 @@ export default function PlantDetails({ canFavorite = false }) {
   const hasSingleImage = !hasImages && plant.imagePath;
   const hasAnyImage = hasImages || hasSingleImage;
   const total = hasImages ? plant.imagesPath.length : 0;
-  const textoColecoes = colecoes.length > 1
-    ? `Em ${colecoes.length} coleções: ${colecoes.map(c => c.name).filter(Boolean).join(", ")}`
-    : colecoes.length === 1
-      ? "Em uma coleção — tocar para gerenciar"
-      : "Adicionar a uma coleção";
+  const colecoes = canFavorite ? listasDe(realId) : [];
+  const corColecao = canFavorite ? corDaPlanta(realId) : null;
+  const textoColecoes = canFavorite ? textoDe(realId) : "Adicionar a uma coleção";
 
   const goPrev = () => setActiveIndex(a => (a - 1 + total) % total);
   const goNext = () => setActiveIndex(a => (a + 1) % total);

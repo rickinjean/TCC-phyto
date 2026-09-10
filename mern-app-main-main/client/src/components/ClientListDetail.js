@@ -1,58 +1,39 @@
-import { useState, useEffect } from "react"
 import { Link, useParams } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
+import useAuthFetchData from "../useAuthFetchData"
 import PlantCard from "./PlantCard"
 
 export default function ClientListDetail() {
     usePageTitle("Lista")
     const { id } = useParams()
-    const [lista, setLista] = useState(null)
-    const [items, setItems] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+    const { data: dados, setData: setDados, loading, error, setError } = useAuthFetchData(`${API_URL}/userlists/${id}/plants`, [id], "Erro ao carregar a lista")
+    const lista = dados?.lista || null
+    const items = dados?.plants || []
 
-    useEffect(() => {
-        async function load() {
+    function removerPlanta(itemId, plantName) {
+        if (!window.confirm(`Remover "${plantName}" desta lista?`)) return
+        async function remover() {
             try {
-                const res = await authFetch(`${API_URL}/userlists/${id}/plants`)
+                const res = await authFetch(`${API_URL}/userlists/${id}/plants/${itemId}`, { method: "DELETE" })
                 if (!res) {
                     setError("Sessão expirada. Faça login novamente.")
                     return
                 }
                 if (!res.ok) {
-                    setError(`Erro ao carregar a lista: ${res.status}`)
+                    setError("Erro ao remover a planta da lista.")
                     return
                 }
-                const data = await res.json()
-                setLista(data.lista)
-                setItems(data.plants)
+                setDados(prev => ({
+                    ...prev,
+                    plants: (prev?.plants || []).filter(it => it.plantId !== itemId),
+                }))
             } catch {
                 setError("Erro ao conectar com o servidor")
-            } finally {
-                setLoading(false)
             }
         }
-        load()
-    }, [id])
-
-    async function removerPlanta(itemId, plantName) {
-        if (!window.confirm(`Remover "${plantName}" desta lista?`)) return
-        try {
-            const res = await authFetch(`${API_URL}/userlists/${id}/plants/${itemId}`, { method: "DELETE" })
-            if (!res) {
-                setError("Sessão expirada. Faça login novamente.")
-                return
-            }
-            if (!res.ok) {
-                setError("Erro ao remover a planta da lista.")
-                return
-            }
-            setItems(prev => prev.filter(it => it.plantId !== itemId))
-        } catch {
-            setError("Erro ao conectar com o servidor")
-        }
+        remover()
     }
 
     return (

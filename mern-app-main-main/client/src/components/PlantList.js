@@ -8,6 +8,7 @@ import ListaPicker from "./ListaPicker"
 import PlantCard from "./PlantCard"
 import PlantFilters, { FILTER_FIELDS, PAGE_SIZES, PAGE_SIZE_KEY, DEFAULT_PAGE_SIZE } from "./PlantFilters"
 import PlantPagination from "./PlantPagination"
+import useColecoes from "../useColecoes"
 
 const EmptyState = ({ hasActiveFilters, onClear }) => (
     <div className="plant-list-empty col-12 text-center py-5">
@@ -35,10 +36,12 @@ export default function PlantList({ role, canFavorite = false }) {
     const [loading, setLoading] = useState(true)
     const [fetchError, setFetchError] = useState(null)
     const [collectionOptions, setCollectionOptions] = useState({})
-    const [listasMeta, setListasMeta] = useState([])
-    const [membership, setMembership] = useState({})
     const [pickerPlanta, setPickerPlanta] = useState(null)
     const [searchParams, setSearchParams] = useSearchParams()
+    const { nomesDe, corDaPlanta, qtdDe } = useColecoes({
+        ativo: canFavorite,
+        refreshKey: Boolean(pickerPlanta),
+    })
 
     const filtersFromURL = {}
     FILTER_FIELDS.forEach(({ key }) => {
@@ -85,23 +88,6 @@ export default function PlantList({ role, canFavorite = false }) {
         }
         loadCollections()
     }, [])
-
-    useEffect(() => {
-        if (!canFavorite) return;
-        async function loadMembership() {
-            try {
-                const res = await authFetch(`${API_URL}/userlists/membership`)
-                if (res && res.ok) {
-                    const data = await res.json()
-                    setListasMeta(data.lists || [])
-                    setMembership(data.membership || {})
-                }
-            } catch (err) {
-                console.error("Erro ao carregar coleções:", err)
-            }
-        }
-        loadMembership()
-    }, [canFavorite, pickerPlanta])
 
     const fetchPlants = useCallback(async (activeFilters, searchQuery) => {
         setLoading(true)
@@ -200,26 +186,6 @@ export default function PlantList({ role, canFavorite = false }) {
         }
     }
 
-    function corDaPlanta(plantId) {
-        const ids = membership[String(plantId)]
-        if (!ids || ids.length === 0) return null
-        const meta = listasMeta.find(l => String(l._id) === ids[0])
-        return meta && meta.color ? meta.color : null
-    }
-
-    function colecoesDaPlanta(plantId) {
-        return membership[String(plantId)] || []
-    }
-
-    function nomesDasColecoes(plantId) {
-        return colecoesDaPlanta(plantId)
-            .map(id => {
-                const meta = listasMeta.find(l => String(l._id) === id)
-                return meta ? meta.name : null
-            })
-            .filter(Boolean)
-    }
-
     async function deleteRecord(id) {
         if (!window.confirm("Deseja remover esta planta da lista?")) return
 
@@ -307,8 +273,8 @@ export default function PlantList({ role, canFavorite = false }) {
                             canFavorite={canFavorite}
                             deleteRecord={deleteRecord}
                             corColecao={corDaPlanta(record._id)}
-                            qtdColecoes={colecoesDaPlanta(record._id).length}
-                            nomesColecoes={nomesDasColecoes(record._id)}
+                            qtdColecoes={qtdDe(record._id)}
+                            nomesColecoes={nomesDe(record._id)}
                             onOpenPicker={setPickerPlanta}
                         />
                     ))

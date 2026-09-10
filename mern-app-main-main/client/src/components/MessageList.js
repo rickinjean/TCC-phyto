@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
+import useAuthFetchData from "../useAuthFetchData"
 
 const ASSUNTOS = {
     duvida: "Dúvida",
@@ -47,32 +48,7 @@ function MessageCard({ msg, onDelete }) {
 
 export default function MessageList() {
     usePageTitle("Mensagens")
-    const [messages, setMessages] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
-
-    useEffect(() => {
-        async function getMessages() {
-            try {
-                const response = await authFetch(`${API_URL}/messages`)
-                if (response === null) {
-                    setError("Sessão expirada. Faça login novamente.")
-                    return
-                }
-                if (!response.ok) {
-                    setError(`Erro ao carregar mensagens: ${response.status}`)
-                    return
-                }
-                const data = await response.json()
-                setMessages(data)
-            } catch {
-                setError("Erro ao conectar com o servidor")
-            } finally {
-                setLoading(false)
-            }
-        }
-        getMessages()
-    }, [])
+    const { data: messages = [], setData: setMessages, loading, error, setError } = useAuthFetchData(`${API_URL}/messages`, [], "Erro ao carregar mensagens")
 
     async function deleteMessage(id) {
         if (!window.confirm("Deseja excluir esta mensagem?")) return

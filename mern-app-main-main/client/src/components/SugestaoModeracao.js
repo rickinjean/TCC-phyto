@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
+import useAuthFetchData from "../useAuthFetchData"
 import { STATUS_LABEL, TIPO_LABEL, formatarData } from "../sugestaoUtils"
 
 function SugestaoCard({ sug, executar, onEditar }) {
@@ -110,34 +111,10 @@ function SugestaoCard({ sug, executar, onEditar }) {
 export default function SugestaoModeracao() {
     usePageTitle("Moderar Sugestões")
     const navigate = useNavigate()
-    const [todas, setTodas] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+    const { data: todas = [], setData: setTodas, loading, error, setError } = useAuthFetchData(`${API_URL}/suggestions`, [], "Erro ao carregar sugestões")
     const [aba, setAba] = useState("pendente")
     const [filtroTipo, setFiltroTipo] = useState("todos")
     const [aviso, setAviso] = useState("")
-
-    useEffect(() => {
-        async function load() {
-            try {
-                const res = await authFetch(`${API_URL}/suggestions`)
-                if (!res) {
-                    setError("Sessão expirada. Faça login novamente.")
-                    return
-                }
-                if (!res.ok) {
-                    setError(`Erro ao carregar sugestões: ${res.status}`)
-                    return
-                }
-                setTodas(await res.json())
-            } catch {
-                setError("Erro ao conectar com o servidor")
-            } finally {
-                setLoading(false)
-            }
-        }
-        load()
-    }, [])
 
     const visiveis = filtroTipo === "todos" ? todas : todas.filter(s => s.tipo === filtroTipo)
     const pendentes = visiveis.filter(s => s.status === "pendente")
