@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom"
 import API_URL from "../config"
 import { encodeId } from "../idCodec"
 import PlantImage from "./PlantImage"
-import normalizeText from "../normalizeText"
 import usePageTitle from "../usePageTitle"
 import { imgVariantProps } from "../getImageVariants"
 import { PLACEHOLDER_CARD } from "../placeholderImg"
@@ -19,14 +18,6 @@ function seededShuffle(list, seed) {
         arr[j] = tmp
     }
     return arr
-}
-
-function objectIdToTimestamp(id) {
-    try {
-        return typeof id === "string" ? parseInt(id.substring(0, 8), 16) * 1000 : 0
-    } catch {
-        return 0
-    }
 }
 
 function getPlantImagePath(plant) {
@@ -136,7 +127,8 @@ const TABS = [
 export default function Home({ token = null }) {
     usePageTitle("Início", "Phytografia — sistema de pesquisa botânica do IFC Campus Sombrio com biodiversidade em um catálogo de plantas digital e interativo.", "/inicio")
     const [plants, setPlants] = useState([])
-    const [stats, setStats] = useState({ plantCount: 0, userCount: 0 })
+    const [recentPlants, setRecentPlants] = useState([])
+    const [stats, setStats] = useState({ plantCount: 0, userCount: 0, familyCount: 0 })
     const [searchTerm, setSearchTerm] = useState("")
     const [activeTab, setActiveTab] = useState("dia")
     const [loadingPlants, setLoadingPlants] = useState(true)
@@ -148,7 +140,11 @@ export default function Home({ token = null }) {
             setLoadingPlants(true)
             setLoadingStats(true)
 
-            const plantsPromise = fetch(`${API_URL}/plant/`)
+            const featuredPromise = fetch(`${API_URL}/plant/featured?qtd=12`)
+                .then(r => r.ok ? r.json() : [])
+                .catch(() => [])
+
+            const recentPromise = fetch(`${API_URL}/plant/featured?recent=1&qtd=4`)
                 .then(r => r.ok ? r.json() : [])
                 .catch(() => [])
 
@@ -156,9 +152,10 @@ export default function Home({ token = null }) {
                 .then(r => r.ok ? r.json() : null)
                 .catch(() => null)
 
-            const [plantsData, statsData] = await Promise.all([plantsPromise, statsPromise])
+            const [plantsData, recentData, statsData] = await Promise.all([featuredPromise, recentPromise, statsPromise])
 
             setPlants(plantsData)
+            setRecentPlants(recentData)
             setLoadingPlants(false)
 
             if (statsData) {
@@ -171,20 +168,9 @@ export default function Home({ token = null }) {
 
     function handleSearch(event) {
         event.preventDefault()
-        const term = normalizeText(searchTerm).trim()
+        const term = searchTerm.trim()
         if (!term) return
-
-        const matches = plants.filter(
-            (p) =>
-                normalizeText(p.name).includes(term) ||
-                normalizeText(p.scientificName).includes(term)
-        )
-
-        if (matches.length === 1) {
-            navigate(`/plantdetails/${encodeId(matches[0]._id)}`)
-        } else {
-            navigate(`/plantlist?search=${encodeURIComponent(searchTerm)}`)
-        }
+        navigate(`/plantlist?search=${encodeURIComponent(term)}`)
     }
 
     const plantasDoDia = useCallback(() => {
@@ -200,10 +186,8 @@ export default function Home({ token = null }) {
     }, [plants])
 
     const recemAdicionadas = useCallback(() => {
-        return [...plants]
-            .sort((a, b) => objectIdToTimestamp(b._id) - objectIdToTimestamp(a._id))
-            .slice(0, 4)
-    }, [plants])
+        return recentPlants.slice(0, 4)
+    }, [recentPlants])
 
     const destaque = useMemo(() => {
         if (activeTab === "dia") return plantasDoDia()
@@ -307,9 +291,9 @@ export default function Home({ token = null }) {
                         <StatBox value={stats.plantCount} label="Plantas Cadastradas" loading={loadingStats} />
                         <StatBox value={stats.userCount} label="Usuários Cadastrados" loading={loadingStats} />
                         <StatBox
-                            value={new Set(plants.map(p => p.Family).filter(Boolean)).size}
+                            value={stats.familyCount || 0}
                             label="Famílias Botânicas"
-                            loading={loadingPlants}
+                            loading={loadingStats}
                         />
                         <StatBox value={stats.collectionItemCount || 0} label="Plantas em Coleções" loading={loadingStats} />
                     </div>

@@ -238,3 +238,39 @@ A constante `REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'` está duplicada 
 ### Commit
 - `125e06e` — `chore: remover arquivos pessoais da raiz; corrigir role Usuario para User em create/edit`
 - Push realizado para `origin/main` em 27/08/2026.
+
+---
+
+## Fase 2 — Concluída (10/09/2026)
+
+### Segurança / Correção de bugs
+| # | Correção | Arquivo |
+|---|----------|---------|
+| 27 | Bug do `setInterval` recursivo corrigido: `agendarLimpezaSugestoes` re-registrava um timer a cada execução (crescimento exponencial). Agora `executarLimpezaSugestoes()` roda no startup e é agendada **uma única vez** | `server/server.js` |
+| 28 | `JWT_REFRESH_SECRET` deixa de cair silenciosamente para `JWT_SECRET` — agora é obrigatório | `server/middleware/auth.js` |
+| 29 | `uncaughtException` agora chama `process.exit(1)` (estado não definido não deve continuar servindo) | `server/server.js` |
+| 30 | `refreshLimiter` reduzido de 300 para 30 req/15min | `server/server.js` |
+| 31 | Body validation com `express-validator` aplicada em login, registro, mensagens e sugestões | `server/middleware/validate.js` (novo), `user.js`, `messages.js`, `suggestions.js` |
+| 32 | Índices de banco criados automaticamente na conexão (users, sessions, userlist_items, favorites, suggestions, messages) | `server/db/conn.js` |
+| 33 | `npm audit fix` — 7 vulnerabilidades corrigidas (multer, nodemailer, jws, etc.) | `server/package-lock.json` |
+
+### Frontend
+| # | Correção | Arquivo |
+|---|----------|---------|
+| 34 | `createplant.js` e `editplant.js` agora usam `authFetch` (não lêem token do localStorage) | `CreatePlant.js`, `EditPlant.js` |
+| 35 | `PlantFormWizard.js`: clone e carregamento de sugestão via `authFetch` | `PlantFormWizard.js` |
+| 36 | `useAuthFetchData`: deps dinâmicas estabilizadas com `JSON.stringify(deps)` | `useAuthFetchData.js` |
+| 37 | `PlantDetails.js`: `COLLECTION_MAP` derivado do módulo compartilhado (sem duplicação) | `PlantDetails.js` |
+| 38 | Página inicial deixa de buscar o catálogo inteiro: novo endpoint `/plant/featured` (aleatório e recentes) + `/stats` agora inclui `familyCount` | `plant.js`, `stats.js`, `Inicio.js` |
+| 39 | Padronização de nomenclatura: `createplant`→`CreatePlant`, `editplant`→`EditPlant`, `userList`→`UserList`, `edit`→`EditUser`, `inicio`→`Inicio` | `components/` + `App.js` |
+
+### Observabilidade
+| # | Correção | Arquivo |
+|---|----------|---------|
+| 40 | Logging estruturado com `pino` + `pino-http` (redação automática de senhas/tokens, logs de requisição HTTP) | `server/logger.js` (novo), `server.js`, `auth.js`, `user.js`, `conn.js` |
+
+### Pendente (requer ação manual)
+- Migrar de CRA para Vite
+- Escrever testes de integração
+- Mover tokens OAuth de query string da URL para código de autorização de curto prazo
+- Upgrade Express 4 → 5 (resolve 2 vulnerabilidades `qs` restantes)

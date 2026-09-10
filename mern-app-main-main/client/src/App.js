@@ -2,17 +2,17 @@ import { useState, useEffect } from 'react';
 import { Route, Routes, Navigate, useLocation } from "react-router-dom"
 import Navbar from "./components/navbar"
 import Footer from "./components/footer"
-import UserList from "./components/userList"
+import UserList from "./components/UserList"
 import MessageList from "./components/MessageList"
 import PlantList from "./components/PlantList"          
-import Edit from "./components/edit"
-import Editplant from './components/editplant';
-import Createplant from "./components/createplant"
+import Edit from "./components/EditUser"
+import Editplant from './components/EditPlant';
+import Createplant from "./components/CreatePlant"
 import Login from "./components/Login"
 import Register from "./components/Register"
 import Verify from "./components/Verify"
 import PlantDetails from './components/PlantDetails';
-import Inicio from './components/inicio'
+import Inicio from './components/Inicio'
 import Sobre from './components/Sobre'
 import ClientLists from './components/ClientLists'
 import ClientListDetail from './components/ClientListDetail'

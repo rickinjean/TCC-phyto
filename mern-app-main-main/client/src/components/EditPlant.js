@@ -1,6 +1,7 @@
 import React, { useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import API_URL from "../config"
+import authFetch from "../authFetch"
 import PlantFormWizard, { loadCollectionOptions } from "./PlantFormWizard"
 import { decodeId } from "../idCodec"
 
@@ -11,11 +12,11 @@ export default function Edit() {
 
     const handleLoad = useCallback(async ({ setForm, setExistingImages, setOpcoesBanco, showToast }) => {
         const [plantRes] = await Promise.all([
-            fetch(`${API_URL}/plant/${realId}`),
+            authFetch(`${API_URL}/plant/${realId}`),
             loadCollectionOptions(setOpcoesBanco)
         ])
 
-        if (!plantRes.ok) {
+        if (!plantRes || !plantRes.ok) {
             showToast("Planta não encontrada", "error")
             setTimeout(() => navigate("/plantlist"), 2000)
             return
@@ -27,15 +28,15 @@ export default function Edit() {
     }, [realId, navigate])
 
     const handleSubmit = useCallback(async ({ formData, showToast }) => {
-        const token = localStorage.getItem("token")
-        const headers = {}
-        if (token) headers.Authorization = `Bearer ${token}`
-
-        const response = await fetch(`${API_URL}/plant/${realId}`, {
+        const response = await authFetch(`${API_URL}/plant/${realId}`, {
             method: "PUT",
-            headers,
             body: formData
         })
+
+        if (!response) {
+            showToast("Sessão expirada. Faça login novamente.", "error")
+            return
+        }
 
         if (!response.ok) {
             const err = await response.json().catch(() => ({}))

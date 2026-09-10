@@ -3,8 +3,10 @@ const suggestionsRoutes = express.Router()
 const rateLimit = require("express-rate-limit")
 const dbo = require("../db/conn")
 const ObjectId = require("mongodb").ObjectId
+const { validationResult } = require("express-validator")
 const { authenticateToken, authorizeRoles } = require("../middleware/auth")
 const { asyncHandler } = require("../utils")
+const { suggestionValidation } = require("../middleware/validate")
 
 const suggestionLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -13,6 +15,14 @@ const suggestionLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 })
+
+function checkValidation(req, res, next) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: errors.array()[0].msg })
+    }
+    next()
+}
 
 const STATUS_VALIDOS = ["pendente", "aprovada", "rejeitada", "concluida"]
 
@@ -26,7 +36,7 @@ const CAMPOS_NOVA = [
    ENVIAR SUGESTÃO (usuário logado)
    tipo: "nova" | "correcao"
 ================================================== */
-suggestionsRoutes.route("/suggestions").post(authenticateToken, suggestionLimiter, asyncHandler(async function (req, res) {
+suggestionsRoutes.route("/suggestions").post(authenticateToken, suggestionLimiter, suggestionValidation, checkValidation, asyncHandler(async function (req, res) {
     const db_connect = dbo.getDb()
     const { tipo, data, plantaId, plantaNome, campo, texto } = req.body
 

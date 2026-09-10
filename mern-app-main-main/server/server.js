@@ -8,10 +8,17 @@ const helmet = require("helmet")
 const rateLimit = require("express-rate-limit")
 const compression = require("compression")
 const mongodb = require("mongodb")
+const pinoHttp = require("pino-http")
+const logger = require("./logger")
 const { getBucket } = require("./gridfs")
 
 if (!process.env.JWT_SECRET) {
-    console.error("ERRO: JWT_SECRET não está definida. Crie um arquivo .env na pasta server/ com essa variável.")
+    logger.error("ERRO: JWT_SECRET não está definida. Crie um arquivo .env na pasta server/ com essa variável.")
+    process.exit(1)
+}
+
+if (!process.env.JWT_REFRESH_SECRET) {
+    logger.error("ERRO: JWT_REFRESH_SECRET não está definida. Crie um arquivo .env na pasta server/ com essa variável.")
     process.exit(1)
 }
 
@@ -77,6 +84,20 @@ app.use(cors({
     },
     credentials: true
 }))
+
+// Log estruturado de requisições HTTP (pino-http). Ignora /uploads (excesso
+// de tráfego de imagem) para não poluir os logs.
+app.use(pinoHttp({
+    logger,
+    autoLogging: {
+        ignore: function (req) { return req.url.startsWith("/uploads") },
+    },
+    serializers: {
+        res(res) { return { statusCode: res.statusCode } },
+        req(req) { return { method: req.method, url: req.url } },
+    },
+}))
+
 app.use(express.json({ limit: "2mb" }))
 
 // Compressão gzip/brotli. Pula imagens (já compactadas por sharp) para economizar CPU.
@@ -135,7 +156,7 @@ const loginLimiter = rateLimit({
 
 const refreshLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 300,
+    max: 30,
     message: { mensagem: "Muitas tentativas de renovação de sessão. Tente novamente em 15 minutos." },
     standardHeaders: true,
     legacyHeaders: false,
@@ -146,11 +167,12 @@ app.use("/user/register", loginLimiter)
 app.use("/auth/refresh", refreshLimiter)
 
 process.on("unhandledRejection", (reason) => {
-    console.error("Rejeição não tratada:", reason)
+    logger.error(reason, "Rejeição não tratada")
 })
 
 process.on("uncaughtException", (error) => {
-    console.error("Exceção não tratada:", error)
+    logger.error(error, "Exceção não tratada")
+    process.exit(1)
 })
 
 app.use(require("./routes/auth"))
@@ -195,7 +217,7 @@ app.get("/sitemap.xml", async function (req, res) {
     try {
         plants = await db_connect.collection("plants").find({}, { projection: { _id: 1 } }).toArray()
     } catch (error) {
-        console.error("Erro ao gerar sitemap:", error)
+        logger.error(error, "Erro ao gerar sitemap")
     }
 
     const urls = []
@@ -246,23 +268,23 @@ if (isProduction) {
     })
 }
 
-function agendarLimpezaSugestoes() {
+function executarLimpezaSugestoes() {
     suggestionsRoutes.limparSugestoesEncerradas()
         .then(r => {
             if (r.deletedCount > 0) {
-                console.log(`[suggestions] ${r.deletedCount} sugestão(ões) encerrada(s) antiga(s) removida(s)`)
+                logger.info({ qtd: r.deletedCount }, "[suggestions] sugestões encerradas antigas removidas")
             }
         })
-        .catch(err => console.error("[suggestions] Erro na limpeza automática:", err))
-    setInterval(agendarLimpezaSugestoes, 6 * 60 * 60 * 1000)
+        .catch(err => logger.error(err, "[suggestions] Erro na limpeza automática"))
 }
 
 dbo.connectToMongoDB(function (error) {
     if (error) throw error
 
-    agendarLimpezaSugestoes()
+    executarLimpezaSugestoes()
+    setInterval(executarLimpezaSugestoes, 6 * 60 * 60 * 1000)
 
     app.listen(port, () => {
-        console.log("Servidor rodando na porta: " + port)
+        logger.info({ port }, "Servidor rodando")
     })
 })

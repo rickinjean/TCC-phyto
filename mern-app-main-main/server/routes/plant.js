@@ -271,6 +271,33 @@ plantRoutes.route("/plant").get(asyncHandler(async function (req, res) {
 }))
 
 /* ==================================================
+   PLANTA EM DESTAQUE para a página inicial.
+   - Padrão: amostra aleatória (`$sample`).
+   - ?recent=1: as mais recentes por _id.
+   - ?qtd=N: quantidade (1 a 12, padrão 6).
+   Declarada ANTES de /plant/:id para não casar com o ":id".
+================================================== */
+plantRoutes.route("/plant/featured").get(asyncHandler(async function (req, res) {
+    const db_connect = dbo.getDb()
+    const qtd = Math.min(Math.max(parseInt(req.query.qtd, 10) || 6, 1), 12)
+
+    let result
+    if (req.query.recent) {
+        result = await db_connect.collection("plants")
+            .find({}, { projection: LIST_PROJECTION, sort: { _id: -1 }, limit: qtd })
+            .toArray()
+    } else {
+        result = await db_connect.collection("plants")
+            .aggregate([
+                { $sample: { size: qtd } },
+                { $project: LIST_PROJECTION },
+            ])
+            .toArray()
+    }
+    res.status(200).json(result)
+}))
+
+/* ==================================================
    BUSCAR PLANTA POR ID
 ================================================== */
 plantRoutes.route("/plant/:id").get(asyncHandler(async function (req, res) {

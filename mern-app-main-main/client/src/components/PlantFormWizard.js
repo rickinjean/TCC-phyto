@@ -256,10 +256,11 @@ export default function PlantFormWizard({
         if (!realId) return
         async function loadClone() {
             try {
-                const token = localStorage.getItem("token")
-                const headers = {}
-                if (token) headers.Authorization = `Bearer ${token}`
-                const res = await fetch(`${API_URL}/plant/${realId}/clone`, { headers })
+                const res = await authFetch(`${API_URL}/plant/${realId}/clone`)
+                if (!res) {
+                    showToast("Sessão expirada. Faça login novamente.", "error")
+                    return
+                }
                 if (!res.ok) {
                     showToast("Erro ao buscar planta para clonar.", "error")
                     return
@@ -280,10 +281,11 @@ export default function PlantFormWizard({
         if (!sugestaoParam) return
         async function loadSugestao() {
             try {
-                const token = localStorage.getItem("token")
-                const headers = {}
-                if (token) headers.Authorization = `Bearer ${token}`
-                const res = await fetch(`${API_URL}/suggestions/${sugestaoParam}`, { headers })
+                const res = await authFetch(`${API_URL}/suggestions/${sugestaoParam}`)
+                if (!res) {
+                    showToast("Sessão expirada. Faça login novamente.", "error")
+                    return
+                }
                 if (!res.ok) {
                     showToast("Erro ao carregar a sugestão.", "error")
                     return

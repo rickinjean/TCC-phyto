@@ -9,6 +9,7 @@ import { PLACEHOLDER_DETAIL } from "../placeholderImg";
 import { imgVariantProps } from "../getImageVariants";
 import FavoriteButton from "./FavoriteButton";
 import useColecoes from "../useColecoes";
+import mapeamentoColecoes from "../mapeamentoColecoes";
 
 function QuickBadge({ icon, label, value }) {
   if (!value || value === "—") return null;
@@ -80,17 +81,11 @@ function SkeletonLoader() {
   );
 }
 
-const COLLECTION_MAP = {
-  fruit: "fruit", origin: "origin", type: "type",
-  propagation: "propagation", toxicity: "toxicity", dificulty: "dificulty",
-  height: "height", flowercolor: "flowercolor", foliage: "foliage",
-  flowering: "flowering", light: "light", water: "water", soil: "soil",
-  size: "size", manha: "manha", amount: "amount", frequency: "frequency",
-  NPK: "NPK", season: "season", tools: "tools", prevention: "prevention",
-  monitoring: "monitoring", station: "station", spacing: "spacing",
-  iluminosity: "iluminosity", protection: "protection",
-  idealTemperature: "idealTemperature", tolerance: "tolerance",
-};
+// Mapa campo → coleção derivado do módulo compartilhado (mapeamentoColecoes),
+// evitando duplicar a lista de coleções aqui.
+const COLLECTION_MAP = Object.fromEntries(
+  Object.entries(mapeamentoColecoes).map(([field, meta]) => [field, meta.colecao])
+);
 
 // Campos de texto livre: são armazenados diretamente no documento da planta,
 // NÃO como referência de ObjectId em uma coleção.

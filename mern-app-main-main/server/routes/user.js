@@ -3,11 +3,22 @@ const userRoutes = express.Router()
 const dbo = require("../db/conn")
 const crypto = require("crypto")
 const ObjectId = require("mongodb").ObjectId
+const { validationResult } = require("express-validator")
 const { authenticateToken, authorizeRoles, signToken } = require("../middleware/auth")
 const { createSession } = require("./sessions")
 const { enviarEmailConfirmacao, smtpConfigurado } = require("../mailer")
 const bcrypt = require("bcrypt")
 const { escapeRegex } = require("../utils")
+const { registerValidation, loginValidation } = require("../middleware/validate")
+const logger = require("../logger")
+
+function checkValidation(req, res, next) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ mensagem: errors.array()[0].msg })
+    }
+    next()
+}
 
 function validarSenha(senha) {
     if (typeof senha !== "string") return "Senha inválida"
@@ -20,7 +31,7 @@ function validarSenha(senha) {
     return null
 }
 
-userRoutes.route('/user/login').post(async function (req, res) {
+userRoutes.route('/user/login').post(loginValidation, checkValidation, async function (req, res) {
     const db_connect = dbo.getDb()
 
     const identificador = (req.body.user || "").toString().trim().toLowerCase()
@@ -63,13 +74,13 @@ userRoutes.route('/user/login').post(async function (req, res) {
 
         res.json({ mensagem: 'Login bem-sucedido', token, refreshToken });
     } catch (erro) {
-        console.error(erro);
+        logger.error(erro, "Erro no login")
         res.status(500).json({ mensagem: 'Erro no servidor' });
     }
 }
 );
 
-userRoutes.route('/user/register').post(async function (req, res) {
+userRoutes.route('/user/register').post(registerValidation, checkValidation, async function (req, res) {
     const db_connect = dbo.getDb()
 
     const user = (req.body.user || req.body.nome || "").toString().trim()
@@ -133,7 +144,7 @@ userRoutes.route('/user/register').post(async function (req, res) {
             try {
                 await enviarEmailConfirmacao(user, email, link)
             } catch (erroEmail) {
-                console.error("Erro ao enviar email de confirmação:", erroEmail.message)
+                logger.error(erroEmail, "Erro ao enviar email de confirmação")
             }
         }
 
@@ -144,7 +155,7 @@ userRoutes.route('/user/register').post(async function (req, res) {
             precisaConfirmarEmail: smtpConfigurado
         });
     } catch (error) {
-        console.error("Erro ao cadastrar usuário:", error);
+        logger.error(error, "Erro ao cadastrar usuário")
         return res.status(500).json({ mensagem: 'Erro ao cadastrar usuário' });
     }
 }
@@ -177,7 +188,7 @@ userRoutes.route('/user/verify').get(async function (req, res) {
 
         return res.json({ mensagem: 'E-mail confirmado com sucesso! Você já pode entrar.' })
     } catch (erro) {
-        console.error(erro)
+        logger.error(erro, "Erro na verificação de e-mail")
         return res.status(500).json({ mensagem: 'Erro no servidor' })
     }
 }

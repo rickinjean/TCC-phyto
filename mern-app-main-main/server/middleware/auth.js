@@ -1,11 +1,15 @@
 const jwt = require("jsonwebtoken")
+const logger = require("../logger")
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET não está definida no ambiente. Configure server/.env antes de subir o servidor.")
 }
 
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || JWT_SECRET
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET
+if (!JWT_REFRESH_SECRET) {
+  throw new Error("JWT_REFRESH_SECRET não está definida no ambiente. Configure server/.env antes de subir o servidor.")
+}
 const ACCESS_TOKEN_TTL = process.env.ACCESS_TOKEN_TTL || "60m"
 const REFRESH_TOKEN_TTL = process.env.REFRESH_TOKEN_TTL || "7d"
 
@@ -34,7 +38,7 @@ function authorizeRoles(...allowedRoles) {
     if (!tipo || !allowedRoles.includes(tipo)) {
       // Diagnóstico: ajuda a distinguir "token inválido/expirado" (401 na
       // authenticateToken) de "sem permissão" (403 aqui) em produção.
-      console.error(`[auth] 403 Acesso negado em ${req.method} ${req.originalUrl} (tipo=${tipo})`)
+      logger.warn({ metodo: req.method, url: req.originalUrl, tipo }, "[auth] 403 Acesso negado")
       return res.status(403).json({ mensagem: "Acesso negado" })
     }
     next()

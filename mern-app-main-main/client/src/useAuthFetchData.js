@@ -41,7 +41,7 @@ export default function useAuthFetchData(url, deps = [], msgErro = "Erro ao carr
         load()
         return () => { cancelled = true }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tentativa, ...deps, msgErro, enabled])
+    }, [tentativa, JSON.stringify(deps), msgErro, enabled])
 
     const recarregar = useCallback(() => setTentativa(t => t + 1), [])
 

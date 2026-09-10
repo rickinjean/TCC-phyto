@@ -1,6 +1,7 @@
 import React, { useCallback } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import API_URL from "../config"
+import authFetch from "../authFetch"
 import PlantFormWizard, { loadCollectionOptions } from "./PlantFormWizard"
 
 const AUTOSAVE_KEY = "phyto-plant-draft"
@@ -17,15 +18,16 @@ export default function Create() {
 
     const handleSubmit = useCallback(async ({ formData, showToast }) => {
         if (sugestaoParam) formData.append("sugestaoId", sugestaoParam)
-        const token = localStorage.getItem("token")
-        const headers = {}
-        if (token) headers.Authorization = `Bearer ${token}`
 
-        const response = await fetch(`${API_URL}/plant/add`, {
+        const response = await authFetch(`${API_URL}/plant/add`, {
             method: "POST",
-            headers,
             body: formData
         })
+
+        if (!response) {
+            showToast("Sessão expirada. Faça login novamente.", "error")
+            return
+        }
 
         if (!response.ok) {
             const err = await response.json().catch(() => ({}))

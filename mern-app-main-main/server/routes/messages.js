@@ -3,8 +3,10 @@ const messagesRoutes = express.Router()
 const rateLimit = require("express-rate-limit")
 const dbo = require("../db/conn")
 const ObjectId = require("mongodb").ObjectId
+const { validationResult } = require("express-validator")
 const { authenticateToken, authorizeRoles } = require("../middleware/auth")
 const { asyncHandler } = require("../utils")
+const { messageValidation } = require("../middleware/validate")
 
 const messageLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -14,7 +16,15 @@ const messageLimiter = rateLimit({
     legacyHeaders: false,
 })
 
-messagesRoutes.route("/messages").post(messageLimiter, asyncHandler(async function (req, res) {
+function checkValidation(req, res, next) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: errors.array()[0].msg })
+    }
+    next()
+}
+
+messagesRoutes.route("/messages").post(messageLimiter, messageValidation, checkValidation, asyncHandler(async function (req, res) {
     const db_connect = dbo.getDb()
     const { nome, email, assunto, mensagem } = req.body
 
