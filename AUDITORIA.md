@@ -273,4 +273,32 @@ A constante `REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'` está duplicada 
 - Migrar de CRA para Vite
 - Escrever testes de integração
 - Mover tokens OAuth de query string da URL para código de autorização de curto prazo
-- Upgrade Express 4 → 5 (resolve 2 vulnerabilidades `qs` restantes)
+- ~~Upgrade Express 4 → 5~~ — superado: override `qs@^6.16.0` zerou as vulnerabilidades (ver Fase 3, item 46)
+
+---
+
+## Fase 3 — Concluída (10/09/2026)
+
+### Incidente de produção — crash por índice único em `users.user`
+| # | Item | Detalhes |
+|---|------|----------|
+| 41 | Crash de produção (E11000) | O índice `unique: true` em `users.user` criado na Fase 2 falhou ao ser construído em produção: existiam registros legados com `user: null` — o MongoDB trata `null` como valor para unicidade (`E11000 dup key: { user: null }`). O `throw` no callback de conexão virou *unhandled rejection* e o deploy foi cancelado pelo Render. |
+| 42 | Índices únicos PARCIAIS | `users.user` e `users.email` agora usam `unique: true` + `partialFilterExpression: { campo: { $type: "string" } }` — unicidade só em documentos com o campo string; legados com null ficam fora do índice | `server/db/conn.js` |
+| 43 | Boot resiliente a índices | `Promise.all` → `Promise.allSettled`: falha em UM índice vira warning e não derruba o boot | `server/db/conn.js` |
+| 44 | Autocura de spec divergente | `alignUniqueIndexes()` remove índices legados com spec divergente (ex.: `email_1` único completo deixado pelo deploy que crashou) e recria como parciais — idempotente a cada boot | `server/db/conn.js` |
+| 45 | Erro de conexão tratado | `throw error` substituído por `logger.fatal` + `process.exit(1)` — container reinicia limpo, sem estado inconsistente | `server/server.js` |
+
+Commits: `627970c` (índices parciais), `7d9a96d` (boot resiliente + fatal), `ac2ccb2` (autocura).
+
+### Dependências — segurança
+| # | Correção | Detalhes |
+|---|----------|----------|
+| 46 | `npm audit` servidor zerado | Override `qs@^6.16.0` resolve as 2 vulnerabilidades `qs` (GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g) herdadas do Express 4/body-parser — **sem migrar para Express 5** | `server/package.json` |
+| 47 | React Router 7 | `react-router-dom` 6 → 7.18.3: remove 2 advisories de código shipped (open redirect via backslash, deserializeErrors SSR). API usada no app não mudou; build verificado | `client/package.json` |
+| 48 | Cliente: override `qs` | `qs@^6.16.0` também no client (transitivo do express do webpack-dev-server) | `client/package.json` |
+| 49 | Cliente: 32 restantes são build/dev-only | Todas as 15 high e o restante vêm da árvore do `react-scripts` (CRA, descontinuado): webpack-dev-server, workbox, serialize-javascript, svgo, underscore, jest, css-minimizer. **Nada disso entra no bundle de produção.** Limpeza total exige migração CRA → Vite | `client/package.json` |
+
+### Pendente (requer ação manual)
+- Migrar de CRA para Vite (limpar as 32 vulnerabilidades restantes do client — todas build/dev-time, não vão para produção)
+- Escrever testes de integração
+- Mover tokens OAuth de query string da URL para código de autorização de curto prazo
