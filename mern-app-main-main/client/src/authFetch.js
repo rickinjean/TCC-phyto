@@ -63,6 +63,18 @@ function expiraEmbreve(token, margemMs = 30000) {
     return payload.exp * 1000 - Date.now() <= margemMs
 }
 
+// Um 403 só é tratado como falha de autenticação se o corpo indicar token
+// inválido/expirado (tolerância a servidor legado). "Acesso negado" passa adiante.
+async function tokenInvalido(res) {
+    if (res.status !== 403) return false
+    try {
+        const d = await res.clone().json()
+        return /token/i.test(String((d && (d.mensagem || d.message)) || ""))
+    } catch {
+        return false
+    }
+}
+
 export default async function authFetch(url, options = {}) {
     let token = localStorage.getItem("token")
 
@@ -90,15 +102,15 @@ export default async function authFetch(url, options = {}) {
 
     let res = await doFetch(token)
 
-    // 401 = sessão expirada/inválida -> tenta renovar uma única vez e refaz a chamada.
-    // 403 (acesso negado a rota ADM, e-mail não confirmado etc.) NÃO renova nem encerra
-    // a sessão: o chamador lida com res.ok === false.
-    if (res.status === 401) {
+    // 401 = sessão expirada/inválida (e 403 que indique token inválido) -> renova uma
+    // única vez e refaz a chamada. 403 genuíno ("Acesso negado", e-mail não confirmado)
+    // NÃO renova nem encerra a sessão: o chamador lida com res.ok === false.
+    if (res.status === 401 || (res.status === 403 && await tokenInvalido(res))) {
         const newToken = await refreshOnce()
         if (newToken) {
             res = await doFetch(newToken)
-            // Mesmo após renovar a sessão persiste o 401: encerra de vez.
-            if (res.status === 401) {
+            // Mesmo após renovar a sessão persiste o problema de autenticação: encerra de vez.
+            if (res.status === 401 || (res.status === 403 && await tokenInvalido(res))) {
                 clearSession()
                 return null
             }

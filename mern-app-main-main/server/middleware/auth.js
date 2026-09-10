@@ -30,7 +30,11 @@ function authenticateToken(req, res, next) {
 
 function authorizeRoles(...allowedRoles) {
   return (req, res, next) => {
-    if (!req.user || !allowedRoles.includes(req.user.tipo)) {
+    const tipo = req.user && req.user.tipo
+    if (!tipo || !allowedRoles.includes(tipo)) {
+      // Diagnóstico: ajuda a distinguir "token inválido/expirado" (401 na
+      // authenticateToken) de "sem permissão" (403 aqui) em produção.
+      console.error(`[auth] 403 Acesso negado em ${req.method} ${req.originalUrl} (tipo=${tipo})`)
       return res.status(403).json({ mensagem: "Acesso negado" })
     }
     next()
