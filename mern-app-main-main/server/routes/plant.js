@@ -8,10 +8,7 @@ const multer = require("multer")
 const sharp = require("sharp")
 const { getBucket } = require("../gridfs")
 const { authenticateToken, authorizeRoles } = require("../middleware/auth")
-
-function escapeRegex(str) {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-}
+const { escapeRegex, asyncHandler, plantaCorpo } = require("../utils")
 
 // Variantes com/sem acento para busca tolerante a diacríticos
 const DIACRITIC_VARIANTS = {
@@ -218,24 +215,20 @@ async function deletarImagensGridFS(itens) {
 /* ==================================================
    CLONAR PLANTA (retorna cópia dos dados sem _id e images)
 ================================================== */
-plantRoutes.route("/plant/:id/clone").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
+plantRoutes.route("/plant/:id/clone").get(authenticateToken, authorizeRoles("ADM"), asyncHandler(async function (req, res) {
     const db_connect = dbo.getDb()
-    try {
-        const id = req.params.id
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).json({ message: "ID inválido" })
-        }
-        const result = await db_connect.collection("plants").findOne({ _id: new ObjectId(id) })
-        if (!result) {
-            return res.status(404).json({ message: `Planta com id ${id} não encontrada` })
-        }
-        // Remove _id, imagesPath, imagePath e imagesMeta para criar uma cópia limpa
-        const { _id, imagesPath, imagePath, imagesMeta, ...cloneData } = result
-        res.status(200).json(cloneData)
-    } catch (error) {
-        res.status(500).json({ message: error.message })
+    const id = req.params.id
+    if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "ID inválido" })
     }
-})
+    const result = await db_connect.collection("plants").findOne({ _id: new ObjectId(id) })
+    if (!result) {
+        return res.status(404).json({ message: `Planta com id ${id} não encontrada` })
+    }
+    // Remove _id, imagesPath, imagePath e imagesMeta para criar uma cópia limpa
+    const { _id, imagesPath, imagePath, imagesMeta, ...cloneData } = result
+    res.status(200).json(cloneData)
+}))
 
 /* ==================================================
    LISTAR PLANTAS (com filtros opcionais)
@@ -250,56 +243,48 @@ const LIST_PROJECTION = {
     Family: 1, Genero: 1, Especie: 1
 }
 
-plantRoutes.route("/plant").get(async function (req, res) {
+plantRoutes.route("/plant").get(asyncHandler(async function (req, res) {
     const db_connect = dbo.getDb()
-    try {
-        const { origin, flowercolor, light, water, soil, toxicity, dificulty, type, height, search } = req.query
-        const filter = {}
-        if (origin) filter.origin = origin
-        if (flowercolor) filter.flowercolor = flowercolor
-        if (light) filter.light = light
-        if (water) filter.water = water
-        if (soil) filter.soil = soil
-        if (toxicity) filter.toxicity = toxicity
-        if (dificulty) filter.dificulty = dificulty
-        if (type) filter.type = type
-        if (height) filter.height = height
-        if (search) {
-            const safeRegex = searchRegex(search)
-            filter.$or = [
-                { name: safeRegex },
-                { scientificName: safeRegex }
-            ]
-        }
-
-        const result = await db_connect.collection("plants")
-            .find(filter, { projection: LIST_PROJECTION })
-            .toArray()
-        res.status(200).json(result)
-    } catch (error) {
-        res.status(500).json({ message: error.message })
+    const { origin, flowercolor, light, water, soil, toxicity, dificulty, type, height, search } = req.query
+    const filter = {}
+    if (origin) filter.origin = origin
+    if (flowercolor) filter.flowercolor = flowercolor
+    if (light) filter.light = light
+    if (water) filter.water = water
+    if (soil) filter.soil = soil
+    if (toxicity) filter.toxicity = toxicity
+    if (dificulty) filter.dificulty = dificulty
+    if (type) filter.type = type
+    if (height) filter.height = height
+    if (search) {
+        const safeRegex = searchRegex(search)
+        filter.$or = [
+            { name: safeRegex },
+            { scientificName: safeRegex }
+        ]
     }
-})
+
+    const result = await db_connect.collection("plants")
+        .find(filter, { projection: LIST_PROJECTION })
+        .toArray()
+    res.status(200).json(result)
+}))
 
 /* ==================================================
    BUSCAR PLANTA POR ID
 ================================================== */
-plantRoutes.route("/plant/:id").get(async function (req, res) {
+plantRoutes.route("/plant/:id").get(asyncHandler(async function (req, res) {
     const db_connect = dbo.getDb()
-    try {
-        const id = req.params.id
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).json({ message: "ID inválido" })
-        }
-        const result = await db_connect.collection("plants").findOne({ _id: new ObjectId(id) })
-        if (!result) {
-            return res.status(404).json({ message: `Planta com id ${id} não encontrada` })
-        }
-        res.status(200).json(result)
-    } catch (error) {
-        res.status(500).json({ message: error.message })
+    const id = req.params.id
+    if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "ID inválido" })
     }
-})
+    const result = await db_connect.collection("plants").findOne({ _id: new ObjectId(id) })
+    if (!result) {
+        return res.status(404).json({ message: `Planta com id ${id} não encontrada` })
+    }
+    res.status(200).json(result)
+}))
 
 /* ==================================================
    CRIAR PLANTA
@@ -338,51 +323,7 @@ plantRoutes.route("/plant/add").post(authenticateToken, authorizeRoles("ADM"), u
         const imagePaths = imagensSalvas.map(i => i.path)
         const imagesMeta = imagensSalvas
         const myobj = {
-            name: req.body.name,
-            scientificName: req.body.scientificName,
-            description: req.body.description,
-            simpleDescription: req.body.simpleDescription,
-            fruit: req.body.fruit,
-            origin: req.body.origin,
-            type: req.body.type,
-            propagation: req.body.propagation,
-            toxicity: req.body.toxicity,
-            dificulty: req.body.dificulty,
-            Filo: req.body.Filo,
-            Classe: req.body.Classe,
-            Ordem: req.body.Ordem,
-            Family: req.body.Family,
-            Genero: req.body.Genero,
-            Especie: req.body.Especie,
-            height: req.body.height,
-            flowercolor: req.body.flowercolor,
-            foliage: req.body.foliage,
-            flowering: req.body.flowering,
-            light: req.body.light,
-            water: req.body.water,
-            size: req.body.size,
-            soil: req.body.soil,
-            watering: req.body.watering,
-            fertilizing: req.body.fertilizing,
-            pruning: req.body.pruning,
-            pests: req.body.pests,
-            manha: req.body.manha,
-            amount: req.body.amount,
-            frequency: req.body.frequency,
-            NPK: req.body.NPK,
-            season: req.body.season,
-            tools: req.body.tools,
-            prevention: req.body.prevention,
-            monitoring: req.body.monitoring,
-            planting: req.body.planting,
-            exhibition: req.body.exhibition,
-            maintenance: req.body.maintenance,
-            station: req.body.station,
-            spacing: req.body.spacing,
-            iluminosity: req.body.iluminosity, // CORRIGIDO PARA ESTAR IGUAL AO FRONT-END
-            protection: req.body.protection,
-            idealTemperature: req.body.idealTemperature,
-            tolerance: req.body.tolerance,
+            ...plantaCorpo(req),
 
             imagesPath: imagePaths,
             imagePath: imagePaths[0] || "",
@@ -406,111 +347,61 @@ plantRoutes.route("/plant/add").post(authenticateToken, authorizeRoles("ADM"), u
 /* ==================================================
    EDITAR PLANTA
 ================================================== */
-plantRoutes.route("/plant/:id").put(authenticateToken, authorizeRoles("ADM"), upload.fields([{ name: "images", maxCount: 5 }]), async function (req, res) {
+plantRoutes.route("/plant/:id").put(authenticateToken, authorizeRoles("ADM"), upload.fields([{ name: "images", maxCount: 5 }]), asyncHandler(async function (req, res) {
     const db_connect = dbo.getDb()
-    try {
-        const id = req.params.id
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).json({ message: "ID inválido" })
-        }
-        const myquery = { _id: new ObjectId(id) }
-        
-        const updateFields = {
-            name: req.body.name,
-            scientificName: req.body.scientificName,
-            description: req.body.description,
-            simpleDescription: req.body.simpleDescription,
-            fruit: req.body.fruit,
-            origin: req.body.origin,
-            type: req.body.type,
-            propagation: req.body.propagation,
-            toxicity: req.body.toxicity,
-            dificulty: req.body.dificulty,
-            Filo: req.body.Filo,
-            Classe: req.body.Classe,
-            Ordem: req.body.Ordem,
-            Family: req.body.Family,
-            Genero: req.body.Genero,
-            Especie: req.body.Especie,
-            height: req.body.height,
-            flowercolor: req.body.flowercolor,
-            foliage: req.body.foliage,
-            flowering: req.body.flowering,
-            light: req.body.light,
-            water: req.body.water,
-            size: req.body.size,
-            soil: req.body.soil,
-            watering: req.body.watering,
-            fertilizing: req.body.fertilizing,
-            pruning: req.body.pruning,
-            pests: req.body.pests,
-            manha: req.body.manha,
-            amount: req.body.amount,
-            frequency: req.body.frequency,
-            NPK: req.body.NPK,
-            season: req.body.season,
-            tools: req.body.tools,
-            prevention: req.body.prevention,
-            monitoring: req.body.monitoring,
-            planting: req.body.planting,
-            exhibition: req.body.exhibition,
-            maintenance: req.body.maintenance,
-            station: req.body.station,
-            spacing: req.body.spacing,
-            iluminosity: req.body.iluminosity, // CORRIGIDO PARA ESTAR IGUAL AO FRONT-END
-            protection: req.body.protection,
-            idealTemperature: req.body.idealTemperature,
-            tolerance: req.body.tolerance
-        }
-
-        const files = req.files?.images || []
-        const mantidasPaths = [...new Set(
-            [].concat(req.body.imagesPath || [])
-                .filter(p => typeof p === "string" && p.startsWith("/uploads/") && p.length > 10)
-        )]
-        let docAtualSeguro = req.body.imagesMeta || []
-        if (typeof docAtualSeguro === "string") {
-            try { docAtualSeguro = JSON.parse(docAtualSeguro) || [] } catch { docAtualSeguro = [] }
-        }
-        const imagensManitdasMeta = (Array.isArray(docAtualSeguro) ? docAtualSeguro : [])
-            .filter(m => m && (typeof m.path === "string" || typeof m.webpPath === "string") && mantidasPaths.includes(m.path || m.webpPath))
-        let novasImages = []
-        try {
-            if (files.length > 0) {
-                novasImages = await salvarImagensGridFS(files)
-            }
-            if (files.length > 0 || req.body.imagesPath !== undefined) {
-                const novasPaths = novasImages.map(i => i.path)
-                const imagensFinal = [...mantidasPaths, ...novasPaths]
-                updateFields.imagesPath = imagensFinal
-                updateFields.imagePath = imagensFinal[0] || ""
-                updateFields.imagesMeta = [...imagensManitdasMeta, ...novasImages]
-                const docAtual = await db_connect.collection("plants").findOne(myquery)
-                const antigasPaths = docAtual?.imagesPath?.length > 0
-                    ? docAtual.imagesPath
-                    : (docAtual?.imagePath ? [docAtual.imagePath] : [])
-                const antigasMetas = Array.isArray(docAtual?.imagesMeta) ? docAtual.imagesMeta : []
-                const removidas = antigasPaths.filter(p => !imagensFinal.includes(p))
-                // Deleta os objectIds (webp + avif) das imagens removidas, incluindo vias de metas antigas
-                const metasRemovidas = antigasMetas.filter(m => m && removidas.includes(m.path || m.webpPath))
-                await deletarImagensGridFS([...removidas, ...metasRemovidas])
-            }
-        } catch (error) {
-            if (novasImages.length > 0) await deletarImagensGridFS(novasImages)
-            throw error
-        }
-
-        const newvalues = { $set: updateFields }
-        
-        const result = await db_connect.collection("plants").updateOne(myquery, newvalues)
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ message: `Planta com id ${id} não encontrada` })
-        }
-        res.status(200).json({ message: "Planta updated com sucesso", imagesReceived: files.length })
-    } catch (error) {
-        res.status(500).json({ message: error.message })
+    const id = req.params.id
+    if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "ID inválido" })
     }
-})
+    const myquery = { _id: new ObjectId(id) }
+
+    const updateFields = plantaCorpo(req)
+
+    const files = req.files?.images || []
+    const mantidasPaths = [...new Set(
+        [].concat(req.body.imagesPath || [])
+            .filter(p => typeof p === "string" && p.startsWith("/uploads/") && p.length > 10)
+    )]
+    let docAtualSeguro = req.body.imagesMeta || []
+    if (typeof docAtualSeguro === "string") {
+        try { docAtualSeguro = JSON.parse(docAtualSeguro) || [] } catch { docAtualSeguro = [] }
+    }
+    const imagensManitdasMeta = (Array.isArray(docAtualSeguro) ? docAtualSeguro : [])
+        .filter(m => m && (typeof m.path === "string" || typeof m.webpPath === "string") && mantidasPaths.includes(m.path || m.webpPath))
+    let novasImages = []
+    try {
+        if (files.length > 0) {
+            novasImages = await salvarImagensGridFS(files)
+        }
+        if (files.length > 0 || req.body.imagesPath !== undefined) {
+            const novasPaths = novasImages.map(i => i.path)
+            const imagensFinal = [...mantidasPaths, ...novasPaths]
+            updateFields.imagesPath = imagensFinal
+            updateFields.imagePath = imagensFinal[0] || ""
+            updateFields.imagesMeta = [...imagensManitdasMeta, ...novasImages]
+            const docAtual = await db_connect.collection("plants").findOne(myquery)
+            const antigasPaths = docAtual?.imagesPath?.length > 0
+                ? docAtual.imagesPath
+                : (docAtual?.imagePath ? [docAtual.imagePath] : [])
+            const antigasMetas = Array.isArray(docAtual?.imagesMeta) ? docAtual.imagesMeta : []
+            const removidas = antigasPaths.filter(p => !imagensFinal.includes(p))
+            // Deleta os objectIds (webp + avif) das imagens removidas, incluindo vias de metas antigas
+            const metasRemovidas = antigasMetas.filter(m => m && removidas.includes(m.path || m.webpPath))
+            await deletarImagensGridFS([...removidas, ...metasRemovidas])
+        }
+    } catch (error) {
+        if (novasImages.length > 0) await deletarImagensGridFS(novasImages)
+        throw error
+    }
+
+    const newvalues = { $set: updateFields }
+
+    const result = await db_connect.collection("plants").updateOne(myquery, newvalues)
+    if (result.matchedCount === 0) {
+        return res.status(404).json({ message: `Planta com id ${id} não encontrada` })
+    }
+    res.status(200).json({ message: "Planta updated com sucesso", imagesReceived: files.length })
+}))
 
 /* ==================================================
    DELETAR PLANTA

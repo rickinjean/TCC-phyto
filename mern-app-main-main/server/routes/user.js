@@ -7,10 +7,7 @@ const { authenticateToken, authorizeRoles, signToken } = require("../middleware/
 const { createSession } = require("./sessions")
 const { enviarEmailConfirmacao, smtpConfigurado } = require("../mailer")
 const bcrypt = require("bcrypt")
-
-function escapeRegex(texto) {
-    return (texto || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-}
+const { escapeRegex } = require("../utils")
 
 function validarSenha(senha) {
     if (typeof senha !== "string") return "Senha inválida"
