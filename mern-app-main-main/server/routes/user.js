@@ -5,7 +5,7 @@ const crypto = require("crypto")
 const ObjectId = require("mongodb").ObjectId
 const { authenticateToken, authorizeRoles, signToken } = require("../middleware/auth")
 const { createSession } = require("./sessions")
-const { enviarEmailConfirmacao, resendConfigurado } = require("../mailer")
+const { enviarEmailConfirmacao, smtpConfigurado } = require("../mailer")
 const bcrypt = require("bcrypt")
 const { escapeRegex } = require("../utils")
 
@@ -116,10 +116,10 @@ userRoutes.route('/user/register').post(async function (req, res) {
             email,
             senha: senhaHash,
             function: tipoUsuario,
-            emailVerified: !resendConfigurado,
+            emailVerified: !smtpConfigurado,
         }
 
-        if (resendConfigurado) {
+        if (smtpConfigurado) {
             novoUsuario.emailVerified = false
             novoUsuario.verificationToken = crypto.randomBytes(32).toString("hex")
             novoUsuario.verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -127,7 +127,7 @@ userRoutes.route('/user/register').post(async function (req, res) {
 
         const result = await db_connect.collection("users").insertOne(novoUsuario);
 
-        if (resendConfigurado) {
+        if (smtpConfigurado) {
             const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
             const link = `${FRONTEND_URL}/verify?token=${novoUsuario.verificationToken}`
             try {
@@ -138,10 +138,10 @@ userRoutes.route('/user/register').post(async function (req, res) {
         }
 
         return res.status(201).json({
-            mensagem: resendConfigurado
+            mensagem: smtpConfigurado
                 ? 'Cadastro realizado! Confirme seu e-mail no link que enviamos para ativar a conta.'
                 : 'Usuário cadastrado com sucesso',
-            precisaConfirmarEmail: resendConfigurado
+            precisaConfirmarEmail: smtpConfigurado
         });
     } catch (error) {
         console.error("Erro ao cadastrar usuário:", error);
@@ -176,58 +176,6 @@ userRoutes.route('/user/verify').get(async function (req, res) {
         )
 
         return res.json({ mensagem: 'E-mail confirmado com sucesso! Você já pode entrar.' })
-    } catch (erro) {
-        console.error(erro)
-        return res.status(500).json({ mensagem: 'Erro no servidor' })
-    }
-}
-);
-
-userRoutes.route('/user/resend-verification').post(async function (req, res) {
-    const db_connect = dbo.getDb()
-    const { email } = req.body
-
-    if (!email) {
-        return res.status(400).json({ mensagem: 'Email é obrigatório' })
-    }
-
-    if (!resendConfigurado) {
-        return res.status(500).json({ mensagem: 'Serviço de envio de e-mail não configurado' })
-    }
-
-    try {
-        const expEmail = escapeRegex(email.trim().toLowerCase())
-        const usuario = await db_connect.collection("users").findOne({
-            email: { $regex: new RegExp(`^${expEmail}$`, "i") }
-        })
-
-        if (!usuario) {
-            return res.status(200).json({ mensagem: 'Se o e-mail estiver cadastrado, você receberá um link de confirmação.' })
-        }
-
-        if (usuario.emailVerified === true) {
-            return res.status(200).json({ mensagem: 'Este e-mail já está verificado. Você pode fazer login.' })
-        }
-
-        const novoToken = crypto.randomBytes(32).toString("hex")
-        const novaExpiracao = new Date(Date.now() + 24 * 60 * 60 * 1000)
-
-        await db_connect.collection("users").updateOne(
-            { _id: usuario._id },
-            { $set: { verificationToken: novoToken, verificationExpires: novaExpiracao } }
-        )
-
-        const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
-        const link = `${FRONTEND_URL}/verify?token=${novoToken}`
-
-        try {
-            await enviarEmailConfirmacao(usuario.name || usuario.user, usuario.email, link)
-        } catch (erroEmail) {
-            console.error("Erro ao reenviar email de confirmação:", erroEmail.message)
-            return res.status(500).json({ mensagem: 'Erro ao enviar e-mail. Tente novamente.' })
-        }
-
-        return res.json({ mensagem: 'Se o e-mail estiver cadastrado, você receberá um link de confirmação.' })
     } catch (erro) {
         console.error(erro)
         return res.status(500).json({ mensagem: 'Erro no servidor' })

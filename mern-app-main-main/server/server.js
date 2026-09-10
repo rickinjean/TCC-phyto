@@ -141,17 +141,8 @@ const refreshLimiter = rateLimit({
     legacyHeaders: false,
 })
 
-const resendLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 5,
-    message: { mensagem: "Muitas tentativas de reenvio de e-mail. Tente novamente em 15 minutos." },
-    standardHeaders: true,
-    legacyHeaders: false,
-})
-
 app.use("/user/login", loginLimiter)
 app.use("/user/register", loginLimiter)
-app.use("/user/resend-verification", resendLimiter)
 app.use("/auth/refresh", refreshLimiter)
 
 process.on("unhandledRejection", (reason) => {
