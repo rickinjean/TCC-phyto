@@ -4,7 +4,8 @@ import authFetch from "./authFetch"
 // GET autenticado + estados: { data, setData, loading, error, recarregar }.
 // `deps` controla quando refazer a busca (ex.: mudança de id).
 // `msgErro` personaliza a mensagem quando a resposta não é ok.
-export default function useAuthFetchData(url, deps = [], msgErro = "Erro ao carregar os dados") {
+// `enabled` pausa a busca (deve ser true para disparar, ex.: modal aberto).
+export default function useAuthFetchData(url, deps = [], msgErro = "Erro ao carregar os dados", enabled = true) {
     const urlRef = useRef(url)
     useEffect(() => { urlRef.current = url }, [url])
 
@@ -14,6 +15,7 @@ export default function useAuthFetchData(url, deps = [], msgErro = "Erro ao carr
     const [tentativa, setTentativa] = useState(0)
 
     useEffect(() => {
+        if (!enabled) return
         let cancelled = false
         async function load() {
             setLoading(true)
@@ -39,7 +41,7 @@ export default function useAuthFetchData(url, deps = [], msgErro = "Erro ao carr
         load()
         return () => { cancelled = true }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tentativa, ...deps, msgErro])
+    }, [tentativa, ...deps, msgErro, enabled])
 
     const recarregar = useCallback(() => setTentativa(t => t + 1), [])
 

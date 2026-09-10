@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
+import useAuthFetchData from "../useAuthFetchData"
 import { NOVA_INICIAL, FormNovaPlanta, FormCorrecao, MinhasSugestoes } from "./SugestaoForms"
 
 export default function Sugestao() {
@@ -22,38 +23,9 @@ export default function Sugestao() {
     const [ok, setOk] = useState(false)
     const [erro, setErro] = useState("")
 
-    const [minhas, setMinhas] = useState([])
-    const [carregandoMinhas, setCarregandoMinhas] = useState(false)
-    const [erroMinhas, setErroMinhas] = useState("")
-    const [atualizarMinhas, setAtualizarMinhas] = useState(0)
-
-    useEffect(() => {
-        if (aba !== "minhas") return
-        let cancelled = false
-        async function loadMinhas() {
-            setCarregandoMinhas(true)
-            try {
-                const res = await authFetch(`${API_URL}/suggestions/minhas`)
-                if (cancelled) return
-                if (!res) {
-                    setErroMinhas("Sessão expirada. Faça login novamente.")
-                    return
-                }
-                if (!res.ok) {
-                    setErroMinhas("Erro ao carregar suas sugestões.")
-                    return
-                }
-                setMinhas(await res.json())
-                setErroMinhas("")
-            } catch {
-                if (!cancelled) setErroMinhas("Erro ao conectar com o servidor.")
-            } finally {
-                if (!cancelled) setCarregandoMinhas(false)
-            }
-        }
-        loadMinhas()
-        return () => { cancelled = true }
-    }, [aba, atualizarMinhas])
+    const { data: minhas = [], loading: carregandoMinhas, error: erroMinhas, recarregar } = useAuthFetchData(
+        `${API_URL}/suggestions/minhas`, [aba], "Erro ao carregar suas sugestões", aba === "minhas"
+    )
 
     useEffect(() => {
         async function loadOpcoes() {
@@ -195,7 +167,7 @@ export default function Sugestao() {
                     minhas={minhas}
                     carregando={carregandoMinhas}
                     erro={erroMinhas}
-                    onAtualizar={() => setAtualizarMinhas(x => x + 1)}
+                    onAtualizar={recarregar}
                 />
             ) : (
                 <form onSubmit={enviar} className="sugestao-form card border-0 p-4 col-lg-8 mx-auto">

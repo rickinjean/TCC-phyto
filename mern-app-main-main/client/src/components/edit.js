@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
+import useAuthFetchData from "../useAuthFetchData"
 
 export default function Edit() {
     const [form, setForm] = useState({
@@ -10,41 +11,13 @@ export default function Edit() {
         email: "",
         function: ""
     })
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
     const params = useParams()
     const navigate = useNavigate()
+    const { data: user, loading, error, setError } = useAuthFetchData(`${API_URL}/user/${params.id}`, [params.id], "Erro")
 
     useEffect(() => {
-        async function fetchData() {
-            try {
-                const id = params.id
-                const response = await authFetch(`${API_URL}/user/${id}`)
-                if (response === null) {
-                    setError("Sessão expirada. Faça login novamente.")
-                    return
-                }
-                if (!response.ok) {
-                    setError(`Erro: ${response.status}`)
-                    return
-                }
-
-                const user = await response.json()
-                if (!user) {
-                    setError(`Usuário com id ${id} não encontrado`)
-                    return
-                }
-
-                setForm(user)
-            } catch {
-                setError("Erro ao conectar com o servidor")
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        fetchData()
-    }, [params.id])
+        if (user) setForm(user)
+    }, [user])
 
     function updateForm(value) {
         setForm((prev) => {

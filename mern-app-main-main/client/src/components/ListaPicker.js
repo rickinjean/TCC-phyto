@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef } from "react"
 import API_URL from "../config"
 import authFetch from "../authFetch"
+import useAuthFetchData from "../useAuthFetchData"
 import { COR_PADRAO } from "../listaCores"
 import PaletaCores from "./PaletaCores"
 
 export default function ListaPicker({ aberto, plantaId, plantaNome, onFechar }) {
     const [listas, setListas] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [erro, setErro] = useState(null)
     const [aviso, setAviso] = useState(null)
     const [salvando, setSalvando] = useState(false)
     const [novoNome, setNovoNome] = useState("")
@@ -32,33 +31,22 @@ export default function ListaPicker({ aberto, plantaId, plantaNome, onFechar }) 
         }
     }, [aberto, onFechar])
 
+    const { data: dados, loading, error: erro } = useAuthFetchData(
+        `${API_URL}/userlists?plantId=${plantaId}`,
+        [aberto, plantaId],
+        "Erro ao carregar coleções",
+        aberto && !!plantaId
+    )
+
     useEffect(() => {
-        if (!aberto || !plantaId) return
-        let cancelled = false
-        setAviso(null)
-        async function carregar() {
-            setLoading(true)
-            try {
-                const res = await authFetch(`${API_URL}/userlists?plantId=${plantaId}`)
-                if (!res) {
-                    if (!cancelled) setErro("Sessão expirada. Faça login novamente.")
-                } else if (res.ok) {
-                    const dados = await res.json()
-                    if (!cancelled) {
-                        setListas(dados)
-                        setFormAberto(dados.length === 0)
-                    }
-                } else if (!cancelled) {
-                    setErro(`Erro ao carregar coleções: ${res.status}`)
-                }
-            } catch {
-                if (!cancelled) setErro("Erro ao conectar com o servidor")
-            } finally {
-                if (!cancelled) setLoading(false)
-            }
+        if (dados) {
+            setListas(dados)
+            setFormAberto(dados.length === 0)
         }
-        carregar()
-        return () => { cancelled = true }
+    }, [dados])
+
+    useEffect(() => {
+        if (aberto && plantaId) setAviso(null)
     }, [aberto, plantaId])
 
     if (!aberto) return null

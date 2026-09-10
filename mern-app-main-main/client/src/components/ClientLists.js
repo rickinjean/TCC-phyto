@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Link } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
+import useAuthFetchData from "../useAuthFetchData"
 import { COR_PADRAO } from "../listaCores"
 import PaletaCores from "./PaletaCores"
 
@@ -94,34 +95,10 @@ function ListaCard({ lista, onRename, onDelete }) {
 
 export default function ClientLists() {
     usePageTitle("Minhas Listas")
-    const [lists, setLists] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+    const { data: lists = [], setData: setLists, loading, error, setError } = useAuthFetchData(`${API_URL}/userlists`, [], "Erro ao carregar listas")
     const [novaLista, setNovaLista] = useState("")
     const [novaCor, setNovaCor] = useState(COR_PADRAO)
     const [criando, setCriando] = useState(false)
-
-    useEffect(() => {
-        async function load() {
-            try {
-                const res = await authFetch(`${API_URL}/userlists`)
-                if (!res) {
-                    setError("Sessão expirada. Faça login novamente.")
-                    return
-                }
-                if (!res.ok) {
-                    setError(`Erro ao carregar listas: ${res.status}`)
-                    return
-                }
-                setLists(await res.json())
-            } catch {
-                setError("Erro ao conectar com o servidor")
-            } finally {
-                setLoading(false)
-            }
-        }
-        load()
-    }, [])
 
     async function criar(e) {
         e.preventDefault()

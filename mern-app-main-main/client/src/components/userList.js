@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react"
+import React from "react"
 import { Link } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
+import useAuthFetchData from "../useAuthFetchData"
 
 const Record = (props) => {
     return (
@@ -26,36 +27,7 @@ const Record = (props) => {
 }
 
 export default function UserList() {
-    const [users, setUsers] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
-
-    useEffect(() => {
-        async function getUsers() {
-            try {
-                const response = await authFetch(`${API_URL}/user/`)
-
-                if (response === null) {
-                    setError("Sessão expirada. Faça login novamente.")
-                    return
-                }
-
-                if (!response.ok) {
-                    setError(`Erro ao carregar usuários: ${response.status}`)
-                    return
-                }
-
-                const users = await response.json()
-                setUsers(users)
-            } catch {
-                setError("Erro ao conectar com o servidor")
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        getUsers()
-    }, [])
+    const { data: users = [], setData: setUsers, loading, error, setError } = useAuthFetchData(`${API_URL}/user/`, [], "Erro ao carregar usuários")
 
     async function deleteRecord(id) {
         const result = window.confirm("Deseja remover desta lista?")
