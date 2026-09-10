@@ -12,6 +12,33 @@ const client = new MongoClient(Db)
 
 var _db
 
+// Remove índices legados de users.user/users.email cuja spec divirja do
+// formato parcial atual (ex.: email_1 único completo criado no deploy que
+// crashou). Idempotente: a cada boot, se o índice já estiver correto, não faz
+// nada. Janela entre drop e recriação é de milissegundos.
+async function alignUniqueIndexes(users) {
+    try {
+        const existing = await users.indexes()
+        const desejados = [
+            { key: { user: 1 }, partial: { user: { $type: "string" } } },
+            { key: { email: 1 }, partial: { email: { $type: "string" } } },
+        ]
+        for (const def of desejados) {
+            const key = JSON.stringify(def.key)
+            const idx = existing.find(i => JSON.stringify(i.key) === key)
+            if (!idx) continue
+            const confere = idx.partialFilterExpression &&
+                JSON.stringify(idx.partialFilterExpression) === JSON.stringify(def.partial)
+            if (!idx.unique || !confere) {
+                await users.dropIndex(idx.name)
+                logger.info({ index: idx.name }, "Índice legado divergente removido para recriação parcial")
+            }
+        }
+    } catch (error) {
+        logger.warn({ err: error.message }, "Falha ao alinhar índices existentes — prosseguindo")
+    }
+}
+
 async function createIndexes(db) {
     const users = db.collection("users")
 
@@ -19,6 +46,8 @@ async function createIndexes(db) {
     // campo existe e é string. Registros legados com `user`/`email` ausentes
     // (null) não entram no índice — sem isso, o build falha com E11000
     // (dup key: { user: null }).
+    await alignUniqueIndexes(users)
+
     const tasks = [
         users.createIndex(
             { user: 1 },
