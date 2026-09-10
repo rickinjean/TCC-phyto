@@ -279,7 +279,10 @@ function executarLimpezaSugestoes() {
 }
 
 dbo.connectToMongoDB(function (error) {
-    if (error) throw error
+    if (error) {
+        logger.fatal({ err: error }, "Falha ao conectar ao MongoDB")
+        process.exit(1)
+    }
 
     executarLimpezaSugestoes()
     setInterval(executarLimpezaSugestoes, 6 * 60 * 60 * 1000)

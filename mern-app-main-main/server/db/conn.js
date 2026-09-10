@@ -13,9 +13,21 @@ const client = new MongoClient(Db)
 var _db
 
 async function createIndexes(db) {
-    await Promise.all([
-        db.collection("users").createIndex({ user: 1 }, { unique: true }),
-        db.collection("users").createIndex({ email: 1 }, { unique: true }),
+    const users = db.collection("users")
+
+    // Índices únicos PARCIAIS: aplicam unicidade apenas em documentos onde o
+    // campo existe e é string. Registros legados com `user`/`email` ausentes
+    // (null) não entram no índice — sem isso, o build falha com E11000
+    // (dup key: { user: null }).
+    const tasks = [
+        users.createIndex(
+            { user: 1 },
+            { unique: true, partialFilterExpression: { user: { $type: "string" } } }
+        ),
+        users.createIndex(
+            { email: 1 },
+            { unique: true, partialFilterExpression: { email: { $type: "string" } } }
+        ),
         db.collection("sessions").createIndex({ tokenHash: 1 }),
         db.collection("sessions").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
         db.collection("userlist_items").createIndex({ listId: 1 }),
@@ -24,8 +36,19 @@ async function createIndexes(db) {
         db.collection("suggestions").createIndex({ userId: 1 }),
         db.collection("suggestions").createIndex({ status: 1 }),
         db.collection("messages").createIndex({ createdAt: -1 }),
-    ])
-    logger.info("Índices do banco criados/verificados")
+    ]
+
+    // Um índice que falhe não pode derrubar o boot: registramos o aviso e
+    // seguimos. Índices únicos com dados sujos já existentes (ex.: usernames
+    // duplicados de verdade) ficam pendentes de limpeza manual, mas o serviço sobe.
+    const results = await Promise.allSettled(tasks)
+    results.forEach((r, i) => {
+        if (r.status === "fulfilled") {
+            logger.info({ index: i }, "Índice criado/verificado")
+        } else {
+            logger.warn({ index: i, err: r.reason && r.reason.message }, "Falha ao criar índice — ignorado")
+        }
+    })
 }
 
 module.exports = {
