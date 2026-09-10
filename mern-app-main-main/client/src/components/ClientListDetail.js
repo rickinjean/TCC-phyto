@@ -5,15 +5,14 @@ import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
 import { encodeId } from "../idCodec"
 import PlantImage from "./PlantImage"
-import getImageVariants from "../getImageVariants"
-
-const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' fill='%23dceee3'%3E%3Crect width='400' height='250'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='62%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E"
+import { imgVariantProps } from "../getImageVariants"
+import { PLACEHOLDER_CARD } from "../placeholderImg"
 
 function ItemCard({ item, onRemove }) {
     const plant = item.plant
     const images = plant.imagesPath?.length > 0 ? plant.imagesPath : plant.imagePath ? [plant.imagePath] : []
-    const imageUrl = images.length > 0 ? `${API_URL}${images[0]}` : PLACEHOLDER_IMG
-    const variants = getImageVariants(plant.imagesMeta, images[0], API_URL)
+    const imageUrl = images.length > 0 ? `${API_URL}${images[0]}` : PLACEHOLDER_CARD
+    const variants = imgVariantProps(plant.imagesMeta, images[0], API_URL)
 
     return (
         <div className="col-12 col-md-6 col-lg-4 mb-4">
@@ -23,12 +22,8 @@ function ItemCard({ item, onRemove }) {
                         src={imageUrl}
                         alt={plant.name}
                         className="plant-list-card__image d-block w-100"
-                        fallback={PLACEHOLDER_IMG}
-                        avifSrc={variants?.avifSrc}
-                        webpSrc={variants?.webpSrc}
-                        avifSrcset={variants?.avifSrcset}
-                        webpSrcset={variants?.webpSrcset}
-                        imgSrcset={variants?.imgSrcset}
+                        fallback={PLACEHOLDER_CARD}
+                        {...variants}
                         sizesAttr="(max-width: 767px) 100vw, (max-width: 991px) 50vw, 33vw"
                     />
                     <button

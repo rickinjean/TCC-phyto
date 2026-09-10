@@ -5,20 +5,7 @@ import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
 import SearchableSelect from "./SearchableSelect"
 import { encodeId } from "../idCodec"
-
-const STATUS_LABEL = {
-    pendente: "Pendente",
-    aprovada: "Em processo",
-    rejeitada: "Rejeitada",
-    concluida: "Concluída",
-}
-
-function formatarData(iso) {
-    if (!iso) return ""
-    return new Date(iso).toLocaleDateString("pt-BR", {
-        day: "2-digit", month: "2-digit", year: "numeric",
-    })
-}
+import { STATUS_LABEL, formatarData } from "../sugestaoUtils"
 
 const CAMPOS_CORRECAO = [
     { value: "nome", label: "Nome / Nome científico" },

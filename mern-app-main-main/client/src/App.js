@@ -218,7 +218,7 @@ const App = () => {
                         <Route path="/login" element={token ? <Navigate to="/inicio" replace /> : <Login onLogin={handleLogin} />} />
                         <Route path="/register" element={token ? <Navigate to="/inicio" replace /> : <Register />} />
                         <Route path="/verify" element={<Verify />} />
-                        <Route exact path="/" element={token ? (role === "ADM" ? <UserList /> : <Navigate to="/inicio" replace />) : <Inicio token={token} />} />
+                        <Route path="/" element={token ? (role === "ADM" ? <UserList /> : <Navigate to="/inicio" replace />) : <Inicio token={token} />} />
                         <Route path="/plantlist" element={<PlantList role={role} canFavorite={Boolean(token)} />} />
                         <Route path="/userlist" element={token && role === "ADM" ? <UserList /> : <Navigate to={token ? "/" : "/login"} replace />} />
                         <Route path="/messages" element={token && role === "ADM" ? <MessageList /> : <Navigate to={token ? "/" : "/login"} replace />} />

@@ -4,23 +4,11 @@ import API_URL from "../config";
 import authFetch from "../authFetch";
 import { decodeId } from "../idCodec";
 import PlantImage from "./PlantImage";
-import getImageVariants from "../getImageVariants";
 import usePageTitle from "../usePageTitle";
 import ListaPicker from "./ListaPicker";
-
-const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' fill='%23dceee3'%3E%3Crect width='600' height='400'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E";
-
-function imgVariantProps(meta, path) {
-  const v = getImageVariants(meta, path, API_URL)
-  return {
-    aspectRatio: v?.aspectRatio || undefined,
-    avifSrc: v?.avifSrc || undefined,
-    webpSrc: v?.webpSrc || undefined,
-    avifSrcset: v?.avifSrcset || undefined,
-    webpSrcset: v?.webpSrcset || undefined,
-    imgSrcset: v?.imgSrcset || undefined,
-  }
-};
+import { PLACEHOLDER_DETAIL } from "../placeholderImg";
+import { imgVariantProps } from "../getImageVariants";
+import FavoriteButton from "./FavoriteButton";
 
 function QuickBadge({ icon, label, value }) {
   if (!value || value === "—") return null;
@@ -247,21 +235,13 @@ export default function PlantDetails({ canFavorite = false }) {
               <p className="plant-details-scientific-name">{plant.scientificName}</p>
             </div>
             {canFavorite && (
-              <button
-                className={`plant-details-favorite-btn ${corColecao ? "is-favorite" : ""}`}
+              <FavoriteButton
+                variant="details"
+                corColecao={corColecao}
+                qtdColecoes={colecoes.length}
+                texto={textoColecoes}
                 onClick={() => setPickerAberto(true)}
-                type="button"
-                aria-label={textoColecoes}
-                title={textoColecoes}
-                style={corColecao ? { color: corColecao, borderColor: corColecao } : undefined}
-              >
-                <svg viewBox="0 0 24 24" width="24" height="24" fill={corColecao ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg>
-                {colecoes.length > 1 && (
-                  <span className="plant-details-favorite-btn-badge">{colecoes.length}</span>
-                )}
-              </button>
+              />
             )}
           </div>
         </div>
@@ -282,9 +262,9 @@ export default function PlantDetails({ canFavorite = false }) {
                           src={`${API_URL}${plant.imagesPath[activeIndex]}`}
                           alt={`${plant.name} ${activeIndex + 1}`}
                           className="plant-details-image"
-                          fallback={PLACEHOLDER_IMG}
+                          fallback={PLACEHOLDER_DETAIL}
                           sizesAttr="(max-width: 991px) 100vw, 58vw"
-                          {...imgVariantProps(plant.imagesMeta, plant.imagesPath[activeIndex])}
+                          {...imgVariantProps(plant.imagesMeta, plant.imagesPath[activeIndex], API_URL)}
                         />
                       </div>
                       {total > 1 && (
@@ -308,7 +288,7 @@ export default function PlantDetails({ canFavorite = false }) {
                             onClick={() => setActiveIndex(i)}
                             aria-label={`Ver imagem ${i + 1}`}
                           >
-                            <PlantImage src={`${API_URL}${src}`} alt={`${plant.name} ${i + 1}`} className="plant-details-gallery__img" fallback={PLACEHOLDER_IMG} sizesAttr="56px" {...imgVariantProps(plant.imagesMeta, src)} />
+                            <PlantImage src={`${API_URL}${src}`} alt={`${plant.name} ${i + 1}`} className="plant-details-gallery__img" fallback={PLACEHOLDER_DETAIL} sizesAttr="56px" {...imgVariantProps(plant.imagesMeta, src, API_URL)} />
                           </button>
                         ))}
                       </div>
@@ -317,14 +297,14 @@ export default function PlantDetails({ canFavorite = false }) {
                 ) : (
                   <div className="plant-details-carousel">
                     <div className="plant-details-carousel-inner">
-                      <PlantImage src={`${API_URL}${plant.imagePath}`} alt={plant.name} className="plant-details-image" fallback={PLACEHOLDER_IMG} sizesAttr="(max-width: 991px) 100vw, 58vw" {...imgVariantProps(plant.imagesMeta, plant.imagePath)} />
+                      <PlantImage src={`${API_URL}${plant.imagePath}`} alt={plant.name} className="plant-details-image" fallback={PLACEHOLDER_DETAIL} sizesAttr="(max-width: 991px) 100vw, 58vw" {...imgVariantProps(plant.imagesMeta, plant.imagePath, API_URL)} />
                     </div>
                   </div>
                 )
               ) : (
                 <div className="plant-details-carousel">
                   <div className="plant-details-carousel-inner">
-                    <img src={PLACEHOLDER_IMG} alt="Sem imagem disponível" className="plant-details-image" />
+                    <img src={PLACEHOLDER_DETAIL} alt="Sem imagem disponível" className="plant-details-image" />
                   </div>
                 </div>
               )}

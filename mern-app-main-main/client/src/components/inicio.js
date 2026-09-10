@@ -5,9 +5,8 @@ import { encodeId } from "../idCodec"
 import PlantImage from "./PlantImage"
 import normalizeText from "../normalizeText"
 import usePageTitle from "../usePageTitle"
-import getImageVariants from "../getImageVariants"
-
-const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' fill='%23dceee3'%3E%3Crect width='400' height='250'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='62%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E"
+import { imgVariantProps } from "../getImageVariants"
+import { PLACEHOLDER_CARD } from "../placeholderImg"
 
 function seededShuffle(list, seed) {
     const arr = [...list]
@@ -37,12 +36,12 @@ function getPlantImagePath(plant) {
 
 function getPlantImageUrl(plant) {
     const path = getPlantImagePath(plant)
-    return path ? `${API_URL}${path}` : PLACEHOLDER_IMG
+    return path ? `${API_URL}${path}` : PLACEHOLDER_CARD
 }
 
 const PlantCard = ({ plant }) => {
     const imgPath = getPlantImagePath(plant)
-    const variants = getImageVariants(plant.imagesMeta, imgPath, API_URL)
+    const variants = imgVariantProps(plant.imagesMeta, imgPath, API_URL)
     return (
         <div className="col-sm-6 col-md-3">
             <div className="plant-feature-card card h-100">
@@ -51,12 +50,8 @@ const PlantCard = ({ plant }) => {
                         src={getPlantImageUrl(plant)}
                         alt={plant.name}
                         className="plant-feature-card__img"
-                        fallback={PLACEHOLDER_IMG}
-                        avifSrc={variants?.avifSrc}
-                        webpSrc={variants?.webpSrc}
-                        avifSrcset={variants?.avifSrcset}
-                        webpSrcset={variants?.webpSrcset}
-                        imgSrcset={variants?.imgSrcset}
+                        fallback={PLACEHOLDER_CARD}
+                        {...variants}
                         sizesAttr="(max-width: 575px) 100vw, (max-width: 767px) 50vw, 33vw"
                     />
                 </div>

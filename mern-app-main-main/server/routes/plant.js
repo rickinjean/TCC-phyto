@@ -335,7 +335,6 @@ plantRoutes.route("/plant/add").post(authenticateToken, authorizeRoles("ADM"), u
         if (files.length > 0) {
             imagensSalvas = await salvarImagensGridFS(files)
         }
-        console.log(`[plant/add] recebido ${files.length} arquivo(s)`)
         const imagePaths = imagensSalvas.map(i => i.path)
         const imagesMeta = imagensSalvas
         const myobj = {
@@ -479,7 +478,6 @@ plantRoutes.route("/plant/:id").put(authenticateToken, authorizeRoles("ADM"), up
         try {
             if (files.length > 0) {
                 novasImages = await salvarImagensGridFS(files)
-                console.log(`[plant/:id PUT] recebido ${files.length} arquivo(s)`)
             }
             if (files.length > 0 || req.body.imagesPath !== undefined) {
                 const novasPaths = novasImages.map(i => i.path)

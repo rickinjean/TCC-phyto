@@ -6,10 +6,10 @@ import { encodeId } from "../idCodec"
 import PlantImage from "./PlantImage"
 import sortPorNome from "../sortOptions"
 import usePageTitle from "../usePageTitle"
-import getImageVariants from "../getImageVariants"
+import { imgVariantProps } from "../getImageVariants"
 import ListaPicker from "./ListaPicker"
-
-const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='250' fill='%23dceee3'%3E%3Crect width='400' height='250'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='%232f8a5d'%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x='50%25' y='62%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%2371827a'%3ESem imagem%3C/text%3E%3C/svg%3E"
+import { PLACEHOLDER_CARD } from "../placeholderImg"
+import FavoriteButton from "./FavoriteButton"
 
 const FILTER_FIELDS = [
     { key: "type", label: "Tipo" },
@@ -39,18 +39,6 @@ const PlantCard = (props) => {
         : qtdColecoes === 1
             ? "Em uma coleção — tocar para gerenciar"
             : "Adicionar a uma coleção"
-
-    function imgVariantProps(path) {
-        const v = getImageVariants(props.record.imagesMeta, path, API_URL)
-        return {
-            avifSrc: v?.avifSrc || undefined,
-            webpSrc: v?.webpSrc || undefined,
-            avifSrcset: v?.avifSrcset || undefined,
-            webpSrcset: v?.webpSrcset || undefined,
-            imgSrcset: v?.imgSrcset || undefined,
-            sizesAttr: "(max-width: 767px) 100vw, (max-width: 991px) 50vw, 33vw",
-        }
-    }
 
     useEffect(() => {
         if (typeof window !== "undefined" && window.bootstrap?.Carousel && carouselRef.current) {
@@ -92,19 +80,21 @@ const PlantCard = (props) => {
                                             src={`${API_URL}${src}`}
                                             alt={`${props.record.name} ${index + 1}`}
                                             className="plant-list-card__image d-block w-100"
-                                            fallback={PLACEHOLDER_IMG}
-                                            {...imgVariantProps(src)}
+                                            fallback={PLACEHOLDER_CARD}
+                                            sizesAttr="(max-width: 767px) 100vw, (max-width: 991px) 50vw, 33vw"
+                                            {...imgVariantProps(props.record.imagesMeta, src, API_URL)}
                                         />
                                     </div>
                                 ))
                             ) : (
                                 <div className="carousel-item active">
                                     <PlantImage
-                                        src={props.record.imagePath || PLACEHOLDER_IMG}
+                                        src={props.record.imagePath || PLACEHOLDER_CARD}
                                         alt={props.record.name}
                                         className="plant-list-card__image d-block w-100"
-                                        fallback={PLACEHOLDER_IMG}
-                                        {...imgVariantProps(props.record.imagePath)}
+                                        fallback={PLACEHOLDER_CARD}
+                                        sizesAttr="(max-width: 767px) 100vw, (max-width: 991px) 50vw, 33vw"
+                                        {...imgVariantProps(props.record.imagesMeta, props.record.imagePath, API_URL)}
                                     />
                                 </div>
                             )}
@@ -135,21 +125,12 @@ const PlantCard = (props) => {
                     </div>
 
                     {props.canFavorite && (
-                        <button
-                            className={`plant-list-card__favorite ${corColecao ? "is-favorite" : ""}`}
+                        <FavoriteButton
+                            corColecao={corColecao}
+                            qtdColecoes={qtdColecoes}
+                            texto={textoColecoes}
                             onClick={() => props.onOpenPicker(props.record)}
-                            type="button"
-                            aria-label={textoColecoes}
-                            title={textoColecoes}
-                            style={corColecao ? { color: corColecao } : undefined}
-                        >
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill={corColecao ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                            </svg>
-                            {qtdColecoes > 1 && (
-                                <span className="plant-list-card__favorite-badge">{qtdColecoes}</span>
-                            )}
-                        </button>
+                        />
                     )}
                     </div>
 

@@ -14,6 +14,19 @@ function toSrcset(entries, base) {
         .join(", ")
 }
 
+// Monta as props prontas para <PlantImage> a partir de imagesMeta + path.
+export function imgVariantProps(imagesMeta, path, base = "") {
+    const v = getImageVariants(imagesMeta, path, base)
+    return {
+        aspectRatio: v?.aspectRatio || undefined,
+        avifSrc: v?.avifSrc || undefined,
+        webpSrc: v?.webpSrc || undefined,
+        avifSrcset: v?.avifSrcset || undefined,
+        webpSrcset: v?.webpSrcset || undefined,
+        imgSrcset: v?.imgSrcset || undefined,
+    }
+}
+
 export default function getImageVariants(imagesMeta, path, base = "") {
     if (!path) return null
     const meta = (Array.isArray(imagesMeta) ? imagesMeta : []).find(m => m && (

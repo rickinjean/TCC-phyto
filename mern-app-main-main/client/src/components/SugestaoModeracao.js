@@ -3,25 +3,7 @@ import { useNavigate } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
-
-const STATUS_LABEL = {
-    pendente: "Pendente",
-    aprovada: "Em processo",
-    rejeitada: "Rejeitada",
-    concluida: "Concluída",
-}
-
-const TIPO_LABEL = {
-    nova: "Nova planta",
-    correcao: "Correção",
-}
-
-function formatarData(iso) {
-    if (!iso) return ""
-    return new Date(iso).toLocaleDateString("pt-BR", {
-        day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
-    })
-}
+import { STATUS_LABEL, TIPO_LABEL, formatarData } from "../sugestaoUtils"
 
 function SugestaoCard({ sug, executar, onEditar }) {
     const [working, setWorking] = useState(false)
@@ -47,7 +29,7 @@ function SugestaoCard({ sug, executar, onEditar }) {
                         {TIPO_LABEL[sug.tipo]} · {STATUS_LABEL[status]}
                     </span>
                 </div>
-                <span className="admin-message-card__date">{formatarData(sug.created)}</span>
+                <span className="admin-message-card__date">{formatarData(sug.created, true)}</span>
             </div>
 
             <div className="admin-message-card__body">

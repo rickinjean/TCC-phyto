@@ -193,55 +193,6 @@ suggestionsRoutes.route("/suggestions/:id").patch(authenticateToken, authorizeRo
 })
 
 /* ==================================================
-   PUBLICAR PLANTA NO CATÁLOGO (ADM)
-   Converte uma sugestão "nova" aprovada em uma ficha de planta.
-================================================== */
-suggestionsRoutes.route("/suggestions/:id/publicar").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
-    const db_connect = dbo.getDb()
-    try {
-        if (!ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "ID inválido" })
-        }
-        const sId = new ObjectId(req.params.id)
-
-        const s = await db_connect.collection("suggestions").findOne({ _id: sId })
-        if (!s) {
-            return res.status(404).json({ message: "Sugestão não encontrada" })
-        }
-        if (s.tipo !== "nova") {
-            return res.status(400).json({ message: "Apenas sugestões de nova planta podem ser publicadas." })
-        }
-        if (s.status !== "aprovada") {
-            return res.status(409).json({ message: "A sugestão precisa estar aprovada." })
-        }
-        if (s.plantaCriadaId) {
-            return res.status(409).json({ message: "A planta já foi publicada a partir desta sugestão." })
-        }
-
-        const data = s.data || {}
-        const myobj = {}
-        for (const campo of CAMPOS_NOVA) {
-            const v = data[campo]
-            myobj[campo] = v === undefined ? "" : v
-        }
-        myobj.imagesPath = []
-        myobj.imagePath = ""
-        myobj.imagesMeta = []
-
-        const result = await db_connect.collection("plants").insertOne(myobj)
-
-        await db_connect.collection("suggestions").updateOne(
-            { _id: sId, status: "aprovada" },
-            { $set: { status: "concluida", plantaCriadaId: result.insertedId, resolved: new Date() } }
-        )
-
-        res.status(201).json({ message: "Planta publicada no catálogo", plantId: result.insertedId })
-    } catch (error) {
-        res.status(500).json({ message: error.message })
-    }
-})
-
-/* ==================================================
    LIMPEZA AUTOMÁTICA DE SUGESTÕES ENCERRADAS
    Remove rejeitadas/concluídas com resolved mais antigo que o TTL.
    TTL configuravel via SUGGESTION_TTL_DAYS (padrão: 30 dias).

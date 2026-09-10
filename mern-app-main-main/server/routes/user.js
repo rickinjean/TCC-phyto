@@ -140,7 +140,6 @@ userRoutes.route('/user/register').post(async function (req, res) {
             }
         }
 
-        console.log("Usuário cadastrado com sucesso:", result.insertedId);
         return res.status(201).json({
             mensagem: smtpConfigurado
                 ? 'Cadastro realizado! Confirme seu e-mail no link que enviamos para ativar a conta.'
@@ -191,7 +190,6 @@ userRoutes.route('/user/verify').get(async function (req, res) {
 // This section will help you get a list of all the users.
 userRoutes.route("/user").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
     const db_connect = dbo.getDb()
-    // console.log("ROUTE: /user")
 
     try {
         const result = await db_connect.collection("users")
@@ -245,7 +243,6 @@ userRoutes.route("/update/:id").put(authenticateToken, authorizeRoles("ADM"), as
     }
     try {
         const result = await db_connect.collection("users").updateOne(myquery, newvalues)
-        console.log("1 document updated")
         res.status(200).json(result)
     } catch (error) {
         res.status(409).json({ message: error.message })
@@ -261,7 +258,6 @@ userRoutes.route("/user/:id").delete(authenticateToken, authorizeRoles("ADM"), a
     const myquery = { _id: new ObjectId(req.params.id) }
     try {
         const result = await db_connect.collection("users").deleteOne(myquery)
-        console.log("1 document deleted")
         res.status(200).json(result)
     } catch (error) {
         res.status(500).json({ message: "Erro ao deletar usuário" })
