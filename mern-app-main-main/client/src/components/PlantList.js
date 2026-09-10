@@ -1,189 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
-import { encodeId } from "../idCodec"
-import PlantImage from "./PlantImage"
 import sortPorNome from "../sortOptions"
 import usePageTitle from "../usePageTitle"
-import { imgVariantProps } from "../getImageVariants"
 import ListaPicker from "./ListaPicker"
-import { PLACEHOLDER_CARD } from "../placeholderImg"
-import FavoriteButton from "./FavoriteButton"
-
-const FILTER_FIELDS = [
-    { key: "type", label: "Tipo" },
-    { key: "light", label: "Luz" },
-    { key: "height", label: "Altura" },
-    { key: "flowercolor", label: "Cor da Flor" },
-    { key: "dificulty", label: "Dificuldade" },
-    { key: "toxicity", label: "Toxicidade" },
-    { key: "origin", label: "Origem" },
-    { key: "soil", label: "Solo" },
-]
-
-const PAGE_SIZES = [6, 12, 18, 24]
-const DEFAULT_PAGE_SIZE = 12
-const PAGE_SIZE_KEY = "phyto-plantlist-pagesize"
-
-const PlantCard = (props) => {
-    const carouselRef = useRef(null)
-    const carouselId = `plantImagesCarousel-${props.record._id}`
-    const images = props.record.imagesPath?.length > 0 ? props.record.imagesPath : props.record.imagePath ? [props.record.imagePath] : []
-    const isAdmin = props.role === "ADM"
-    const corColecao = props.corColecao || null
-    const qtdColecoes = props.qtdColecoes || 0
-    const nomesColecoes = props.nomesColecoes || []
-    const textoColecoes = qtdColecoes > 1
-        ? `Em ${qtdColecoes} coleções: ${nomesColecoes.join(", ")}`
-        : qtdColecoes === 1
-            ? "Em uma coleção — tocar para gerenciar"
-            : "Adicionar a uma coleção"
-
-    useEffect(() => {
-        if (typeof window !== "undefined" && window.bootstrap?.Carousel && carouselRef.current) {
-            const instance = window.bootstrap.Carousel.getOrCreateInstance(carouselRef.current, {
-                interval: false,
-                ride: false,
-                pause: false,
-            })
-            instance.pause()
-        }
-    }, [])
-
-    return (
-        <div className="col-12 col-md-6 col-lg-4 mb-4">
-            <div className="plant-list-card card h-100 border-0">
-                <div className="plant-list-card__image-wrapper position-relative">
-                    <div ref={carouselRef} className="plant-list-card__carousel carousel slide" id={carouselId} data-bs-interval="false">
-                        {images.length > 1 && (
-                            <div className="carousel-indicators">
-                                {images.map((_, index) => (
-                                    <button
-                                        type="button"
-                                        key={index}
-                                        data-bs-target={`#${carouselId}`}
-                                        data-bs-slide-to={index}
-                                        className={index === 0 ? "active" : ""}
-                                        aria-current={index === 0 ? "true" : undefined}
-                                        aria-label={`Imagem ${index + 1}`}
-                                    />
-                                ))}
-                            </div>
-                        )}
-
-                        <div className="carousel-inner plant-list-card__carousel-inner">
-                            {images.length > 0 ? (
-                                images.map((src, index) => (
-                                    <div className={`carousel-item ${index === 0 ? "active" : ""}`} key={index}>
-                                        <PlantImage
-                                            src={`${API_URL}${src}`}
-                                            alt={`${props.record.name} ${index + 1}`}
-                                            className="plant-list-card__image d-block w-100"
-                                            fallback={PLACEHOLDER_CARD}
-                                            sizesAttr="(max-width: 767px) 100vw, (max-width: 991px) 50vw, 33vw"
-                                            {...imgVariantProps(props.record.imagesMeta, src, API_URL)}
-                                        />
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="carousel-item active">
-                                    <PlantImage
-                                        src={props.record.imagePath || PLACEHOLDER_CARD}
-                                        alt={props.record.name}
-                                        className="plant-list-card__image d-block w-100"
-                                        fallback={PLACEHOLDER_CARD}
-                                        sizesAttr="(max-width: 767px) 100vw, (max-width: 991px) 50vw, 33vw"
-                                        {...imgVariantProps(props.record.imagesMeta, props.record.imagePath, API_URL)}
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                        {images.length > 1 && (
-                            <>
-                                <button
-                                    className="carousel-control-prev"
-                                    type="button"
-                                    data-bs-target={`#${carouselId}`}
-                                    data-bs-slide="prev"
-                                >
-                                    <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-                                    <span className="visually-hidden">Anterior</span>
-                                </button>
-                                <button
-                                    className="carousel-control-next"
-                                    type="button"
-                                    data-bs-target={`#${carouselId}`}
-                                    data-bs-slide="next"
-                                >
-                                    <span className="carousel-control-next-icon" aria-hidden="true"></span>
-                                    <span className="visually-hidden">Próximo</span>
-                                </button>
-                            </>
-                        )}
-                    </div>
-
-                    {props.canFavorite && (
-                        <FavoriteButton
-                            corColecao={corColecao}
-                            qtdColecoes={qtdColecoes}
-                            texto={textoColecoes}
-                            onClick={() => props.onOpenPicker(props.record)}
-                        />
-                    )}
-                    </div>
-
-                <div className="plant-list-card__body card-body d-flex flex-column">
-                    <h5 className="plant-list-card__title card-title mb-0 fw-semibold">
-                        {props.record.name}
-                    </h5>
-                    <p className="plant-list-card__scientific mb-2">
-                        {props.record.scientificName}
-                    </p>
-                    <p className="plant-list-card__description card-text flex-grow-1">
-                        {props.record.simpleDescription}
-                    </p>
-
-                    <div className="d-flex gap-2 flex-wrap mt-3">
-                        <Link
-className="plant-list-card__details btn btn-sm flex-grow-1"
-                            to={`/plantdetails/${encodeId(props.record._id)}`}
-                            
-                        >
-                            Detalhes
-                        </Link>
-                        {isAdmin ? (
-                            <>
-                                <Link
-className="plant-list-card__edit btn btn-sm flex-grow-1"
-                                    to={`/editplant/${encodeId(props.record._id)}`}
-                                    
-                                >
-                                    Editar
-                                </Link>
-                                <Link
-className="plant-list-card__clone btn btn-sm flex-grow-1"
-                                    to={`/createplant?clone=${encodeId(props.record._id)}`}
-                                    
-                                >
-                                    Clonar
-                                </Link>
-                                <button
-className="plant-list-card__delete btn btn-sm"
-                                    onClick={() => props.deleteRecord(props.record._id)}
-                                    
-                                >
-                                    Excluir
-                                </button>
-                            </>
-                        ) : null}
-                    </div>
-</div>
-            </div>
-        </div>
-    )
-}
+import PlantCard from "./PlantCard"
+import PlantFilters, { FILTER_FIELDS, PAGE_SIZES, PAGE_SIZE_KEY, DEFAULT_PAGE_SIZE } from "./PlantFilters"
+import PlantPagination from "./PlantPagination"
 
 const EmptyState = ({ hasActiveFilters, onClear }) => (
     <div className="plant-list-empty col-12 text-center py-5">
@@ -352,8 +176,6 @@ export default function PlantList({ role, canFavorite = false }) {
     const totalPages = Math.max(1, Math.ceil(totalPlants / pageSize))
     const safePage = Math.min(currentPage, totalPages)
     const visiblePlants = plants.slice((safePage - 1) * pageSize, safePage * pageSize)
-    const startCount = totalPlants === 0 ? 0 : (safePage - 1) * pageSize + 1
-    const endCount = Math.min(safePage * pageSize, totalPlants)
 
     useEffect(() => {
         setCurrentPage(1)
@@ -451,76 +273,17 @@ export default function PlantList({ role, canFavorite = false }) {
                 </div>
             </form>
 
-            <div className="plant-filters-toolbar mb-4">
-                <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                    <div className="d-flex align-items-center gap-2">
-                        <button
-                            type="button"
-                            className={`plant-filters__toggle btn ${filtersOpen ? "is-open" : ""}`}
-                            onClick={() => setFiltersOpen(o => !o)}
-                            aria-expanded={filtersOpen}
-                            aria-controls="plant-filters-body"
-                        >
-                            <i className={`fas fa-chevron-${filtersOpen ? "up" : "down"} plant-filters__chevron`} aria-hidden="true"></i>
-                            Filtros
-                            {Object.keys(filters).length > 0 && (
-                                <span className="plant-filters__badge">{Object.keys(filters).length}</span>
-                            )}
-                        </button>
-                        {hasActiveFilters && (
-                            <button
-                                className="plant-filters__clear btn btn-sm btn-outline-secondary"
-                                onClick={clearFilters}
-                                type="button"
-                            >
-                                Limpar Filtros
-                            </button>
-                        )}
-                    </div>
-                    <div className="plant-list-size d-inline-flex align-items-center gap-2">
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary plant-list-size__btn"
-                            onClick={() => changePageSize(-1)}
-                            disabled={pageSize <= PAGE_SIZES[0]}
-                            aria-label="Diminuir plantas por página"
-                        >
-                            −
-                        </button>
-                        <span className="plant-list-size__label">{pageSize} por página</span>
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary plant-list-size__btn"
-                            onClick={() => changePageSize(1)}
-                            disabled={pageSize >= PAGE_SIZES[PAGE_SIZES.length - 1]}
-                            aria-label="Aumentar plantas por página"
-                        >
-                            +
-                        </button>
-                    </div>
-                </div>
-                {filtersOpen && (
-                    <div className="plant-filters mt-2" id="plant-filters-body">
-                        <div className="row g-2">
-                            {FILTER_FIELDS.map(({ key, label }) => (
-                                <div key={key} className="col-6 col-md-3">
-                                    <select
-                                        className="form-select form-select-sm plant-filters__select"
-                                        value={filters[key] || ""}
-                                        onChange={(e) => handleFilterChange(key, e.target.value)}
-                                        aria-label={label}
-                                    >
-                                        <option value="">{label}</option>
-                                        {(collectionOptions[key] || []).map(opt => (
-                                            <option key={opt._id} value={opt._id}>{opt.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
+            <PlantFilters
+                filters={filters}
+                filtersOpen={filtersOpen}
+                onToggle={() => setFiltersOpen(o => !o)}
+                hasActiveFilters={hasActiveFilters}
+                onClear={clearFilters}
+                collectionOptions={collectionOptions}
+                onFilterChange={handleFilterChange}
+                pageSize={pageSize}
+                onChangePageSize={changePageSize}
+            />
 
             {fetchError && (
                 <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3" role="alert">
@@ -558,30 +321,13 @@ export default function PlantList({ role, canFavorite = false }) {
             </div>
 
             {!loading && totalPages > 1 && (
-                <nav className="plant-list-pagination d-flex align-items-center justify-content-between gap-2 flex-wrap mt-2" aria-label="Paginação">
-                    <span className="plant-list-pagination__info">
-                        Mostrando {startCount}–{endCount} de {totalPlants} {totalPlants === 1 ? "planta" : "plantas"}
-                    </span>
-                    <div className="d-flex align-items-center gap-2">
-                        <button
-                            type="button"
-                            className="btn btn-sm plant-list-pagination__btn"
-                            onClick={() => goToPage(safePage - 1)}
-                            disabled={safePage <= 1}
-                        >
-                            Anterior
-                        </button>
-                        <span className="plant-list-pagination__page">Página {safePage} de {totalPages}</span>
-                        <button
-                            type="button"
-                            className="btn btn-sm plant-list-pagination__btn"
-                            onClick={() => goToPage(safePage + 1)}
-                            disabled={safePage >= totalPages}
-                        >
-                            Próximo
-                        </button>
-                    </div>
-                </nav>
+                <PlantPagination
+                    totalPlants={totalPlants}
+                    pageSize={pageSize}
+                    safePage={safePage}
+                    totalPages={totalPages}
+                    onPage={goToPage}
+                />
             )}
 
             {canFavorite && pickerPlanta && (

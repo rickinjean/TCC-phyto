@@ -3,6 +3,13 @@ import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import Logo from "./logo.jpeg";
 
+const ADMIN_LINKS = [
+    { to: "/userlist", icon: "📋", titulo: "Lista de Usuários", curto: "L. Usuários" },
+    { to: "/messages", icon: "✉️", titulo: "Mensagens", curto: "Mensagens" },
+    { to: "/moderar-sugestoes", icon: "🗂", titulo: "Moderar Sugestões", curto: "Moderar Sugestões" },
+    { to: "/createplant", icon: "🌱", titulo: "Cadastrar Planta", curto: "C. Plantas" },
+];
+
 const getInitialTheme = () => {
     try {
         const savedTheme = window.localStorage.getItem("phyto-theme");
@@ -123,18 +130,11 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                             {role === "ADM" && (
                                 <div className="custom-navbar__user-panel-section">
                                     <span className="custom-navbar__user-panel-caption">Administração</span>
-                                    <NavLink className="custom-navbar__user-panel-link" to="/userlist" onClick={closeUserMenu}>
-                                        📋 Lista de Usuários
-                                    </NavLink>
-                                    <NavLink className="custom-navbar__user-panel-link" to="/messages" onClick={closeUserMenu}>
-                                        ✉️ Mensagens
-                                    </NavLink>
-                                    <NavLink className="custom-navbar__user-panel-link" to="/moderar-sugestoes" onClick={closeUserMenu}>
-                                        🗂 Moderar Sugestões
-                                    </NavLink>
-                                    <NavLink className="custom-navbar__user-panel-link" to="/createplant" onClick={closeUserMenu}>
-                                        🌱 Cadastrar Planta
-                                    </NavLink>
+                                    {ADMIN_LINKS.map(link => (
+                                        <NavLink key={link.to} className="custom-navbar__user-panel-link" to={link.to} onClick={closeUserMenu}>
+                                            {link.icon} {link.titulo}
+                                        </NavLink>
+                                    ))}
                                 </div>
                             )}
 
@@ -229,26 +229,13 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                         <ul className="navbar-nav flex-column gap-1">
                             {token && role === "ADM" && (
                                 <>
-                                    <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/userlist" onClick={closeMenu}>
-                                            L. Usuários
-                                        </NavLink>
-                                    </li>
-                                    <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/messages" onClick={closeMenu}>
-                                            Mensagens
-                                        </NavLink>
-                                    </li>
-                                    <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/moderar-sugestoes" onClick={closeMenu}>
-                                            Moderar Sugestões
-                                        </NavLink>
-                                    </li>
-                                    <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/createplant" onClick={closeMenu}>
-                                            C. Plantas
-                                        </NavLink>
-                                    </li>
+                                    {ADMIN_LINKS.map(link => (
+                                        <li className="nav-item" key={link.to}>
+                                            <NavLink className="custom-navbar__offcanvas-link" to={link.to} onClick={closeMenu}>
+                                                {link.curto}
+                                            </NavLink>
+                                        </li>
+                                    ))}
                                     <hr className="custom-navbar__separator" />
                                 </>
                             )}

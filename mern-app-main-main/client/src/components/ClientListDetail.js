@@ -3,66 +3,7 @@ import { Link, useParams } from "react-router-dom"
 import API_URL from "../config"
 import authFetch from "../authFetch"
 import usePageTitle from "../usePageTitle"
-import { encodeId } from "../idCodec"
-import PlantImage from "./PlantImage"
-import { imgVariantProps } from "../getImageVariants"
-import { PLACEHOLDER_CARD } from "../placeholderImg"
-
-function ItemCard({ item, onRemove }) {
-    const plant = item.plant
-    const images = plant.imagesPath?.length > 0 ? plant.imagesPath : plant.imagePath ? [plant.imagePath] : []
-    const imageUrl = images.length > 0 ? `${API_URL}${images[0]}` : PLACEHOLDER_CARD
-    const variants = imgVariantProps(plant.imagesMeta, images[0], API_URL)
-
-    return (
-        <div className="col-12 col-md-6 col-lg-4 mb-4">
-            <div className="plant-list-card card h-100 border-0">
-                <div className="plant-list-card__image-wrapper position-relative">
-                    <PlantImage
-                        src={imageUrl}
-                        alt={plant.name}
-                        className="plant-list-card__image d-block w-100"
-                        fallback={PLACEHOLDER_CARD}
-                        {...variants}
-                        sizesAttr="(max-width: 767px) 100vw, (max-width: 991px) 50vw, 33vw"
-                    />
-                    <button
-                        type="button"
-                        className="plant-list-card__favorite is-favorite"
-                        aria-label="Remover desta lista"
-                        title="Remover desta lista"
-                        onClick={() => onRemove(item.plantId, plant.name)}
-                    >
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="currentColor" strokeWidth="2">
-                            <path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM8 9h8v10H8V9zm1.5-6h5L15 5H9l.5-2z" transform="scale(0.9) translate(1.3 1.3)" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div className="plant-list-card__body card-body d-flex flex-column">
-                    <h5 className="plant-list-card__title card-title mb-0 fw-semibold">
-                        {plant.name}
-                    </h5>
-                    <p className="plant-list-card__scientific mb-2">
-                        {plant.scientificName}
-                    </p>
-                    <p className="plant-list-card__description card-text flex-grow-1">
-                        {plant.simpleDescription}
-                    </p>
-
-                    <div className="d-flex gap-2 mt-3">
-                        <Link
-                            className="plant-list-card__details btn btn-sm flex-grow-1"
-                            to={`/plantdetails/${encodeId(plant._id)}`}
-                        >
-                            Detalhes
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
+import PlantCard from "./PlantCard"
 
 export default function ClientListDetail() {
     usePageTitle("Lista")
@@ -152,7 +93,13 @@ export default function ClientListDetail() {
             ) : (
                 <div className="row">
                     {items.map(item => (
-                        <ItemCard key={String(item._id)} item={item} onRemove={removerPlanta} />
+                        <PlantCard
+                            key={String(item._id)}
+                            record={item.plant}
+                            carousel={false}
+                            onRemove={removerPlanta}
+                            removeId={item.plantId}
+                        />
                     ))}
                 </div>
             )}

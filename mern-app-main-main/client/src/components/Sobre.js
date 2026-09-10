@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import API_URL from "../config";
 import usePageTitle from "../usePageTitle";
+import { AboutCircleCard, AboutResourceCard, TeamCard } from "./AboutCards";
 
 function SobreImagem({ src, alt, icon, minHeight, className }) {
     const [erro, setErro] = useState(false);
@@ -17,14 +18,6 @@ function SobreImagem({ src, alt, icon, minHeight, className }) {
             <i className={`fas ${icon}`} style={{ fontSize: 80, color: "var(--accent, #4a7c59)", opacity: 0.3 }}></i>
         </div>
     );
-}
-
-function FotoOuInicial({ foto, nome }) {
-    const [erro, setErro] = useState(false);
-    if (foto && !erro) {
-        return <img src={foto} alt={nome} className="w-100 h-100" style={{ objectFit: "cover" }} onError={() => setErro(true)} />;
-    }
-    return nome.charAt(0);
 }
 
 export default function About() {
@@ -132,18 +125,8 @@ export default function About() {
                             { icon: 'fa-seedling',  titulo: 'Educação Botânica',  texto: 'Tornar o conhecimento sobre plantas acessível a todos, desde iniciantes até especialistas.' },
                             { icon: 'fa-search',    titulo: 'Pesquisa Avançada',  texto: 'Ferramentas de pesquisa com múltiplos filtros para encontrar plantas específicas rapidamente.' },
                             { icon: 'fa-users',     titulo: 'Comunidade',         texto: 'Conectar entusiastas, jardineiros e botânicos em uma rede colaborativa.' },
-                        ].map((card, i) => (
-                            <div className="col-md-6 col-lg-4" key={i}>
-                                <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
-                                    <div className="card-body">
-                                        <div className="about-icon about-icon--circle mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle">
-                                            <i className={`fas ${card.icon} fs-5 about-icon__glyph`}></i>
-                                        </div>
-                                        <h5 className="about-card__title card-title">{card.titulo}</h5>
-                                        <p className="card-text text-muted small">{card.texto}</p>
-                                    </div>
-                                </div>
-                            </div>
+                        ].map(card => (
+                            <AboutCircleCard key={card.titulo} {...card} />
                         ))}
                     </div>
                 </div>
@@ -232,25 +215,8 @@ export default function About() {
                                 texto: 'Proteção de dados pessoais com autenticação segura.',
                                 itens: ['Autenticação por JWT', 'Login com Google e GitHub', 'Controle de acesso por roles', 'Senhas criptografadas'],
                             },
-                        ].map((card, i) => (
-                            <div className="col-md-4" key={i}>
-                                <div className="about-card card h-100 border-0 shadow-sm p-2">
-                                    <div className="card-body">
-                                        <div className="about-icon about-icon--square mb-3 d-flex align-items-center justify-content-center rounded">
-                                            <i className={`fas ${card.icon} fs-5 about-icon__glyph`}></i>
-                                        </div>
-                                        <h5 className="about-card__title card-title">{card.titulo}</h5>
-                                        <p className="card-text text-muted small mb-3">{card.texto}</p>
-                                        <ul className="list-unstyled small text-muted">
-                                            {card.itens.map((item, j) => (
-                                                <li key={j} className="mb-1">
-                                                    <i className="fas fa-check me-2 about-icon__glyph"></i>{item}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
+                        ].map(card => (
+                            <AboutResourceCard key={card.titulo} {...card} />
                         ))}
                     </div>
                 </div>
@@ -268,22 +234,8 @@ export default function About() {
                             { nome: 'Dr. Jean Lucas', cargo: 'Estudante(Chefe)',                 bio: 'PhD em tomar café, especialista em videojogos com mais de 15 anos de experiência.', foto: '/images/sobre/equipe-jean.jpeg' },
                             { nome: 'Henrique P',     cargo: 'Desenvolvedor Full-Stack(confia)', bio: 'Engenheiro de Software especializada em aplicações web, responsável pela arquitetura e desenvolvimento do sistema.' },
                             { nome: 'Renato Bettin',  cargo: 'Coorientador',                    bio: 'Professor na Unesc de Criciúma, coorientador do Trabalho de Conclusão de Curso. Especialista em desenvolvimento de software e engenharia de sistemas.' },
-                        ].map((membro, i) => (
-                            <div className="col-md-4" key={i}>
-                                <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
-                                    <div className="card-body">
-                                        <div
-                                            className="about-team__image rounded-circle mb-3 d-flex align-items-center justify-content-center mx-auto overflow-hidden"
-                                            style={{width: 100, height: 100, background: "var(--accent, #4a7c59)", color: "#fff", fontSize: 32, fontWeight: 600}}
-                                        >
-                                            <FotoOuInicial foto={membro.foto} nome={membro.nome} />
-                                        </div>
-                                        <h5 className="about-card__title card-title mb-1">{membro.nome}</h5>
-                                        <p className="about-team__role small fw-medium mb-2">{membro.cargo}</p>
-                                        <p className="card-text text-muted small mb-3">{membro.bio}</p>
-                                    </div>
-                                </div>
-                            </div>
+                        ].map(membro => (
+                            <TeamCard key={membro.nome} membro={membro} />
                         ))}
                     </div>
                 </div>
@@ -304,18 +256,8 @@ export default function About() {
                             { icon: 'fa-heart',     titulo: 'Paixão pela Botânica', texto: 'O interesse por plantas e biodiversidade é o que nos motiva a melhorar constantemente o sistema.' },
                             { icon: 'fa-rocket',    titulo: 'Inovação', texto: 'Buscamos aprimorar a plataforma continuamente com novas tecnologias e funcionalidades.' },
                             { icon: 'fa-users',     titulo: 'Comunidade', texto: 'A construção do conhecimento é colaborativa, junto a pesquisadores, estudantes e entusiastas.' },
-                        ].map((valor, i) => (
-                            <div className="col-md-6 col-lg-4" key={i}>
-                                <div className="about-card card h-100 border-0 shadow-sm text-center p-3">
-                                    <div className="card-body">
-                                        <div className="about-icon about-icon--circle mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle">
-                                            <i className={`fas ${valor.icon} fs-5 about-icon__glyph`}></i>
-                                        </div>
-                                        <h5 className="about-card__title card-title">{valor.titulo}</h5>
-                                        <p className="card-text text-muted small">{valor.texto}</p>
-                                    </div>
-                                </div>
-                            </div>
+                        ].map(card => (
+                            <AboutCircleCard key={card.titulo} {...card} />
                         ))}
                     </div>
                 </div>
