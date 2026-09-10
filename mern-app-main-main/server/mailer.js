@@ -1,28 +1,19 @@
-const nodemailer = require("nodemailer")
+const { Resend } = require("resend")
 
-const SMTP_HOST = process.env.SMTP_HOST
-const SMTP_PORT = Number(process.env.SMTP_PORT || 587)
-const SMTP_USER = process.env.SMTP_USER
-const SMTP_PASS = process.env.SMTP_PASS
-const SMTP_FROM = process.env.SMTP_FROM || `Phytografia <${SMTP_USER || "no-reply@phyto.com"}>`
+const RESEND_API_KEY = process.env.RESEND_API_KEY
+const RESEND_FROM = process.env.RESEND_FROM || "Phytografia <onboarding@resend.dev>"
 
-// Verificação de e-mail só é ativa quando o SMTP está configurado.
-const smtpConfigurado = Boolean(SMTP_HOST && SMTP_USER && SMTP_PASS)
+const resendConfigurado = Boolean(RESEND_API_KEY)
 
-let transporter = null
+let resend = null
 
-if (smtpConfigurado) {
-    transporter = nodemailer.createTransport({
-        host: SMTP_HOST,
-        port: SMTP_PORT,
-        secure: SMTP_PORT === 465,
-        auth: { user: SMTP_USER, pass: SMTP_PASS },
-    })
+if (resendConfigurado) {
+    resend = new Resend(RESEND_API_KEY)
 }
 
 async function enviarEmailConfirmacao(nome, email, link) {
-    if (!smtpConfigurado) {
-        throw new Error("SMTP não configurado")
+    if (!resendConfigurado) {
+        throw new Error("Resend não configurado")
     }
 
     const safeNome = (nome || "").split(" ")[0] || ""
@@ -40,13 +31,17 @@ async function enviarEmailConfirmacao(nome, email, link) {
         </div>
     `
 
-    await transporter.sendMail({
-        from: SMTP_FROM,
+    const { error } = await resend.emails.send({
+        from: RESEND_FROM,
         to: email,
         subject: "Confirme seu e-mail - Phytografia",
         text: `Olá ${safeNome}! Confirme seu e-mail clicando no link: ${link}. O link é válido por 24 horas.`,
         html,
     })
+
+    if (error) {
+        throw new Error(error.message)
+    }
 }
 
-module.exports = { smtpConfigurado, enviarEmailConfirmacao }
+module.exports = { resendConfigurado, enviarEmailConfirmacao }
