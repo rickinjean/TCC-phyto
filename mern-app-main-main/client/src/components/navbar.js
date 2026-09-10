@@ -95,7 +95,7 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                             onClick={() => setUserMenuOpen((prev) => !prev)}
                         >
                             {userAvatar ? (
-                                <img className="custom-navbar__user-avatar" src={userAvatar} alt="" decoding="async" />
+                                <img className="custom-navbar__user-avatar" src={userAvatar} alt="" decoding="async" referrerPolicy="no-referrer" />
                             ) : (
                                 <span className="custom-navbar__user-avatar custom-navbar__user-avatar--fallback">
                                     {userName ? userName.charAt(0).toUpperCase() : "?"}
@@ -113,7 +113,7 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                         <div className={`custom-navbar__user-panel ${userMenuOpen ? "is-open" : ""}`}>
                             <div className="custom-navbar__user-panel-header">
                                 {userAvatar ? (
-                                    <img className="custom-navbar__user-panel-avatar" src={userAvatar} alt="" decoding="async" />
+                                    <img className="custom-navbar__user-panel-avatar" src={userAvatar} alt="" decoding="async" referrerPolicy="no-referrer" />
                                 ) : (
                                     <span className="custom-navbar__user-panel-avatar custom-navbar__user-panel-avatar--fallback">
                                         {userName ? userName.charAt(0).toUpperCase() : "?"}

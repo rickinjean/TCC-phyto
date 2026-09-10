@@ -135,7 +135,7 @@ const loginLimiter = rateLimit({
 
 const refreshLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 60,
+    max: 300,
     message: { mensagem: "Muitas tentativas de renovação de sessão. Tente novamente em 15 minutos." },
     standardHeaders: true,
     legacyHeaders: false,

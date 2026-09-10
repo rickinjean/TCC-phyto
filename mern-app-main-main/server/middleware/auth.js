@@ -6,7 +6,7 @@ if (!JWT_SECRET) {
 }
 
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || JWT_SECRET
-const ACCESS_TOKEN_TTL = process.env.ACCESS_TOKEN_TTL || "15m"
+const ACCESS_TOKEN_TTL = process.env.ACCESS_TOKEN_TTL || "60m"
 const REFRESH_TOKEN_TTL = process.env.REFRESH_TOKEN_TTL || "7d"
 
 function authenticateToken(req, res, next) {
@@ -18,8 +18,10 @@ function authenticateToken(req, res, next) {
   }
 
   jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] }, (err, decoded) => {
+    // Token inválido ou expirado = não autenticado (401). Semântica correta:
+    // o cliente renova a sessão em 401; 403 fica reservado a "acesso negado".
     if (err) {
-      return res.status(403).json({ mensagem: "Token inválido" })
+      return res.status(401).json({ mensagem: "Token inválido ou expirado" })
     }
     req.user = decoded
     next()
