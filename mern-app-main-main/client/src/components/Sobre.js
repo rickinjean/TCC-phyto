@@ -51,7 +51,7 @@ export default function About() {
         setErroEnvio('');
         setEnviando(true);
         try {
-            const response = await fetch(`${API_URL}/messages`, {
+            const response = await fetch(`${API_URL}/api/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

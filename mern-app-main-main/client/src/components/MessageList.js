@@ -73,12 +73,12 @@ function MessageCard({ msg, onDelete }) {
 
 export default function MessageList() {
     usePageTitle("Mensagens")
-    const { data: messages = [], setData: setMessages, loading, error, setError } = useAuthFetchData(`${API_URL}/messages`, [], "Erro ao carregar mensagens")
+    const { data: messages = [], setData: setMessages, loading, error, setError } = useAuthFetchData(`${API_URL}/api/messages`, [], "Erro ao carregar mensagens")
 
     async function deleteMessage(id) {
         if (!window.confirm("Deseja excluir esta mensagem?")) return
         try {
-            const res = await authFetch(`${API_URL}/messages/${id}`, { method: "DELETE" })
+            const res = await authFetch(`${API_URL}/api/messages/${id}`, { method: "DELETE" })
             if (res === null) {
                 setError("Sessão expirada. Faça login novamente.")
                 return

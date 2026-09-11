@@ -188,7 +188,7 @@ app.use(require("./routes/plant"))
 app.use(require("./routes/userLists"))
 const suggestionsRoutes = require("./routes/suggestions")
 app.use(suggestionsRoutes)
-app.use(require("./routes/messages"))
+app.use("/api", require("./routes/messages"))
 app.use(require("./routes/stats"))
 
 const dbo = require("./db/conn")
