@@ -76,9 +76,6 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                     <li className="nav-item">
                         <NavLink className="custom-navbar__link" to="/plantlist">Catálogo</NavLink>
                     </li>
-                    <li className="nav-item">
-                        <NavLink className="custom-navbar__link" to="/identificador">Identificador</NavLink>
-                    </li>
                     {token && (
                         <li className="nav-item">
                             <NavLink className="custom-navbar__link" to="/minhas-listas">Minhas Listas</NavLink>
@@ -270,11 +267,6 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/identificador" onClick={closeMenu}>
-                                            Identificador
-                                        </NavLink>
-                                    </li>
-                                    <li className="nav-item">
                                         <NavLink className="custom-navbar__offcanvas-link" to="/minhas-listas" onClick={closeMenu}>
                                             Minhas Listas
                                         </NavLink>
@@ -315,11 +307,6 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     <li className="nav-item">
                                         <NavLink className="custom-navbar__offcanvas-link" to="/plantlist" onClick={closeMenu}>
                                             Catálogo
-                                        </NavLink>
-                                    </li>
-                                    <li className="nav-item">
-                                        <NavLink className="custom-navbar__offcanvas-link" to="/identificador" onClick={closeMenu}>
-                                            Identificador
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">

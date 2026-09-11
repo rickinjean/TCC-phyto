@@ -29,7 +29,8 @@ export default function useTreinador() {
             } catch (e) {
                 if (!cancelado) {
                     setStatus("erro")
-                    setErroMsg("Não foi possível carregar o modelo de IA. Verifique sua conexão.")
+                    setErroMsg("Não foi possível carregar o modelo de IA. Verifique sua conexão." +
+                        (e && e.message ? " Detalhes: " + e.message : ""))
                 }
             }
         }
