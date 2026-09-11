@@ -86,11 +86,16 @@ app.use(cors({
 }))
 
 // Log estruturado de requisições HTTP (pino-http). Ignora /uploads (excesso
-// de tráfego de imagem) para não poluir os logs.
+// de tráfego de imagem) e os health checks do Render (HEAD /) para não
+// poluir os logs.
 app.use(pinoHttp({
     logger,
     autoLogging: {
-        ignore: function (req) { return req.url.startsWith("/uploads") },
+        ignore: function (req) {
+            if (req.url.startsWith("/uploads")) return true
+            if (req.method === "HEAD" && req.url === "/") return true
+            return false
+        },
     },
     serializers: {
         res(res) { return { statusCode: res.statusCode } },
