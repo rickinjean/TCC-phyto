@@ -233,7 +233,7 @@ export default function About() {
                         {[
                             { nome: 'Dr. Jean Lucas', cargo: 'Estudante(Chefe)',                 bio: 'PhD em tomar café, especialista em videojogos com mais de 15 anos de experiência.', foto: '/images/sobre/equipe-jean.jpeg' },
                             { nome: 'Henrique P',     cargo: 'Desenvolvedor Full-Stack(confia)', bio: 'Engenheiro de Software especializada em aplicações web, responsável pela arquitetura e desenvolvimento do sistema.' },
-                            { nome: 'Renato Bettin',  cargo: 'Coorientador',                    bio: 'Professor na Unesc de Criciúma, coorientador do Trabalho de Conclusão de Curso. Especialista em desenvolvimento de software e engenharia de sistemas.' },
+                            { nome: 'Victor',  cargo: 'Orientador',  bio: 'Professor no IFC Campus Sombrio, orientador do Trabalho de Conclusão de Curso. Mestre em Ciência da Computação.', foto: '/images/sobre/equipe-victor.jpeg' },
                         ].map(membro => (
                             <TeamCard key={membro.nome} membro={membro} />
                         ))}
