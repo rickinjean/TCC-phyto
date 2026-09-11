@@ -99,6 +99,12 @@ const QUICK_ACCESS_CARDS = [
         icon: "🔍",
     },
     {
+        title: "Identificar Plantas",
+        text: "Descubra a espécie de uma planta por foto ou webcam usando IA",
+        href: "/identificador",
+        icon: "🧬",
+    },
+    {
         title: "Minhas Listas",
         text: "Organize plantas em coleções personalizadas com cores, como 'Jardim' ou 'TCC'",
         href: "/minhas-listas",
