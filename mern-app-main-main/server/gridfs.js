@@ -1,13 +1,21 @@
 const mongodb = require("mongodb")
 const dbo = require("./db/conn")
 
-let bucket = null
+let imageBucket = null
+let modelBucket = null
 
 function getBucket() {
-    if (!bucket) {
-        bucket = new mongodb.GridFSBucket(dbo.getDb(), { bucketName: "images" })
+    if (!imageBucket) {
+        imageBucket = new mongodb.GridFSBucket(dbo.getDb(), { bucketName: "images" })
     }
-    return bucket
+    return imageBucket
 }
 
-module.exports = { getBucket }
+function getModelBucket() {
+    if (!modelBucket) {
+        modelBucket = new mongodb.GridFSBucket(dbo.getDb(), { bucketName: "models" })
+    }
+    return modelBucket
+}
+
+module.exports = { getBucket, getModelBucket }

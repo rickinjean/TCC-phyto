@@ -8,6 +8,8 @@ const ADMIN_LINKS = [
     { to: "/messages", icon: "✉️", titulo: "Mensagens", curto: "Mensagens" },
     { to: "/moderar-sugestoes", icon: "🗂", titulo: "Moderar Sugestões", curto: "Moderar Sugestões" },
     { to: "/createplant", icon: "🌱", titulo: "Cadastrar Planta", curto: "C. Plantas" },
+    { to: "/treinador", icon: "🧪", titulo: "Treinador de Plantas", curto: "Treinador" },
+    { to: "/gerir-modelos", icon: "🤖", titulo: "Gerir Modelos de IA", curto: "Gerir IA" },
 ];
 
 const getInitialTheme = () => {
@@ -73,6 +75,9 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                     </li>
                     <li className="nav-item">
                         <NavLink className="custom-navbar__link" to="/plantlist">Catálogo</NavLink>
+                    </li>
+                    <li className="nav-item">
+                        <NavLink className="custom-navbar__link" to="/identificador">Identificador</NavLink>
                     </li>
                     {token && (
                         <li className="nav-item">
@@ -265,6 +270,11 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/identificador" onClick={closeMenu}>
+                                            Identificador
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
                                         <NavLink className="custom-navbar__offcanvas-link" to="/minhas-listas" onClick={closeMenu}>
                                             Minhas Listas
                                         </NavLink>
@@ -296,11 +306,34 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     </li>
                                 </>
                             ) : (
-                                <li className="nav-item">
-                                    <NavLink className="custom-navbar__offcanvas-link" to="/login" onClick={closeMenu}>
-                                        Login
-                                    </NavLink>
-                                </li>
+                                <>
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/inicio" onClick={closeMenu}>
+                                            Início
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/plantlist" onClick={closeMenu}>
+                                            Catálogo
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/identificador" onClick={closeMenu}>
+                                            Identificador
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/Sobre" onClick={closeMenu}>
+                                            Sobre
+                                        </NavLink>
+                                    </li>
+                                    <hr className="custom-navbar__separator" />
+                                    <li className="nav-item">
+                                        <NavLink className="custom-navbar__offcanvas-link" to="/login" onClick={closeMenu}>
+                                            Login
+                                        </NavLink>
+                                    </li>
+                                </>
                             )}
                         </ul>
                     </div>

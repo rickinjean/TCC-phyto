@@ -18,6 +18,9 @@ import ClientLists from './components/ClientLists'
 import ClientListDetail from './components/ClientListDetail'
 import Sugestao from './components/Sugestao'
 import SugestaoModeracao from './components/SugestaoModeracao'
+import Identificador from './components/Identificador'
+import Treinador from './components/Treinador'
+import GerirModelos from './components/GerirModelos'
 import ErrorBoundary from './ErrorBoundary'
 import API_URL from "./config"
 
@@ -236,6 +239,9 @@ const App = () => {
                         <Route path="/minhas-listas/:id" element={token ? <ClientListDetail /> : <Navigate to="/login" replace />} />
                         <Route path="/sugerir" element={token ? <Sugestao /> : <Navigate to="/login" replace />} />
                         <Route path="/moderar-sugestoes" element={token && role === "ADM" ? <SugestaoModeracao /> : <Navigate to={token ? "/" : "/login"} replace />} />
+                        <Route path="/identificador" element={<Identificador role={role} />} />
+                        <Route path="/treinador" element={token && role === "ADM" ? <Treinador /> : <Navigate to={token ? "/" : "/login"} replace />} />
+                        <Route path="/gerir-modelos" element={token && role === "ADM" ? <GerirModelos /> : <Navigate to={token ? "/" : "/login"} replace />} />
                         <Route path="*" element={<Navigate to={token ? (role === "ADM" ? "/" : "/inicio") : "/inicio"} replace />} />
                     </Routes>
                 </ErrorBoundary>

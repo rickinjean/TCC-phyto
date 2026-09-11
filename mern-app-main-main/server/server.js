@@ -40,7 +40,7 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:", "blob:", "https://lh3.googleusercontent.com", "https://avatars.githubusercontent.com"],
             fontSrc: ["'self'", "data:"],
-            connectSrc: ["'self'"],
+            connectSrc: ["'self'", "https://storage.googleapis.com"],
             objectSrc: ["'none'"],
             baseUri: ["'self'"],
             frameAncestors: ["'none'"],
@@ -190,6 +190,7 @@ const suggestionsRoutes = require("./routes/suggestions")
 app.use(suggestionsRoutes)
 app.use("/api", require("./routes/messages"))
 app.use(require("./routes/stats"))
+app.use("/ai", require("./routes/models"))
 
 const dbo = require("./db/conn")
 
@@ -231,6 +232,7 @@ app.get("/sitemap.xml", async function (req, res) {
         { path: "/", priority: "1.0", freq: "weekly" },
         { path: "/inicio", priority: "0.9", freq: "weekly" },
         { path: "/plantlist", priority: "0.9", freq: "daily" },
+        { path: "/identificador", priority: "0.7", freq: "weekly" },
         { path: "/Sobre", priority: "0.6", freq: "monthly" },
     ]
     for (const u of staticUrls) {

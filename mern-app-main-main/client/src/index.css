@@ -5896,3 +5896,393 @@ html[data-theme="dark"] .sugestao-cards .admin-message-card__header:hover {
   color: var(--phyto-ink);
 }
 
+/* ==========================================================================
+   Identificador de Plantas (/identificador)
+   ========================================================================== */
+.identificador__cabecalho {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.identificador__titulo,
+.treinador__titulo,
+.gerir__titulo {
+  color: #a05c2b;
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: -0.01em;
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+html[data-theme="dark"] .identificador__titulo,
+html[data-theme="dark"] .treinador__titulo,
+html[data-theme="dark"] .gerir__titulo {
+  color: #e0a063;
+}
+
+.identificador__subtitulo,
+.treinador__subtitulo,
+.gerir__subtitulo {
+  margin: 0 auto;
+  max-width: 640px;
+  color: var(--phyto-ink-soft);
+  font-size: 0.95rem;
+}
+
+.identificador__selector {
+  max-width: 520px;
+  margin: 0 auto 1.25rem;
+}
+
+.identificador__selector-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--phyto-ink);
+}
+
+.identificador__painel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .identificador__painel {
+    grid-template-columns: 1fr;
+  }
+}
+
+.identificador__source,
+.identificador__painel-esquerda,
+.identificador__painel-direita {
+  background: var(--phyto-card-bg);
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-md);
+  padding: 1rem;
+}
+
+.identificador__capture,
+.treinador__capture {
+  background: var(--phyto-sage);
+  border-radius: var(--phyto-radius-sm);
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.identificador__video,
+.treinador__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scaleX(-1);
+}
+
+.identificador__placeholder,
+.treinador__placeholder {
+  text-align: center;
+  color: var(--phyto-ink-soft);
+  padding: 2rem 1rem;
+}
+
+.identificador__placeholder-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.identificador__placeholder-text {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.identificador__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.ident-btn {
+  font-size: 0.85rem;
+}
+
+.identificador__links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.identificador__links .btn {
+  width: 100%;
+  text-align: left;
+}
+
+/* ---- Resultado da predição ---- */
+.prediction {
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.prediction--muted {
+  color: var(--phyto-ink-soft);
+  font-size: 0.95rem;
+  justify-content: center;
+  text-align: center;
+  align-items: center;
+}
+
+.prediction--erro {
+  color: #b04242;
+  font-size: 0.95rem;
+  justify-content: center;
+  text-align: center;
+  align-items: center;
+}
+
+html[data-theme="dark"] .prediction--erro {
+  color: #ef9a9a;
+}
+
+.prediction__resumo {
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-sm);
+  padding: 0.85rem 0.9rem;
+  background: var(--phyto-green-100);
+}
+
+.prediction__planta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.prediction__topo-icone {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.prediction__topo-texto {
+  display: flex;
+  flex-direction: column;
+}
+
+.prediction__topo-rotulo {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--phyto-ink-soft);
+}
+
+.prediction__topo-nome {
+  font-size: 1.25rem;
+  color: var(--phyto-ink);
+}
+
+.prediction__barra {
+  height: 10px;
+  background: var(--phyto-border);
+  border-radius: 999px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.prediction__barra--linha {
+  height: 8px;
+}
+
+.prediction__barra-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--phyto-green-600), var(--phyto-green-700));
+  transition: width 0.25s ease;
+}
+
+.prediction__pct,
+.prediction__linha-pct {
+  font-weight: 700;
+  color: var(--phyto-ink);
+  font-size: 0.9rem;
+}
+
+.prediction__toggle {
+  align-self: flex-start;
+  padding: 0;
+  color: var(--phyto-green-700);
+  text-decoration: none;
+}
+
+.prediction__lista {
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-sm);
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.prediction__linha {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.prediction__linha-nome {
+  width: 150px;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  color: var(--phyto-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prediction__linha--topo {
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .prediction__linha-nome {
+    width: 110px;
+  }
+}
+
+/* ==========================================================================
+   Treinador de Plantas (/treinador, ADM)
+   ========================================================================== */
+.treinador__cabecalho {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.treinador__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .treinador__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.treinador__coluna-webcam,
+.treinador__coluna-classes,
+.gerir__importar,
+.gerir__item {
+  background: var(--phyto-card-bg);
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-md);
+}
+
+.treinador__coluna-webcam,
+.treinador__coluna-classes {
+  padding: 1rem;
+}
+
+.treinador__capture {
+  margin-bottom: 0.75rem;
+}
+
+.treinador__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.classe-classe {
+  position: relative;
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-sm);
+  padding: 0.85rem;
+  background: var(--phyto-green-100);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.classe-classe--gravando {
+  border-color: var(--phyto-green-600);
+  box-shadow: 0 0 0 3px var(--phyto-green-100);
+}
+
+.classe-classe__remover {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: none;
+  background: transparent;
+  color: var(--phyto-ink-soft);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.classe-classe__remover:hover {
+  color: #fff;
+  background: #b04242;
+}
+
+.classe-classe__nome {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--phyto-border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: var(--phyto-card-bg);
+  color: var(--phyto-ink);
+}
+
+.classe-classe__contagem {
+  font-size: 0.8rem;
+  color: var(--phyto-ink-soft);
+}
+
+.classe-classe__gravar,
+.classe-classe__upload {
+  font-size: 0.82rem;
+}
+
+.treinador__salvar {
+  border-top: 1px solid var(--phyto-border);
+  padding-top: 1rem;
+}
+
+.treinador__salvar-titulo {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+/* ==========================================================================
+   Gerir Modelos de IA (/gerir-modelos, ADM)
+   ========================================================================== */
+.gerir__cabecalho {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.gerir__importar,
+.gerir__item {
+  padding: 1rem;
+}
+
+.gerir__item {
+  border-radius: var(--phyto-radius-sm);
+}
+
