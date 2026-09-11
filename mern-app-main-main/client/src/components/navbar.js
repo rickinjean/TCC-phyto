@@ -129,6 +129,13 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                 </div>
                             </div>
 
+                            <div className="custom-navbar__user-panel-section">
+                                <span className="custom-navbar__user-panel-caption">Ferramentas</span>
+                                <NavLink className="custom-navbar__user-panel-link" to="/identificador" onClick={closeUserMenu}>
+                                    🧬 Identificar Plantas
+                                </NavLink>
+                            </div>
+
                             {role === "ADM" && (
                                 <div className="custom-navbar__user-panel-section">
                                     <span className="custom-navbar__user-panel-caption">Administração</span>
