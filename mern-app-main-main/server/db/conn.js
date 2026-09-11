@@ -12,72 +12,87 @@ const client = new MongoClient(Db)
 
 var _db
 
-// Remove índices legados de users.user/users.email cuja spec divirja do
-// formato parcial atual (ex.: email_1 único completo criado no deploy que
-// crashou). Idempotente: a cada boot, se o índice já estiver correto, não faz
-// nada. Janela entre drop e recriação é de milissegundos.
-async function alignUniqueIndexes(users) {
-    try {
-        const existing = await users.indexes()
-        const desejados = [
-            { key: { user: 1 }, partial: { user: { $type: "string" } } },
-            { key: { email: 1 }, partial: { email: { $type: "string" } } },
-        ]
-        for (const def of desejados) {
-            const key = JSON.stringify(def.key)
-            const idx = existing.find(i => JSON.stringify(i.key) === key)
-            if (!idx) continue
-            const confere = idx.partialFilterExpression &&
-                JSON.stringify(idx.partialFilterExpression) === JSON.stringify(def.partial)
-            if (!idx.unique || !confere) {
-                await users.dropIndex(idx.name)
-                logger.info({ index: idx.name }, "Índice legado divergente removido para recriação parcial")
-            }
-        }
-    } catch (error) {
-        logger.warn({ err: error.message }, "Falha ao alinhar índices existentes — prosseguindo")
-    }
+const INDEX_SPECS = [
+    { collection: "users", indexes: [
+        { key: { user: 1 }, options: { unique: true, partialFilterExpression: { user: { $type: "string" } } } },
+        { key: { email: 1 }, options: { unique: true, partialFilterExpression: { email: { $type: "string" } } } },
+    ] },
+    { collection: "sessions", indexes: [
+        { key: { tokenHash: 1 }, options: {} },
+        { key: { expiresAt: 1 }, options: { expireAfterSeconds: 0 } },
+    ] },
+    { collection: "userlist_items", indexes: [
+        { key: { listId: 1 }, options: {} },
+        { key: { plantId: 1 }, options: {} },
+    ] },
+    { collection: "favorites", indexes: [
+        { key: { userId: 1, plantId: 1 }, options: {} },
+    ] },
+    { collection: "suggestions", indexes: [
+        { key: { userId: 1 }, options: {} },
+        { key: { status: 1 }, options: {} },
+    ] },
+    { collection: "messages", indexes: [
+        { key: { createdAt: -1 }, options: {} },
+    ] },
+]
+
+// Compara um índice existente com a spec desejada pela key pattern e pelas
+// options funcionais (unique, partialFilterExpression, expireAfterSeconds).
+// Indices únicos PARCIAIS de users/user e users/email: aplicam unicidade só
+// em documentos onde o campo existe e é string; registros legados com o campo
+// ausente (null) não entram — sem isso o boot falharia com E11000.
+function indexMatches(existingIdx, spec) {
+    const op = spec.options || {}
+    if (JSON.stringify(existingIdx.key) !== JSON.stringify(spec.key)) return false
+    if (!!existingIdx.unique !== !!op.unique) return false
+    const temPartial = !!existingIdx.partialFilterExpression
+    if (temPartial !== !!op.partialFilterExpression) return false
+    if (temPartial && JSON.stringify(existingIdx.partialFilterExpression) !== JSON.stringify(op.partialFilterExpression)) return false
+    if ((existingIdx.expireAfterSeconds ?? 0) !== (op.expireAfterSeconds ?? 0)) return false
+    return true
 }
 
-async function createIndexes(db) {
-    const users = db.collection("users")
+// Sincroniza o conjunto de índices declarado em INDEX_SPECS. Cria apenas os
+// que não existem e recria os que existem com spec divergente (ex.: email_1
+// único completo criado em deploy que crashou). Em estado estável faz só
+// listIndexes, sem comandos de criação redundantes.
+async function syncIndexes(db) {
+    const cria = []
+    let verificadas = 0
+    let removidas = 0
 
-    // Índices únicos PARCIAIS: aplicam unicidade apenas em documentos onde o
-    // campo existe e é string. Registros legados com `user`/`email` ausentes
-    // (null) não entram no índice — sem isso, o build falha com E11000
-    // (dup key: { user: null }).
-    await alignUniqueIndexes(users)
-
-    const tasks = [
-        users.createIndex(
-            { user: 1 },
-            { unique: true, partialFilterExpression: { user: { $type: "string" } } }
-        ),
-        users.createIndex(
-            { email: 1 },
-            { unique: true, partialFilterExpression: { email: { $type: "string" } } }
-        ),
-        db.collection("sessions").createIndex({ tokenHash: 1 }),
-        db.collection("sessions").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
-        db.collection("userlist_items").createIndex({ listId: 1 }),
-        db.collection("userlist_items").createIndex({ plantId: 1 }),
-        db.collection("favorites").createIndex({ userId: 1, plantId: 1 }),
-        db.collection("suggestions").createIndex({ userId: 1 }),
-        db.collection("suggestions").createIndex({ status: 1 }),
-        db.collection("messages").createIndex({ createdAt: -1 }),
-    ]
+    for (const def of INDEX_SPECS) {
+        const col = db.collection(def.collection)
+        const existing = await col.listIndexes().toArray().catch(() => [])
+        for (const spec of def.indexes) {
+            const key = JSON.stringify(spec.key)
+            const idx = existing.find(i => JSON.stringify(i.key) === key)
+            if (!idx) {
+                cria.push(col.createIndex(spec.key, spec.options))
+                continue
+            }
+            if (indexMatches(idx, spec)) {
+                verificadas++
+            } else {
+                await col.dropIndex(idx.name).catch(() => {})
+                removidas++
+                cria.push(col.createIndex(spec.key, spec.options))
+            }
+        }
+    }
 
     // Um índice que falhe não pode derrubar o boot: registramos o aviso e
     // seguimos. Índices únicos com dados sujos já existentes (ex.: usernames
     // duplicados de verdade) ficam pendentes de limpeza manual, mas o serviço sobe.
-    const results = await Promise.allSettled(tasks)
+    const results = await Promise.allSettled(cria)
+    const criadas = results.filter(r => r.status === "fulfilled").length
     results.forEach((r, i) => {
-        if (r.status === "fulfilled") {
-            logger.info({ index: i }, "Índice criado/verificado")
-        } else {
+        if (r.status === "rejected") {
             logger.warn({ index: i, err: r.reason && r.reason.message }, "Falha ao criar índice — ignorado")
         }
     })
+    logger.info({ criadas, removidas, verificadas }, "Índices sincronizados")
 }
 
 module.exports = {
@@ -87,7 +102,7 @@ module.exports = {
             _db = client.db("phytografia") // Nome do BANCO DE DADOS
             logger.info("Conectado ao MongoDB")
 
-            await createIndexes(_db)
+            await syncIndexes(_db)
 
             return callback(null)
         } catch (error) {
