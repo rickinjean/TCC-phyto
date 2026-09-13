@@ -48,25 +48,18 @@ const REVIEW_GRUPOS = [
     {
         label: "🌿 Botânica",
         campos: [
-            ["origin", "Origem"], ["toxicity", "Toxicidade"], ["dificulty", "Dificuldade"],
+            ["fruit", "Tipo de Fruto"], ["origin", "Origem"], ["type", "Tipo"],
+            ["propagation", "Propagação"], ["toxicity", "Toxicidade"], ["dificulty", "Dificuldade"],
             ["Filo", "Filo"], ["Classe", "Classe"], ["Ordem", "Ordem"],
             ["Family", "Família"], ["Genero", "Gênero"], ["Especie", "Espécie"],
         ],
     },
     {
-        label: "🍂 Características Físicas",
+        label: "🍂 Física e Ambiente",
         campos: [
-            ["type", "Tipo"], ["height", "Altura/Porte"], ["flowercolor", "Cor da Flor"],
-            ["foliage", "Folhagem"], ["flowering", "Floração"], ["size", "Tamanho"],
-            ["fruit", "Fruto"], ["propagation", "Propagação"],
-        ],
-    },
-    {
-        label: "☀️ Necessidades Ambientais",
-        campos: [
-            ["light", "Luz"], ["water", "Água"], ["soil", "Solo"],
-            ["idealTemperature", "Temperatura"], ["iluminosity", "Horas de Sol"],
-            ["tolerance", "Tolerância"], ["protection", "Proteção Climática"],
+            ["height", "Altura/Porte"], ["flowercolor", "Cor da Flor"], ["foliage", "Folhagem"],
+            ["flowering", "Floração"], ["light", "Luz"], ["water", "Água"],
+            ["soil", "Solo"], ["size", "Tamanho"],
         ],
     },
     {
@@ -82,7 +75,8 @@ const REVIEW_GRUPOS = [
         label: "🌾 Cultivo",
         campos: [
             ["planting", "Plantio"], ["station", "Estação"], ["spacing", "Espaçamento"],
-            ["exhibition", "Exposição"], ["maintenance", "Manutenção"],
+            ["exhibition", "Exposição"], ["iluminosity", "Horas de Sol"], ["protection", "Proteção"],
+            ["maintenance", "Manutenção"], ["idealTemperature", "Temperatura"], ["tolerance", "Tolerância"],
         ],
     },
 ]
@@ -1049,12 +1043,24 @@ export default function PlantFormWizard({
                             icon="🌿"
                             title="Botânica"
                             optional
-                            filled={conjuntoPreenchido(["origin", "toxicity", "dificulty"], form)}
-                            total={3}
+                            filled={conjuntoPreenchido(["fruit", "origin", "type", "propagation", "toxicity", "dificulty"], form)}
+                            total={6}
                         >
+                            <div className="col-md-4 mb-3">
+                                <FieldLabel>Fruto</FieldLabel>
+                                { Field("fruit", "Tipo de fruto...") }
+                            </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Origem</FieldLabel>
                                 { Field("origin", "Origem geográfica...") }
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <FieldLabel>Tipo</FieldLabel>
+                                { Field("type", "Tipo de planta...") }
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <FieldLabel>Propagação</FieldLabel>
+                                { Field("propagation", "Como se propaga...") }
                             </div>
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Toxicidade</FieldLabel>
@@ -1110,10 +1116,6 @@ export default function PlantFormWizard({
                         </div>
                         <div className="row">
                             <div className="col-md-4 mb-3">
-                                <FieldLabel>Tipo</FieldLabel>
-                                { Field("type", "Tipo de planta...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
                                 <FieldLabel>Altura / Porte</FieldLabel>
                                 { Field("height", "Porte da planta...") }
                             </div>
@@ -1128,18 +1130,6 @@ export default function PlantFormWizard({
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Época de Floração</FieldLabel>
                                 { Field("flowering", "Quando floresce...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Tamanho</FieldLabel>
-                                { Field("size", "Tamanho do vaso/local...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Fruto</FieldLabel>
-                                { Field("fruit", "Tipo de fruto...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Propagação</FieldLabel>
-                                { Field("propagation", "Como se propaga...") }
                             </div>
                         </div>
                     </div>
@@ -1166,20 +1156,8 @@ export default function PlantFormWizard({
                                 { Field("soil", "Tipo de solo...") }
                             </div>
                             <div className="col-md-4 mb-3">
-                                <FieldLabel>Temperatura Ideal</FieldLabel>
-                                { Field("idealTemperature", "Temperatura...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Horas de Sol</FieldLabel>
-                                { Field("iluminosity", "Horas diárias...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Tolerância</FieldLabel>
-                                { Field("tolerance", "Tolerância...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Proteção Climática</FieldLabel>
-                                { Field("protection", "Proteção climática...") }
+                                <FieldLabel>Tamanho</FieldLabel>
+                                { Field("size", "Tamanho recomendado...") }
                             </div>
                         </div>
                     </div>
@@ -1283,10 +1261,14 @@ export default function PlantFormWizard({
                             icon="☀️"
                             title="Exposição Solar"
                             optional
-                            filled={conjuntoPreenchido(["exhibition"], form)}
-                            total={1}
+                            filled={conjuntoPreenchido(["exhibition", "iluminosity", "protection"], form)}
+                            total={3}
                         >
                             {CampoTex("exhibition", "Exposição Solar", "Condições de exposição solar...")}
+                            {ColunaSelects([
+                                ["iluminosity", "Horas de Sol", "Horas diárias..."],
+                                ["protection", "Proteção", "Proteção climática..."],
+                            ])}
                         </FieldGroup>
 
                         <FieldGroup
@@ -1294,10 +1276,14 @@ export default function PlantFormWizard({
                             icon="🔧"
                             title="Manutenção"
                             optional
-                            filled={conjuntoPreenchido(["maintenance"], form)}
-                            total={1}
+                            filled={conjuntoPreenchido(["maintenance", "idealTemperature", "tolerance"], form)}
+                            total={3}
                         >
                             {CampoTex("maintenance", "Manutenção", "Práticas de manutenção...")}
+                            {ColunaSelects([
+                                ["idealTemperature", "Temperatura Ideal", "Temperatura..."],
+                                ["tolerance", "Tolerância", "Tolerância..."],
+                            ])}
                         </FieldGroup>
                     </div>
                 )}
