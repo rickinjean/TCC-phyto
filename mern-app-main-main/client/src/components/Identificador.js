@@ -5,8 +5,6 @@ import ModelSelector from "./identificador/ModelSelector"
 import ImageInput from "./identificador/ImageInput"
 import PredictionDisplay from "./identificador/PredictionDisplay"
 
-const TM_URL = "https://teachablemachine.withgoogle.com/train/image"
-
 // Página pública de identificação de plantas por foto/webcam.
 export default function Identificador({ role }) {
     usePageTitle("Identificador de Plantas", "Identifique plantas por foto ou webcam usando modelos de IA treinados no Phytografia.", "/identificador")
@@ -70,7 +68,7 @@ export default function Identificador({ role }) {
                 <h1 className="identificador__titulo">🔍 Identificador de Plantas</h1>
                 <p className="identificador__subtitulo">
                     Aponte a câmera ou envie uma foto e descubra qual planta está na imagem.
-                    Tecnologia de IA treinada com o Teachable Machine.
+                    Tecnologia de IA treinada no próprio aplicativo.
                 </p>
             </div>
 
@@ -88,9 +86,6 @@ export default function Identificador({ role }) {
                     <PredictionDisplay predicoes={predicoes} status={status} erroMsg={erroMsg} />
 
                     <div className="identificador__links">
-                        <a className="btn btn-outline-success btn-sm" href={TM_URL} target="_blank" rel="noopener noreferrer">
-                            🎓 Treinar um modelo no Teachable Machine
-                        </a>
                         {role === "ADM" && (
                             <a className="btn btn-outline-secondary btn-sm" href="/treinador">
                                 🧪 Treinador (criar modelo no app)

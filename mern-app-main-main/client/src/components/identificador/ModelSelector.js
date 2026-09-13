@@ -1,4 +1,4 @@
-// Dropdown de seleção do modelo ativo (KNN do app ou TM importado).
+// Dropdown de seleção do modelo ativo (KNN treinado no app).
 export default function ModelSelector({ modelos, selecionadoId, onSelecionar, desabilitado }) {
     return (
         <div className="identificador__selector">
@@ -18,10 +18,9 @@ export default function ModelSelector({ modelos, selecionadoId, onSelecionar, de
             >
                 <option value="">— Nenhum modelo selecionado —</option>
                 {modelos.map(function (m) {
-                    const tipo = m.tipo === "tm" ? "TM importado" : "Treinado no app"
                     return (
                         <option key={m._id} value={m._id}>
-                            {m.nome} · {m.totalClasses} classe(s) · {tipo}
+                            {m.nome} · {m.totalClasses} classe(s) · Treinado no app
                         </option>
                     )
                 })}
