@@ -2,7 +2,6 @@ const mongodb = require("mongodb")
 const dbo = require("./db/conn")
 
 let imageBucket = null
-let modelBucket = null
 
 function getBucket() {
     if (!imageBucket) {
@@ -11,11 +10,4 @@ function getBucket() {
     return imageBucket
 }
 
-function getModelBucket() {
-    if (!modelBucket) {
-        modelBucket = new mongodb.GridFSBucket(dbo.getDb(), { bucketName: "models" })
-    }
-    return modelBucket
-}
-
-module.exports = { getBucket, getModelBucket }
+module.exports = { getBucket }
