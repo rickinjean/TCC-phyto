@@ -221,6 +221,11 @@ export default function PlantFormWizard({
     const [modalSearch, setModalSearch] = useState("")
     const [toast, setToast] = useState(null)
     const [hasDraft, setHasDraft] = useState(false)
+    const [identifyResults, setIdentifyResults] = useState([])
+    const [identifyLoading, setIdentifyLoading] = useState(false)
+    const [identifyErro, setIdentifyErro] = useState("")
+    const [identifyOrgan, setIdentifyOrgan] = useState("auto")
+    const [identifyActive, setIdentifyActive] = useState("")
     const autoSaveTimer = useRef(null)
 
     const steps = withReview ? [...BASE_STEPS, REVIEW_STEP] : BASE_STEPS
@@ -345,6 +350,78 @@ export default function PlantFormWizard({
         setCurrentStep(0)
         setHasDraft(false)
         showToast("Rascunho limpo!")
+    }
+
+    // Retorna a imagem a ser enviada para identificação: prioriza um arquivo
+    // novo recém-selecionado; senão, busca a primeira imagem já cadastrada.
+    async function imagemParaIdentificacao() {
+        if (imageFiles.length > 0) return imageFiles[0]
+        if (existingImages.length > 0) {
+            const res = await fetch(`${API_URL}${existingImages[0]}`)
+            if (!res.ok) return null
+            return new File([await res.blob()], "imagem.jpg", {
+                type: res.headers.get("content-type") || "image/jpeg",
+            })
+        }
+        return null
+    }
+
+    async function identificarPlanta() {
+        if (identifyLoading) return
+        let imagem
+        try {
+            imagem = await imagemParaIdentificacao()
+        } catch {
+            imagem = null
+        }
+        if (!imagem) {
+            showToast("Adicione uma imagem da planta primeiro.", "error")
+            return
+        }
+        setIdentifyLoading(true)
+        setIdentifyErro("")
+        setIdentifyResults([])
+        setIdentifyActive("")
+        try {
+            const formData = new FormData()
+            formData.append("image", imagem)
+            formData.append("organ", identifyOrgan)
+            const response = await authFetch(`${API_URL}/identify`, {
+                method: "POST",
+                body: formData,
+            })
+            if (!response) {
+                showToast("Sessão expirada. Faça login novamente.", "error")
+                return
+            }
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}))
+                setIdentifyErro(err.mensagem || "Não foi possível identificar a planta.")
+                return
+            }
+            const data = await response.json()
+            setIdentifyResults(data.resultados || [])
+            if (data.aviso) setIdentifyErro(data.aviso)
+        } catch {
+            setIdentifyErro("Erro ao conectar ao servidor.")
+        } finally {
+            setIdentifyLoading(false)
+        }
+    }
+
+    function aplicarIdentificacao(r) {
+        setIdentifyActive(r.scientificName)
+        const preencher = {}
+        if (r.nomePopular) preencher.name = r.nomePopular
+        if (r.scientificName) preencher.scientificName = r.scientificName
+        if (r.family) preencher.Family = r.family
+        if (r.genus) preencher.Genero = r.genus
+        if (r.species) preencher.Especie = r.species
+        if (r.filo) preencher.Filo = r.filo
+        if (r.classe) preencher.Classe = r.classe
+        if (r.ordem) preencher.Ordem = r.ordem
+        updateForm(preencher)
+        showToast("Campos de taxonomia preenchidos pela identificação.")
     }
 
     function abrirModalPara(campo) {
@@ -565,6 +642,83 @@ export default function PlantFormWizard({
                                     existingImages={existingImages}
                                     setExistingImages={setExistingImages}
                                 />
+                            </div>
+                            <div className="col-12 mb-3">
+                                <div className="wizard-identify">
+                                    <div className="wizard-identify__head">
+                                        <div>
+                                            <div className="wizard-identify__title">🔍 Identificar com Pl@ntNet</div>
+                                            <div className="wizard-identify__hint">
+                                                Envia a imagem para a IA identificar a planta e preenche os campos de taxonomia automaticamente.
+                                            </div>
+                                        </div>
+                                        <div className="d-flex gap-2 flex-wrap">
+                                            <select
+                                                className="form-select form-select-sm wizard-identify__select"
+                                                value={identifyOrgan}
+                                                onChange={e => setIdentifyOrgan(e.target.value)}
+                                                aria-label="Órgão da planta na imagem"
+                                            >
+                                                <option value="auto">Auto-detectar</option>
+                                                <option value="leaf">Folha</option>
+                                                <option value="flower">Flor</option>
+                                                <option value="fruit">Fruto</option>
+                                                <option value="bark">Caule / Casca</option>
+                                            </select>
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-primary wizard-identify__btn"
+                                                onClick={identificarPlanta}
+                                                disabled={identifyLoading || (imageFiles.length === 0 && existingImages.length === 0)}
+                                            >
+                                                {identifyLoading ? (
+                                                    <><span className="spinner-border spinner-border-sm me-2" />Identificando...</>
+                                                ) : "Identificar planta"}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {identifyErro && (
+                                        <div className="wizard-identify__erro">{identifyErro}</div>
+                                    )}
+
+                                    {identifyResults.length > 0 && (
+                                        <div className="wizard-identify__results">
+                                            {identifyResults.map((r, i) => {
+                                                const pct = Math.round(r.score * 100)
+                                                const ativo = identifyActive === r.scientificName
+                                                return (
+                                                    <button
+                                                        key={`${r.scientificName}-${i}`}
+                                                        type="button"
+                                                        className={`wizard-identify__result${ativo ? " is-active" : ""}`}
+                                                        onClick={() => aplicarIdentificacao(r)}
+                                                    >
+                                                        <div className="wizard-identify__result-topo">
+                                                            <span className="wizard-identify__nome">{r.scientificName}</span>
+                                                            <span className="wizard-identify__pct">{pct}%</span>
+                                                        </div>
+                                                        <div className="wizard-identify__score">
+                                                            <span className="wizard-identify__score-bar" style={{ width: `${pct}%` }} />
+                                                        </div>
+                                                        <div className="wizard-identify__meta">
+                                                            {r.nomePopular && <span>{r.nomePopular}</span>}
+                                                            {r.family && <span>Família: {r.family}</span>}
+                                                            {(r.filo || r.classe || r.ordem) && (
+                                                                <span className="text-muted">
+                                                                    {[r.filo, r.classe, r.ordem].filter(Boolean).join(" · ")}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </button>
+                                                )
+                                            })}
+                                            <div className="wizard-identify__hint">
+                                                Clique em um resultado para preencher o formulário.
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div className="col-12 mb-3">
                                 <div className="d-flex justify-content-between align-items-end">

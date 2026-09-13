@@ -5890,3 +5890,150 @@ html[data-theme="dark"] .sugestao-cards .admin-message-card__header:hover {
   color: var(--phyto-ink);
 }
 
+/* ==========================================================================
+   Identificação com Pl@ntNet (cadastro de planta — ADM)
+   ========================================================================== */
+
+.wizard-identify {
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-md);
+  background: var(--phyto-card-bg);
+  padding: 0.9rem 1rem;
+}
+
+.wizard-identify__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.wizard-identify__title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--phyto-green-900);
+}
+
+.wizard-identify__hint {
+  font-size: 0.82rem;
+  color: var(--phyto-ink-soft, #64748b);
+  margin-top: 0.15rem;
+}
+
+.wizard-identify__select {
+  width: auto;
+  min-width: 150px;
+}
+
+.wizard-identify__btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.wizard-identify__erro {
+  margin-top: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--phyto-radius-sm);
+  border: 1px solid rgba(192, 57, 43, 0.35);
+  background: rgba(192, 57, 43, 0.08);
+  color: #b23a2f;
+  font-size: 0.85rem;
+}
+
+.wizard-identify__results {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.wizard-identify__result {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-sm);
+  background: var(--phyto-surface);
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.wizard-identify__result:hover {
+  border-color: var(--phyto-green-600);
+  transform: translateY(-1px);
+}
+
+.wizard-identify__result.is-active {
+  border-color: var(--phyto-green-600);
+  box-shadow: 0 0 0 2px rgba(47, 138, 93, 0.18);
+}
+
+.wizard-identify__result-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.wizard-identify__nome {
+  font-weight: 700;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--phyto-ink);
+}
+
+.wizard-identify__pct {
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: var(--phyto-green-700);
+  white-space: nowrap;
+}
+
+.wizard-identify__score {
+  margin-top: 0.4rem;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(47, 138, 93, 0.15);
+  overflow: hidden;
+}
+
+.wizard-identify__score-bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--phyto-green-600), var(--phyto-green-800));
+}
+
+.wizard-identify__meta {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--phyto-green-700);
+}
+
+html[data-theme="dark"] .wizard-identify {
+  border-color: rgba(133, 214, 158, 0.2);
+  background: rgba(20, 44, 31, 0.6);
+}
+
+html[data-theme="dark"] .wizard-identify__title {
+  color: #dff8e7;
+}
+
+html[data-theme="dark"] .wizard-identify__result {
+  border-color: rgba(133, 214, 158, 0.22);
+  background: rgba(20, 44, 31, 0.9);
+}
+
+html[data-theme="dark"] .wizard-identify__nome {
+  color: #e8f7ec;
+}
+
+html[data-theme="dark"] .wizard-identify__meta {
+  color: #8fdfaa;
+}
+
