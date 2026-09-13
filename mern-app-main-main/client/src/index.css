@@ -6068,19 +6068,12 @@ html[data-theme="dark"] .wizard-identify__meta {
   background: var(--phyto-surface);
   border-radius: var(--phyto-radius-sm);
   padding: 0.6rem 0.75rem;
-  cursor: pointer;
-  text-align: left;
+  cursor: default;
   color: inherit;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .wizard-group__head:hover {
   border-color: var(--phyto-green-600);
-}
-
-.wizard-group__head:focus-visible {
-  outline: 2px solid var(--phyto-green-600);
-  outline-offset: 1px;
 }
 
 .wizard-group__title {
@@ -6097,35 +6090,15 @@ html[data-theme="dark"] .wizard-identify__meta {
   line-height: 1;
 }
 
-.wizard-group__right {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
 .wizard-group__meta {
   font-size: 0.75rem;
   color: var(--phyto-ink-soft, #64748b);
   white-space: nowrap;
 }
 
-.wizard-group__chevron {
-  color: var(--phyto-green-700);
-  font-size: 0.8rem;
-  transition: transform 180ms ease;
-}
-
-.wizard-group.is-collapsed .wizard-group__chevron {
-  transform: rotate(-90deg);
-}
-
 .wizard-group__body {
   padding: 0.9rem 0.1rem 0.25rem;
   animation: wizard-fade-in 200ms ease;
-}
-
-.wizard-group.is-collapsed .wizard-group__body {
-  display: none;
 }
 
 @keyframes wizard-fade-in {

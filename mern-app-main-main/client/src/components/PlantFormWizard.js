@@ -118,20 +118,17 @@ function conjuntoPreenchido(campos, form) {
     return campos.filter(k => form[k] && String(form[k]).trim()).length
 }
 
-function FieldGroup({ id, icon, title, optional, filled, total, open, onToggle, hint, children }) {
+function FieldGroup({ id, icon, title, optional, filled, total, hint, children }) {
     return (
-        <div className={`wizard-group${open ? "" : " is-collapsed"}`}>
-            <button type="button" className="wizard-group__head" onClick={onToggle} aria-expanded={open}>
+        <div className="wizard-group">
+            <div className="wizard-group__head">
                 <span className="wizard-group__title">
                     <span className="wizard-group__icon">{icon}</span>
                     {title}
                     {optional && <span className="wizard-tag-optional">opcional</span>}
                 </span>
-                <span className="wizard-group__right">
-                    <span className="wizard-group__meta">{filled}/{total} preenchidos</span>
-                    <span className="wizard-group__chevron">▾</span>
-                </span>
-            </button>
+                <span className="wizard-group__meta">{filled}/{total} preenchidos</span>
+            </div>
             <div className="wizard-group__body">
                 {hint && <p className="wizard-group__hint">{hint}</p>}
                 <div className="row">{children}</div>
@@ -294,22 +291,7 @@ export default function PlantFormWizard({
     const [catalogResults, setCatalogResults] = useState([])
     const [catalogLoading, setCatalogLoading] = useState(false)
     const [catalogSearched, setCatalogSearched] = useState(false)
-    const [gruposAbertos, setGruposAbertos] = useState(() => ({
-        "s1-botanica": true,
-        "s1-taxonomia": false,
-        "s4-rega": true,
-        "s4-adubacao": false,
-        "s4-poda": false,
-        "s4-pragas": false,
-        "s5-plantio": true,
-        "s5-exposicao": false,
-        "s5-manutencao": false,
-    }))
     const autoSaveTimer = useRef(null)
-
-    function toggleGrupo(id) {
-        setGruposAbertos(prev => ({ ...prev, [id]: !prev[id] }))
-    }
 
     const steps = withReview ? [...BASE_STEPS, REVIEW_STEP] : BASE_STEPS
 
@@ -1047,8 +1029,6 @@ export default function PlantFormWizard({
                             optional
                             filled={conjuntoPreenchido(["fruit", "origin", "type", "propagation", "toxicity", "dificulty"], form)}
                             total={6}
-                            open={gruposAbertos["s1-botanica"]}
-                            onToggle={() => toggleGrupo("s1-botanica")}
                         >
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Fruto</FieldLabel>
@@ -1082,8 +1062,6 @@ export default function PlantFormWizard({
                             hint="Preenchido automaticamente pela identificação"
                             filled={conjuntoPreenchido(["Filo", "Classe", "Ordem", "Family", "Genero", "Especie"], form)}
                             total={6}
-                            open={gruposAbertos["s1-taxonomia"]}
-                            onToggle={() => toggleGrupo("s1-taxonomia")}
                         >
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Filo</FieldLabel>
@@ -1184,8 +1162,6 @@ export default function PlantFormWizard({
                             optional
                             filled={conjuntoPreenchido(["watering", "manha", "amount"], form)}
                             total={3}
-                            open={gruposAbertos["s4-rega"]}
-                            onToggle={() => toggleGrupo("s4-rega")}
                         >
                             {CampoTex("watering", "Rega", "Como regar esta planta...")}
                             {ColunaSelects([
@@ -1201,8 +1177,6 @@ export default function PlantFormWizard({
                             optional
                             filled={conjuntoPreenchido(["fertilizing", "frequency", "NPK"], form)}
                             total={3}
-                            open={gruposAbertos["s4-adubacao"]}
-                            onToggle={() => toggleGrupo("s4-adubacao")}
                         >
                             {CampoTex("fertilizing", "Adubação", "Como adubar esta planta...")}
                             {ColunaSelects([
@@ -1218,8 +1192,6 @@ export default function PlantFormWizard({
                             optional
                             filled={conjuntoPreenchido(["pruning", "season", "tools"], form)}
                             total={3}
-                            open={gruposAbertos["s4-poda"]}
-                            onToggle={() => toggleGrupo("s4-poda")}
                         >
                             {CampoTex("pruning", "Poda", "Como podar...")}
                             {ColunaSelects([
@@ -1235,8 +1207,6 @@ export default function PlantFormWizard({
                             optional
                             filled={conjuntoPreenchido(["pests", "prevention", "monitoring"], form)}
                             total={3}
-                            open={gruposAbertos["s4-pragas"]}
-                            onToggle={() => toggleGrupo("s4-pragas")}
                         >
                             {CampoTex("pests", "Pragas e Doenças", "Pragas comuns e tratamento...")}
                             {ColunaSelects([
@@ -1262,8 +1232,6 @@ export default function PlantFormWizard({
                             optional
                             filled={conjuntoPreenchido(["planting", "station", "spacing"], form)}
                             total={3}
-                            open={gruposAbertos["s5-plantio"]}
-                            onToggle={() => toggleGrupo("s5-plantio")}
                         >
                             {CampoTex("planting", "Plantio", "Como plantar...")}
                             {ColunaSelects([
@@ -1279,8 +1247,6 @@ export default function PlantFormWizard({
                             optional
                             filled={conjuntoPreenchido(["exhibition", "iluminosity", "protection"], form)}
                             total={3}
-                            open={gruposAbertos["s5-exposicao"]}
-                            onToggle={() => toggleGrupo("s5-exposicao")}
                         >
                             {CampoTex("exhibition", "Exposição Solar", "Condições de exposição solar...")}
                             {ColunaSelects([
@@ -1296,8 +1262,6 @@ export default function PlantFormWizard({
                             optional
                             filled={conjuntoPreenchido(["maintenance", "idealTemperature", "tolerance"], form)}
                             total={3}
-                            open={gruposAbertos["s5-manutencao"]}
-                            onToggle={() => toggleGrupo("s5-manutencao")}
                         >
                             {CampoTex("maintenance", "Manutenção", "Práticas de manutenção...")}
                             {ColunaSelects([
