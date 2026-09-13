@@ -16,7 +16,8 @@ export default function Footer() {
               <span className="site-footer__brand-name">Phytografia</span>
             </div>
             <p className="site-footer__tagline">
-              Sistema de Pesquisa Botânica
+              Plataforma acadêmica do IFC Campus Sombrio para catalogação e pesquisa
+              de espécies botânicas da região.
             </p>
           </div>
 
@@ -27,7 +28,7 @@ export default function Footer() {
               <li><NavLink className="site-footer__link" to="/inicio">Início</NavLink></li>
               <li><NavLink className="site-footer__link" to="/plantlist">Catálogo</NavLink></li>
               <li><NavLink className="site-footer__link" to="/Sobre">Sobre</NavLink></li>
-              <li><NavLink className="site-footer__link" to="/minhas-listas">Minhas Listas</NavLink></li>
+              <li><NavLink className="site-footer__link" to="/sugerir">Sugerir Planta</NavLink></li>
             </ul>
           </div>
 
@@ -39,15 +40,15 @@ export default function Footer() {
               <i className="fas fa-map-marker-alt" aria-hidden="true"></i>{" "}
               IFC — Campus Sombrio, SC, Brasil
             </p>
+            <p className="site-footer__links">
+              <NavLink className="site-footer__link" to="/Sobre">Fale conosco</NavLink>
+            </p>
           </div>
         </div>
 
         <div className="site-footer__bottom">
           <p className="site-footer__text site-footer__text--small">
-            &copy; {year} Phytografia · Projeto MERN — IFC Campus Sombrio
-          </p>
-          <p className="site-footer__text site-footer__text--small site-footer__disclaimer">
-            Este site é um trabalho acadêmico com finalidade de pesquisa botânica.
+            &copy; {year} Phytografia · Trabalho acadêmico de pesquisa botânica — IFC Campus Sombrio
           </p>
         </div>
       </div>

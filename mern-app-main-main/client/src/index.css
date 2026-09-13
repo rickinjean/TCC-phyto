@@ -763,12 +763,6 @@ html[data-theme="dark"] .custom-navbar__user-panel-action:hover {
   text-align: center;
 }
 
-.site-footer__disclaimer {
-  margin: 0.5rem auto 0;
-  max-width: 720px;
-  line-height: 1.5;
-}
-
 .site-footer__text--small {
   font-size: 0.85rem;
   color: rgba(226, 241, 232, 0.6);
