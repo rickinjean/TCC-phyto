@@ -3,7 +3,7 @@ import API_URL from "../config"
 import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
 import { decodeId } from "../idCodec"
-import SearchableSelect from "./SearchableSelect"
+
 import sortPorNome from "../sortOptions"
 
 const BASE_STEPS = [
@@ -690,16 +690,32 @@ export default function PlantFormWizard({
     }
 
     function Field(campo, placeholder) {
+        const opcoes = opcoesBanco[campo] || []
         return (
-            <SearchableSelect
-                campo={campo}
-                placeholder={placeholder}
-                value={form[campo]}
-                options={opcoesBanco[campo] || []}
-                onChange={id => updateForm({ [campo]: id })}
-                onManage={() => abrirModalPara(campo)}
-                onDelete={id => deletarItemDoCampo(campo, id)}
-            />
+            <div className="wizard-select-group">
+                <select
+                    className="form-select"
+                    value={form[campo] || ""}
+                    onChange={e => updateForm({ [campo]: e.target.value })}
+                    aria-label={placeholder}
+                >
+                    <option value="">{placeholder}…</option>
+                    {opcoes.length === 0 && (
+                        <option value="" disabled>— sem opções, use o + para adicionar —</option>
+                    )}
+                    {opcoes.map(o => (
+                        <option key={o._id} value={o._id}>{o.name}</option>
+                    ))}
+                </select>
+                <button
+                    type="button"
+                    className="wizard-select-plus"
+                    onClick={() => abrirModalPara(campo)}
+                    title="Gerenciar valores"
+                >
+                    +
+                </button>
+            </div>
         )
     }
 
