@@ -7,7 +7,6 @@ export default function PlantImage({
     alt,
     className = "",
     fallback = "",
-    aspectRatio,
     // Variantes responsivas (srcset) — URLs já totalmente qualificadas
     avifSrcset,
     webpSrcset,
@@ -38,7 +37,6 @@ export default function PlantImage({
         if (fallback && currentSrc !== fallback) setCurrentSrc(fallback)
     }
 
-    const ratio = aspectRatio && Number(aspectRatio) > 0 ? Number(aspectRatio) : null
     const hasSrcset = !!(avifSrcset || webpSrcset || imgSrcset)
 
     const showAvifSource = avifSrcset || avifSrc
@@ -61,7 +59,6 @@ export default function PlantImage({
                 loading="lazy"
                 decoding="async"
                 className={`${className}${isSmall ? " is-small" : ""}`}
-                style={ratio ? { aspectRatio: String(ratio), width: "100%", height: "auto" } : undefined}
                 onLoad={handleLoad}
                 onError={handleError}
                 {...rest}
