@@ -6015,6 +6015,22 @@ html[data-theme="dark"] .sugestao-cards .admin-message-card__header:hover {
   color: var(--phyto-green-700);
 }
 
+.wizard-identify__faltantes {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: #a8661d;
+  background: rgba(240, 173, 78, 0.12);
+  border: 1px solid rgba(240, 173, 78, 0.3);
+  border-radius: var(--phyto-radius-sm);
+  padding: 0.3rem 0.5rem;
+}
+
+html[data-theme="dark"] .wizard-identify__faltantes {
+  color: #eec183;
+  background: rgba(240, 173, 78, 0.1);
+  border-color: rgba(240, 173, 78, 0.28);
+}
+
 html[data-theme="dark"] .wizard-identify {
   border-color: rgba(133, 214, 158, 0.2);
   background: rgba(20, 44, 31, 0.6);

@@ -59,10 +59,70 @@ async function buscarTaxonomiaGBIF(gbifId) {
     }
 }
 
-function montarResultados(apiData, taxonomia) {
+// Fallback: quando a Pl@ntNet não devolveu a classe/filo/ordem, casa o nome
+// científico no GBIF Species Match e usa a classificação completa do resultado.
+async function casarTaxonomiaGBIF(nomeCientifico) {
+    if (!nomeCientifico) return null
+    try {
+        const { data } = await axios.get("https://api.gbif.org/v1/species/match", {
+            params: { name: nomeCientifico, strict: false },
+            timeout: 10000,
+            headers: { "User-Agent": "PhytografiaTCC (trabalho academico)" },
+        })
+        return {
+            filo: data.phylum || null,
+            classe: data.clazz || data.className || null,
+            ordem: data.order || null,
+            family: data.family || null,
+        }
+    } catch (err) {
+        logger.warn({ nomeCientifico, err: err.message || "Erro" }, "[identify] Falha ao casar taxonomia GBIF")
+        return null
+    }
+}
+
+// Fallback: quando a Pl@ntNet não devolve nome comum, busca os nomes
+// vernaculares do GBIF (por > espanhol > inglês).
+async function buscarNomeVernacularGBIF(gbifId) {
+    if (!gbifId) return ""
+    try {
+        const { data } = await axios.get(
+            `https://api.gbif.org/v1/species/${encodeURIComponent(gbifId)}/vernacularNames`,
+            { timeout: 10000, headers: { "User-Agent": "PhytografiaTCC (trabalho academico)" } }
+        )
+        const nomes = Array.isArray(data.results) ? data.results : []
+        const langs = ["por", "spa", "eng"]
+        for (const lang of langs) {
+            const achado = nomes.find(n => n && n.language === lang && n.vernacularName && String(n.vernacularName).trim())
+            if (achado) return String(achado.vernacularName).trim()
+        }
+        const qualquer = nomes.find(n => n && n.vernacularName && String(n.vernacularName).trim())
+        return qualquer ? String(qualquer.vernacularName).trim() : ""
+    } catch (err) {
+        logger.warn({ gbifId, err: err.message || "Erro" }, "[identify] Falha ao consultar nomes comuns GBIF")
+        return ""
+    }
+}
+
+const ROTULOS_CAMPOS = {
+    nomePopular: "Nome popular",
+    scientificName: "Nome científico",
+    family: "Família",
+    genus: "Gênero",
+    species: "Espécie",
+    filo: "Filo",
+    classe: "Classe",
+    ordem: "Ordem",
+}
+
+function camposFaltantes(r) {
+    return Object.keys(ROTULOS_CAMPOS).filter(k => !r[k] || !String(r[k]).trim()).map(k => ROTULOS_CAMPOS[k])
+}
+
+async function montarResultados(apiData, taxonomia) {
     const resultadosBrutos = Array.isArray(apiData.results) ? apiData.results : []
     const vistos = new Set()
-    const resultados = []
+    const rascunhos = []
 
     for (const r of resultadosBrutos) {
         const sp = r && r.species
@@ -75,7 +135,7 @@ function montarResultados(apiData, taxonomia) {
         if (vistos.has(chave)) continue
         vistos.add(chave)
 
-        resultados.push({
+        rascunhos.push({
             score: Number(r.score) || 0,
             nomePopular: normalizarNomeComum(sp.commonNames, "por"),
             scientificName: nomeCientifico,
@@ -88,8 +148,18 @@ function montarResultados(apiData, taxonomia) {
             ordem: taxonomia?.ordem || null,
             gbifId: r.gbif && r.gbif.id ? String(r.gbif.id) : null,
         })
-        if (resultados.length >= 3) break
+        if (rascunhos.length >= 3) break
     }
+
+    resultados = await Promise.all(
+        rascunhos.map(async r => {
+            if (!r.nomePopular && r.gbifId) {
+                r.nomePopular = await buscarNomeVernacularGBIF(r.gbifId)
+            }
+            r.faltantes = camposFaltantes(r)
+            return r
+        })
+    )
 
     return resultados.sort((a, b) => b.score - a.score)
 }
@@ -148,10 +218,32 @@ router.post(
 
         // Identificação de baixa confiança ou vazia: ainda retorna o que houver.
         const melhor = apiData && Array.isArray(apiData.results) ? apiData.results[0] : null
-        const gbifId = melhor && melhor.gbif && melhor.gbif.id
-        const taxonomia = gbifId ? await buscarTaxonomiaGBIF(gbifId) : null
 
-        const resultados = montarResultados(apiData, taxonomia)
+        // Escolhe o melhor registro com gbif entre os top-3 para a taxonomia.
+        const brutos = Array.isArray(apiData.results) ? apiData.results : []
+        let gbifId = null
+        for (const r of brutos.slice(0, 3)) {
+            if (r && r.gbif && r.gbif.id) { gbifId = String(r.gbif.id); break }
+        }
+        let taxonomia = gbifId ? await buscarTaxonomiaGBIF(gbifId) : null
+
+        // Se a taxonomia ficou incompleta, tenta casar pelo nome científico do top-1.
+        const melhorNome = melhor && melhor.species
+            ? (melhor.species.scientificNameWithoutAuthor || melhor.species.scientificName || "")
+            : ""
+        if ((!taxonomia || !taxonomia.classe || !taxonomia.filo || !taxonomia.ordem) && melhorNome) {
+            const alternativa = await casarTaxonomiaGBIF(melhorNome)
+            if (alternativa) {
+                taxonomia = {
+                    filo: (taxonomia && taxonomia.filo) || alternativa.filo || null,
+                    classe: (taxonomia && taxonomia.classe) || alternativa.classe || null,
+                    ordem: (taxonomia && taxonomia.ordem) || alternativa.ordem || null,
+                    family: (taxonomia && taxonomia.family) || alternativa.family || null,
+                }
+            }
+        }
+
+        const resultados = await montarResultados(apiData, taxonomia)
         const temConfiancaBaixa = melhor && Number(melhor.score || 0) < 0.4
 
         logger.info(

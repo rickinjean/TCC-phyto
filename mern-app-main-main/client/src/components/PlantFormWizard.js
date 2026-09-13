@@ -409,7 +409,41 @@ export default function PlantFormWizard({
         }
     }
 
-    function aplicarIdentificacao(r) {
+    // Converte valores retornados pela identificação em _ids de campos select:
+    // casa com um item já cadastrado na coleção ou cria o item automaticamente.
+    async function resolverSelecoes(valores) {
+        const resolvidos = {}
+        for (const campo of Object.keys(valores)) {
+            const config = mapeamentoColecoes[campo]
+            const valor = String(valores[campo] || "").trim()
+            if (!config || !valor) continue
+            const normalizado = valor.toLowerCase()
+            const existente = (opcoesBanco[campo] || []).find(o => String(o.name || "").trim().toLowerCase() === normalizado)
+            if (existente) {
+                resolvidos[campo] = existente._id
+                continue
+            }
+            try {
+                const response = await authFetch(`${API_URL}/collections/${config.colecao}/add`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: valor })
+                })
+                if (!response || !response.ok) continue
+                const item = await response.json()
+                setOpcoesBanco(prev => ({
+                    ...prev,
+                    [campo]: sortPorNome([...(prev[campo] || []), item], campo)
+                }))
+                resolvidos[campo] = item._id
+            } catch {
+                // Falha de rede: mantém o valor original sem resolver.
+            }
+        }
+        return resolvidos
+    }
+
+    async function aplicarIdentificacao(r) {
         setIdentifyActive(r.scientificName)
         const preencher = {}
         if (r.nomePopular) preencher.name = r.nomePopular
@@ -420,8 +454,14 @@ export default function PlantFormWizard({
         if (r.filo) preencher.Filo = r.filo
         if (r.classe) preencher.Classe = r.classe
         if (r.ordem) preencher.Ordem = r.ordem
+        Object.assign(preencher, await resolverSelecoes(preencher))
         updateForm(preencher)
-        showToast("Campos de taxonomia preenchidos pela identificação.")
+        const faltantes = Array.isArray(r.faltantes) ? r.faltantes : []
+        showToast(
+            faltantes.length > 0
+                ? `Campos preenchidos pela identificação. Sem resposta: ${faltantes.join(", ")}.`
+                : "Campos de taxonomia preenchidos pela identificação."
+        )
     }
 
     function abrirModalPara(campo) {
@@ -710,6 +750,11 @@ export default function PlantFormWizard({
                                                                 </span>
                                                             )}
                                                         </div>
+                                                        {Array.isArray(r.faltantes) && r.faltantes.length > 0 && (
+                                                            <div className="wizard-identify__faltantes">
+                                                                Não retornado: {r.faltantes.join(", ")}
+                                                            </div>
+                                                        )}
                                                     </button>
                                                 )
                                             })}
