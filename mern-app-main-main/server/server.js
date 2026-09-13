@@ -22,6 +22,12 @@ if (!process.env.JWT_REFRESH_SECRET) {
     process.exit(1)
 }
 
+if (process.env.PLANTNET_API_KEY) {
+    logger.info("[identify] Pl@ntNet: chave configurada")
+} else {
+    logger.warn("[identify] Pl@ntNet: PLANTNET_API_KEY ausente — identificação de plantas indisponível")
+}
+
 const port = process.env.PORT || 5050
 
 app.set('trust proxy', 1)
