@@ -65,8 +65,6 @@ const REVIEW_GRUPOS = [
         label: "☀️ Necessidades Ambientais",
         campos: [
             ["light", "Luz"], ["water", "Água"], ["soil", "Solo"],
-            ["idealTemperature", "Temperatura Ideal"], ["iluminosity", "Horas de Sol"],
-            ["tolerance", "Tolerância"], ["protection", "Proteção Climática"],
         ],
     },
     {
@@ -82,7 +80,8 @@ const REVIEW_GRUPOS = [
         campos: [
             ["planting", "Plantio"], ["station", "Estação"], ["spacing", "Espaçamento"],
             ["fertilizing", "Adubação"], ["frequency", "Freq. Adubação"], ["NPK", "NPK"],
-            ["exhibition", "Exposição"], ["maintenance", "Manutenção"],
+            ["exhibition", "Exposição"], ["iluminosity", "Horas de Sol"], ["protection", "Proteção"],
+            ["maintenance", "Manutenção"], ["idealTemperature", "Temperatura Ideal"], ["tolerance", "Tolerância"],
         ],
     },
 ]
@@ -1165,22 +1164,6 @@ export default function PlantFormWizard({
                                 <FieldLabel>Solo</FieldLabel>
                                 { Field("soil", "Tipo de solo...") }
                             </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Temperatura Ideal</FieldLabel>
-                                { Field("idealTemperature", "Temperatura ideal...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Horas de Sol</FieldLabel>
-                                { Field("iluminosity", "Horas diárias...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Tolerância</FieldLabel>
-                                { Field("tolerance", "Tolerância...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Proteção Climática</FieldLabel>
-                                { Field("protection", "Proteção climática...") }
-                            </div>
                         </div>
                     </div>
                 )}
@@ -1283,10 +1266,14 @@ export default function PlantFormWizard({
                             icon="☀️"
                             title="Exposição Solar"
                             optional
-                            filled={conjuntoPreenchido(["exhibition"], form)}
-                            total={1}
+                            filled={conjuntoPreenchido(["exhibition", "iluminosity", "protection"], form)}
+                            total={3}
                         >
                             {CampoTex("exhibition", "Exposição Solar", "Condições de exposição solar...")}
+                            {ColunaSelects([
+                                ["iluminosity", "Horas de Sol", "Horas diárias..."],
+                                ["protection", "Proteção", "Proteção climática..."],
+                            ])}
                         </FieldGroup>
 
                         <FieldGroup
@@ -1294,10 +1281,14 @@ export default function PlantFormWizard({
                             icon="🔧"
                             title="Manutenção"
                             optional
-                            filled={conjuntoPreenchido(["maintenance"], form)}
-                            total={1}
+                            filled={conjuntoPreenchido(["maintenance", "idealTemperature", "tolerance"], form)}
+                            total={3}
                         >
                             {CampoTex("maintenance", "Manutenção", "Práticas de manutenção...")}
+                            {ColunaSelects([
+                                ["idealTemperature", "Temperatura Ideal", "Temperatura ideal..."],
+                                ["tolerance", "Tolerância", "Tolerância..."],
+                            ])}
                         </FieldGroup>
                     </div>
                 )}
