@@ -8,10 +8,11 @@ import sortPorNome from "../sortOptions"
 
 const BASE_STEPS = [
     { key: "basicos", label: "Dados Básicos", icon: "🌱" },
-    { key: "botanica", label: "Botânica", icon: "🌿" },
+    { key: "botanica-ambiente", label: "Botânica e Ambiente", icon: "🌿" },
+    { key: "taxonomia", label: "Taxonomia", icon: "🧬" },
     { key: "fisicas", label: "Física", icon: "🍂" },
-    { key: "ambiente", label: "Ambiente", icon: "☀️" },
     { key: "cuidados", label: "Cuidados", icon: "🤲" },
+    { key: "poda-pragas", label: "Poda e Pragas", icon: "✂️" },
     { key: "cultivo", label: "Cultivo", icon: "🌾" },
 ]
 
@@ -46,9 +47,15 @@ const TEXT_LIMITS = {
 
 const REVIEW_GRUPOS = [
     {
-        label: "🌿 Botânica",
+        label: "🌿 Botânica e Ambiente",
         campos: [
             ["origin", "Origem"], ["toxicity", "Toxicidade"], ["dificulty", "Dificuldade"],
+            ["light", "Luz"], ["water", "Água"], ["soil", "Solo"],
+        ],
+    },
+    {
+        label: "🧬 Taxonomia",
+        campos: [
             ["Filo", "Filo"], ["Classe", "Classe"], ["Ordem", "Ordem"],
             ["Family", "Família"], ["Genero", "Gênero"], ["Especie", "Espécie"],
         ],
@@ -62,15 +69,15 @@ const REVIEW_GRUPOS = [
         ],
     },
     {
-        label: "☀️ Necessidades Ambientais",
-        campos: [
-            ["light", "Luz"], ["water", "Água"], ["soil", "Solo"],
-        ],
-    },
-    {
         label: "🤲 Cuidados",
         campos: [
             ["watering", "Rega"], ["manha", "Melhor Horário"], ["amount", "Quantidade"],
+            ["fertilizing", "Adubação"], ["frequency", "Freq. Adubação"], ["NPK", "NPK"],
+        ],
+    },
+    {
+        label: "✂️ Poda e Pragas",
+        campos: [
             ["pruning", "Poda"], ["season", "Época da Poda"], ["tools", "Ferramentas"],
             ["pests", "Pragas e Doenças"], ["prevention", "Prevenção"], ["monitoring", "Monitoramento"],
         ],
@@ -79,7 +86,6 @@ const REVIEW_GRUPOS = [
         label: "🌾 Cultivo",
         campos: [
             ["planting", "Plantio"], ["station", "Estação"], ["spacing", "Espaçamento"],
-            ["fertilizing", "Adubação"], ["frequency", "Freq. Adubação"], ["NPK", "NPK"],
             ["exhibition", "Exposição"], ["iluminosity", "Horas de Sol"], ["protection", "Proteção"],
             ["maintenance", "Manutenção"], ["idealTemperature", "Temperatura Ideal"], ["tolerance", "Tolerância"],
         ],
@@ -1036,12 +1042,12 @@ export default function PlantFormWizard({
                     </div>
                 )}
 
-                {/* ── STEP 1: BOTÂNICA ── */}
+                {/* ── STEP 1: BOTÂNICA E AMBIENTE ── */}
                 {currentStep === 1 && (
                     <div className="wizard-step-content">
                         <div className="wizard-step-header">
-                            <h4>🌿 Informações Botânicas</h4>
-                            <p>Classificação, origem e características gerais</p>
+                            <h4>🌿 Botânica e Ambiente</h4>
+                            <p>Origem, toxicidade e condições básicas</p>
                         </div>
                         <FieldGroup
                             id="s1-botanica"
@@ -1065,7 +1071,38 @@ export default function PlantFormWizard({
                             </div>
                         </FieldGroup>
                         <FieldGroup
-                            id="s1-taxonomia"
+                            id="s1-ambiente"
+                            icon="☀️"
+                            title="Necessidades Ambientais"
+                            optional
+                            filled={conjuntoPreenchido(["light", "water", "soil"], form)}
+                            total={3}
+                        >
+                            <div className="col-md-4 mb-3">
+                                <FieldLabel>Luminosidade</FieldLabel>
+                                { Field("light", "Necessidade de luz...") }
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <FieldLabel>Água</FieldLabel>
+                                { Field("water", "Necessidade de água...") }
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <FieldLabel>Solo</FieldLabel>
+                                { Field("soil", "Tipo de solo...") }
+                            </div>
+                        </FieldGroup>
+                    </div>
+                )}
+
+                {/* ── STEP 2: TAXONOMIA ── */}
+                {currentStep === 2 && (
+                    <div className="wizard-step-content">
+                        <div className="wizard-step-header">
+                            <h4>🧬 Classificação Taxonômica</h4>
+                            <p>Preenchido automaticamente pela identificação</p>
+                        </div>
+                        <FieldGroup
+                            id="s2-taxonomia"
                             icon="🧬"
                             title="Classificação Taxonômica"
                             hint="Preenchido automaticamente pela identificação"
@@ -1100,8 +1137,8 @@ export default function PlantFormWizard({
                     </div>
                 )}
 
-                {/* ── STEP 2: CARACTERÍSTICAS FÍSICAS ── */}
-                {currentStep === 2 && (
+                {/* ── STEP 3: CARACTERÍSTICAS FÍSICAS ── */}
+                {currentStep === 3 && (
                     <div className="wizard-step-content">
                         <div className="wizard-step-header">
                             <h4>🍂 Características Físicas</h4>
@@ -1144,36 +1181,12 @@ export default function PlantFormWizard({
                     </div>
                 )}
 
-                {/* ── STEP 3: NECESSIDADES AMBIENTAIS ── */}
-                {currentStep === 3 && (
-                    <div className="wizard-step-content">
-                        <div className="wizard-step-header">
-                            <h4>☀️ Necessidades Ambientais</h4>
-                            <p>Condições ideais de cultivo</p>
-                        </div>
-                        <div className="row">
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Luminosidade</FieldLabel>
-                                { Field("light", "Necessidade de luz...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Água</FieldLabel>
-                                { Field("water", "Necessidade de água...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Solo</FieldLabel>
-                                { Field("soil", "Tipo de solo...") }
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {/* ── STEP 4: CUIDADOS ── */}
                 {currentStep === 4 && (
                     <div className="wizard-step-content">
                         <div className="wizard-step-header">
                             <h4>🤲 Cuidados da Planta</h4>
-                            <p>Rega, adubação, poda e pragas</p>
+                            <p>Rega e adubação</p>
                         </div>
 
                         <FieldGroup
@@ -1192,7 +1205,32 @@ export default function PlantFormWizard({
                         </FieldGroup>
 
                         <FieldGroup
-                            id="s4-poda"
+                            id="s4-adubacao"
+                            icon="🧪"
+                            title="Adubação"
+                            optional
+                            filled={conjuntoPreenchido(["fertilizing", "frequency", "NPK"], form)}
+                            total={3}
+                        >
+                            {CampoTex("fertilizing", "Adubação", "Como adubar esta planta...")}
+                            {ColunaSelects([
+                                ["frequency", "Frequência de Adubação", "Frequência..."],
+                                ["NPK", "Tipo de NPK", "Tipo de NPK..."],
+                            ])}
+                        </FieldGroup>
+                    </div>
+                )}
+
+                {/* ── STEP 5: PODA E PRAGAS ── */}
+                {currentStep === 5 && (
+                    <div className="wizard-step-content">
+                        <div className="wizard-step-header">
+                            <h4>✂️ Poda e Pragas</h4>
+                            <p>Poda, pragas e monitoramento</p>
+                        </div>
+
+                        <FieldGroup
+                            id="s5-poda"
                             icon="✂️"
                             title="Poda"
                             optional
@@ -1207,7 +1245,7 @@ export default function PlantFormWizard({
                         </FieldGroup>
 
                         <FieldGroup
-                            id="s4-pragas"
+                            id="s5-pragas"
                             icon="🐛"
                             title="Pragas e Doenças"
                             optional
@@ -1223,8 +1261,8 @@ export default function PlantFormWizard({
                     </div>
                 )}
 
-                {/* ── STEP 5: CULTIVO ── */}
-                {currentStep === 5 && (
+                {/* ── STEP 6: CULTIVO ── */}
+                {currentStep === 6 && (
                     <div className="wizard-step-content">
                         <div className="wizard-step-header">
                             <h4>🌾 Cultivo da Planta</h4>
@@ -1232,7 +1270,7 @@ export default function PlantFormWizard({
                         </div>
 
                         <FieldGroup
-                            id="s5-plantio"
+                            id="s6-plantio"
                             icon="🌱"
                             title="Plantio"
                             optional
@@ -1247,22 +1285,7 @@ export default function PlantFormWizard({
                         </FieldGroup>
 
                         <FieldGroup
-                            id="s5-adubacao"
-                            icon="🧪"
-                            title="Adubação"
-                            optional
-                            filled={conjuntoPreenchido(["fertilizing", "frequency", "NPK"], form)}
-                            total={3}
-                        >
-                            {CampoTex("fertilizing", "Adubação", "Como adubar esta planta...")}
-                            {ColunaSelects([
-                                ["frequency", "Frequência de Adubação", "Frequência..."],
-                                ["NPK", "Tipo de NPK", "Tipo de NPK..."],
-                            ])}
-                        </FieldGroup>
-
-                        <FieldGroup
-                            id="s5-exposicao"
+                            id="s6-exposicao"
                             icon="☀️"
                             title="Exposição Solar"
                             optional
@@ -1277,7 +1300,7 @@ export default function PlantFormWizard({
                         </FieldGroup>
 
                         <FieldGroup
-                            id="s5-manutencao"
+                            id="s6-manutencao"
                             icon="🔧"
                             title="Manutenção"
                             optional
