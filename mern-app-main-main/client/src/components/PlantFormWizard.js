@@ -50,6 +50,7 @@ const REVIEW_GRUPOS = [
         label: "🌿 Botânica e Ambiente",
         campos: [
             ["origin", "Origem"], ["toxicity", "Toxicidade"], ["dificulty", "Dificuldade"],
+            ["fruit", "Tipo de Fruto"],
             ["light", "Luz"], ["water", "Água"], ["soil", "Solo"],
         ],
     },
@@ -65,7 +66,6 @@ const REVIEW_GRUPOS = [
         campos: [
             ["type", "Tipo"], ["height", "Altura/Porte"], ["flowercolor", "Cor da Flor"],
             ["foliage", "Folhagem"], ["flowering", "Floração"], ["size", "Tamanho"],
-            ["fruit", "Tipo de Fruto"], ["propagation", "Propagação"],
         ],
     },
     {
@@ -85,7 +85,7 @@ const REVIEW_GRUPOS = [
     {
         label: "🌾 Cultivo",
         campos: [
-            ["planting", "Plantio"], ["station", "Estação"], ["spacing", "Espaçamento"],
+            ["planting", "Plantio"], ["propagation", "Propagação"], ["station", "Estação"], ["spacing", "Espaçamento"],
             ["exhibition", "Exposição"], ["iluminosity", "Horas de Sol"], ["protection", "Proteção"],
             ["maintenance", "Manutenção"], ["idealTemperature", "Temperatura Ideal"], ["tolerance", "Tolerância"],
         ],
@@ -1054,20 +1054,24 @@ export default function PlantFormWizard({
                             icon="🌿"
                             title="Botânica"
                             optional
-                            filled={conjuntoPreenchido(["origin", "toxicity", "dificulty"], form)}
-                            total={3}
+                            filled={conjuntoPreenchido(["origin", "toxicity", "dificulty", "fruit"], form)}
+                            total={4}
                         >
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Origem</FieldLabel>
                                 { Field("origin", "Origem geográfica...") }
                             </div>
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Toxicidade</FieldLabel>
                                 { Field("toxicity", "Grau de toxicidade...") }
                             </div>
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Dificuldade</FieldLabel>
                                 { Field("dificulty", "Nível de cuidado...") }
+                            </div>
+                            <div className="col-md-3 mb-3">
+                                <FieldLabel>Tipo de Fruto</FieldLabel>
+                                { Field("fruit", "Tipo de fruto...") }
                             </div>
                         </FieldGroup>
                         <FieldGroup
@@ -1169,14 +1173,6 @@ export default function PlantFormWizard({
                                 <FieldLabel>Tamanho</FieldLabel>
                                 { Field("size", "Tamanho da planta...") }
                             </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Fruto</FieldLabel>
-                                { Field("fruit", "Tipo de fruto...") }
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                <FieldLabel>Propagação</FieldLabel>
-                                { Field("propagation", "Como se propaga...") }
-                            </div>
                         </div>
                     </div>
                 )}
@@ -1274,11 +1270,12 @@ export default function PlantFormWizard({
                             icon="🌱"
                             title="Plantio"
                             optional
-                            filled={conjuntoPreenchido(["planting", "station", "spacing"], form)}
-                            total={3}
+                            filled={conjuntoPreenchido(["planting", "propagation", "station", "spacing"], form)}
+                            total={4}
                         >
                             {CampoTex("planting", "Plantio", "Como plantar...")}
                             {ColunaSelects([
+                                ["propagation", "Propagação", "Como se propaga..."],
                                 ["station", "Estação", "Estação de plantio..."],
                                 ["spacing", "Espaçamento", "Espaçamento entre mudas..."],
                             ])}
