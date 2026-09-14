@@ -8,6 +8,8 @@ const { asyncHandler } = require("../utils")
 const logger = require("../logger")
 
 const PLANTNET_API_URL = "https://my-api.plantnet.org/v2/identify/all"
+const PLANTNET_SPECIES_URL = "https://my-api.plantnet.org/v2/species"
+const GBIF_HEADERS = { "User-Agent": "PhytografiaTCC (trabalho academico)" }
 
 const ORGAOS_VALIDOS = new Set(["auto", "leaf", "flower", "fruit", "bark"])
 
@@ -101,6 +103,113 @@ async function buscarNomeVernacularGBIF(gbifId) {
     } catch (err) {
         logger.warn({ gbifId, err: err.message || "Erro" }, "[identify] Falha ao consultar nomes comuns GBIF")
         return ""
+    }
+}
+
+// Extrai o primeiro nome comum de uma resposta da Pl@ntNet
+// (aceita tanto array ordenado por idioma quanto mapa idioma → nomes).
+function nomeComumDaEspecie(commonNames) {
+    if (!commonNames) return ""
+    if (Array.isArray(commonNames)) {
+        const ehObjeto = commonNames.some(n => n && typeof n === "object" && (n.value != null || n.lang))
+        if (ehObjeto) return normalizarNomeComum(commonNames, "por")
+        const texto = commonNames.find(n => n && String(n).trim())
+        return texto ? String(texto).trim() : ""
+    }
+    if (typeof commonNames === "object") {
+        for (const lang of ["pt", "por", "spa", "eng", ""]) {
+            const v = commonNames[lang]
+            if (!v) continue
+            const valor = Array.isArray(v) ? v[0] : v
+            if (valor && String(valor).trim()) return String(valor).trim()
+        }
+        const primeira = Object.values(commonNames)[0]
+        if (primeira != null) {
+            const valor = Array.isArray(primeira) ? primeira[0] : primeira
+            return valor ? String(valor).trim() : ""
+        }
+    }
+    return ""
+}
+
+// Extrai o primeiro nome comum (por → espanhol → inglês) da lista de
+// nomes vernaculares que o GBIF devolve junto do resultado de busca.
+function nomeVernacularDaLista(lista) {
+    if (!Array.isArray(lista)) return ""
+    for (const lang of ["pt", "por", "spa", "eng", ""]) {
+        const achado = lista.find(n => n && n.language === lang && n.vernacularName && String(n.vernacularName).trim())
+        if (achado) return String(achado.vernacularName).trim()
+    }
+    const qualquer = lista.find(n => n && n.vernacularName && String(n.vernacularName).trim())
+    return qualquer ? String(qualquer.vernacularName).trim() : ""
+}
+
+// Busca candidatos por nome científico (prefixo) na Pl@ntNet.
+async function buscarPorNomePlantoNet(nome) {
+    try {
+        const { data } = await axios.get(PLANTNET_SPECIES_URL, {
+            params: {
+                "api-key": process.env.PLANTNET_API_KEY,
+                prefix: nome,
+                pageSize: 10,
+                lang: "pt",
+            },
+            timeout: 15000,
+        })
+        const lista = Array.isArray(data) ? data : (Array.isArray(data.results) ? data.results : [])
+        return lista
+            .map(s => ({
+                scientificName: String(s.scientificNameWithoutAuthor || s.scientificName || "").trim(),
+                nomePopular: nomeComumDaEspecie(s.commonNames),
+                gbifId: s.gbifId ? String(s.gbifId) : null,
+            }))
+            .filter(s => s.scientificName)
+    } catch (err) {
+        logger.warn({ err: err.message || "Erro" }, "[identify] Falha ao buscar espécies na Pl@ntNet por nome")
+        return []
+    }
+}
+
+// Busca candidatos no GBIF pela nome científico (q) e pelo nome comum
+// (vernacularName); o resultado já traz filo/classe/ordem/família.
+async function buscarPorNomeGBIF(nome) {
+    try {
+        const [resQ, resV] = await Promise.all([
+            axios.get("https://api.gbif.org/v1/species/search", {
+                params: { q: nome, limit: 8, kingdom: "Plantae" },
+                timeout: 15000,
+                headers: GBIF_HEADERS,
+            }),
+            axios.get("https://api.gbif.org/v1/species/search", {
+                params: { vernacularName: nome, limit: 8, kingdom: "Plantae" },
+                timeout: 15000,
+                headers: GBIF_HEADERS,
+            }),
+        ])
+        const lista = [
+            ...(Array.isArray(resQ.data.results) ? resQ.data.results : []),
+            ...(Array.isArray(resV.data.results) ? resV.data.results : []),
+        ]
+        return lista
+            .map(r => ({
+                gbifId: r.usageKey || r.key || null,
+                scientificName: String(r.scientificName || r.canonicalName || "").trim(),
+                nomePopular: nomeVernacularDaLista(r.vernacularNames),
+                genus: r.genus || "",
+                family: r.family || "",
+                filo: r.phylum || "",
+                classe: r.class || r.clazz || r.className || "",
+                ordem: r.order || "",
+                reino: r.kingdom || "",
+                rank: String(r.rank || "").toUpperCase(),
+            }))
+            .filter(r => r.scientificName
+                && r.reino === "Plantae"
+                && !["KINGDOM", "PHYLUM", "CLASS", "ORDER"].includes(r.rank)
+                && !/^incertae/i.test(r.scientificName))
+    } catch (err) {
+        logger.warn({ err: err.message || "Erro" }, "[identify] Falha ao buscar espécies no GBIF por nome")
+        return []
     }
 }
 
@@ -255,6 +364,76 @@ router.post(
             resultados,
             aviso: temConfiancaBaixa
                 ? "A confiança da identificação está baixa. Use os resultados como referência e revise os dados."
+                : null,
+        })
+    })
+)
+
+// Busca uma espécie pelo nome popular ou científico (sem precisar de imagem),
+// preenchendo a taxonomia nos mesmos moldes da identificação por foto.
+router.get(
+    "/buscar",
+    authenticateToken,
+    authorizeRoles("ADM"),
+    identifyLimiter,
+    asyncHandler(async function (req, res) {
+        if (!process.env.PLANTNET_API_KEY) {
+            return res.status(500).json({ mensagem: "Chave da API Pl@ntNet não configurada no servidor." })
+        }
+        const nome = String(req.query.nome || "").trim()
+        if (nome.length < 3) {
+            return res.status(400).json({ mensagem: "Digite pelo menos 3 letras para buscar." })
+        }
+
+        const [daPlanto, doGBIF] = await Promise.all([
+            buscarPorNomePlantoNet(nome),
+            buscarPorNomeGBIF(nome),
+        ])
+
+        const vistos = new Set()
+        const rascunhos = []
+        const empurrar = r => {
+            if (!r || !r.scientificName || rascunhos.length >= 6) return
+            const chave = r.scientificName.split(/\s+/).slice(0, 2).join(" ").toLowerCase()
+            if (vistos.has(chave)) return
+            vistos.add(chave)
+            rascunhos.push(r)
+        }
+        daPlanto.forEach(empurrar)
+        doGBIF.forEach(empurrar)
+
+        if (rascunhos.length === 0) {
+            return res.status(404).json({ mensagem: `Nenhuma espécie encontrada para "${nome}". Tente um termo diferente.` })
+        }
+
+        const resultados = await Promise.all(
+            rascunhos.map(async r => {
+                if (!r.filo || !r.classe || !r.ordem || !r.family) {
+                    const taxo = await casarTaxonomiaGBIF(r.scientificName)
+                    if (taxo) {
+                        r.filo = r.filo || taxo.filo
+                        r.classe = r.classe || taxo.classe
+                        r.ordem = r.ordem || taxo.ordem
+                        r.family = r.family || taxo.family
+                    }
+                }
+                if (!r.nomePopular) {
+                    r.nomePopular = r.gbifId ? await buscarNomeVernacularGBIF(r.gbifId) : ""
+                }
+                const partes = r.scientificName.split(/\s+/).filter(Boolean)
+                r.genus = r.genus || partes[0] || ""
+                r.species = partes.slice(1).join(" ") || ""
+                r.faltantes = camposFaltantes(r)
+                return r
+            })
+        )
+
+        logger.info({ qtd: resultados.length, nome }, "[identify] Busca por nome concluída")
+
+        res.status(200).json({
+            resultados,
+            aviso: daPlanto.length === 0
+                ? "Nenhum resultado exato na base da Pl@ntNet; exibindo opções próximas do GBIF."
                 : null,
         })
     })

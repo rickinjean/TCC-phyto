@@ -5819,6 +5819,45 @@ html[data-theme="dark"] .sugestao-cards .admin-message-card__header:hover {
   margin-top: 0.15rem;
 }
 
+.wizard-identify__tabs {
+  display: inline-flex;
+  border: 1px solid var(--phyto-border);
+  border-radius: 999px;
+  padding: 0.2rem;
+  background: var(--phyto-surface);
+  gap: 0.15rem;
+}
+
+.wizard-identify__tab {
+  border: 0;
+  background: transparent;
+  color: var(--phyto-ink-soft, #64748b);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+  white-space: nowrap;
+}
+
+.wizard-identify__tab:hover {
+  color: var(--phyto-green-700);
+}
+
+.wizard-identify__tab.is-active {
+  background: var(--phyto-green-600);
+  color: #fff;
+}
+
+.wizard-identify__controles {
+  margin-top: 0.75rem;
+}
+
+.wizard-identify__busca {
+  max-width: 420px;
+}
+
 .wizard-identify__select {
   width: auto;
   min-width: 150px;
@@ -6053,6 +6092,44 @@ html[data-theme="dark"] .wizard-tag-optional {
 }
 
 /* ═══════════ BUSCA NO CATÁLOGO / USAR DADOS CADASTRADOS ═══════════ */
+.wizard-catalog {
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-md);
+  background: var(--phyto-card-bg);
+  padding: 0.75rem 0.9rem;
+}
+
+.wizard-catalog__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-md);
+  background: var(--phyto-card-bg);
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--phyto-ink);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.wizard-catalog__toggle:hover {
+  border-color: var(--phyto-green-600);
+  background: rgba(47, 138, 93, 0.05);
+}
+
+.wizard-catalog__toggle.is-open {
+  border-color: var(--phyto-green-600);
+}
+
+.wizard-catalog__chevron {
+  font-size: 0.7rem;
+  color: var(--phyto-ink-soft, #64748b);
+}
+
 .wizard-catalog__list {
   list-style: none;
   margin: 0.6rem 0 0;
@@ -6095,6 +6172,40 @@ html[data-theme="dark"] .wizard-tag-optional {
 html[data-theme="dark"] .wizard-catalog__list li {
   background: rgba(20, 44, 31, 0.6);
   border-color: rgba(133, 214, 158, 0.22);
+}
+
+html[data-theme="dark"] .wizard-catalog,
+html[data-theme="dark"] .wizard-catalog__toggle {
+  background: rgba(20, 44, 31, 0.6);
+  border-color: rgba(133, 214, 158, 0.22);
+}
+
+html[data-theme="dark"] .wizard-catalog__toggle {
+  color: #e8f7ec;
+}
+
+html[data-theme="dark"] .wizard-catalog__toggle:hover,
+html[data-theme="dark"] .wizard-catalog__toggle.is-open {
+  border-color: rgba(133, 214, 158, 0.45);
+  background: rgba(20, 44, 31, 0.9);
+}
+
+html[data-theme="dark"] .wizard-identify__tabs {
+  border-color: rgba(133, 214, 158, 0.22);
+  background: rgba(20, 44, 31, 0.9);
+}
+
+html[data-theme="dark"] .wizard-identify__tab {
+  color: #b4cdbd;
+}
+
+html[data-theme="dark"] .wizard-identify__tab:hover {
+  color: #dff8e7;
+}
+
+html[data-theme="dark"] .wizard-identify__tab.is-active {
+  background: var(--phyto-green-600);
+  color: #fff;
 }
 
 html[data-theme="dark"] .wizard-identify__match {

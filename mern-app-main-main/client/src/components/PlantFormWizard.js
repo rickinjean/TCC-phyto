@@ -298,10 +298,14 @@ export default function PlantFormWizard({
     const [identifyOrgan, setIdentifyOrgan] = useState("auto")
     const [identifyActive, setIdentifyActive] = useState("")
     const [identifyMatch, setIdentifyMatch] = useState(null)
+    const [identifyMode, setIdentifyMode] = useState("imagem")
+    const [buscarQuery, setBuscarQuery] = useState("")
+    const [buscarLoading, setBuscarLoading] = useState(false)
     const [catalogQuery, setCatalogQuery] = useState("")
     const [catalogResults, setCatalogResults] = useState([])
     const [catalogLoading, setCatalogLoading] = useState(false)
     const [catalogSearched, setCatalogSearched] = useState(false)
+    const [catalogOpen, setCatalogOpen] = useState(false)
     const autoSaveTimer = useRef(null)
 
     const steps = withReview ? [...BASE_STEPS, REVIEW_STEP] : BASE_STEPS
@@ -483,6 +487,36 @@ export default function PlantFormWizard({
             setIdentifyErro("Erro ao conectar ao servidor.")
         } finally {
             setIdentifyLoading(false)
+        }
+    }
+
+    // Busca a espécie pelo nome popular ou científico no Pl@ntNet (sem imagem).
+    async function buscarPorNome() {
+        const termo = buscarQuery.trim()
+        if (!termo || buscarLoading) return
+        setBuscarLoading(true)
+        setIdentifyErro("")
+        setIdentifyResults([])
+        setIdentifyActive("")
+        setIdentifyMatch(null)
+        try {
+            const response = await authFetch(`${API_URL}/identify/buscar?nome=${encodeURIComponent(termo)}`)
+            if (!response) {
+                showToast("Sessão expirada. Faça login novamente.", "error")
+                return
+            }
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}))
+                setIdentifyErro(err.mensagem || "Não foi possível buscar a planta.")
+                return
+            }
+            const data = await response.json()
+            setIdentifyResults(data.resultados || [])
+            if (data.aviso) setIdentifyErro(data.aviso)
+        } catch {
+            setIdentifyErro("Erro ao conectar ao servidor.")
+        } finally {
+            setBuscarLoading(false)
         }
     }
 
@@ -863,44 +897,55 @@ export default function PlantFormWizard({
                                 />
                             </div>
                             <div className="col-12 mb-3">
-                                <FieldLabel>Usar dados de uma planta já cadastrada</FieldLabel>
-                                <div className="d-flex gap-2">
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        placeholder="Buscar por nome popular ou científico..."
-                                        value={catalogQuery}
-                                        onChange={e => setCatalogQuery(e.target.value)}
-                                        onKeyDown={e => e.key === "Enter" && buscarNoCatalogo()}
-                                    />
-                                    <button
-                                        type="button"
-                                        className="btn btn-outline-primary text-nowrap"
-                                        onClick={buscarNoCatalogo}
-                                        disabled={catalogLoading || !catalogQuery.trim()}
-                                    >
-                                        {catalogLoading ? "Buscando..." : "Buscar"}
-                                    </button>
-                                </div>
-                                {catalogResults.length > 0 && (
-                                    <ul className="wizard-catalog__list">
-                                        {catalogResults.map(p => (
-                                            <li key={p._id}>
-                                                <span className="fw-semibold">{p.name || "—"}</span>
-                                                <em>{p.scientificName || "sem nome científico"}</em>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-primary"
-                                                    onClick={() => usarDadosCadastrados(p._id)}
-                                                >
-                                                    Usar dados
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                                {catalogSearched && catalogResults.length === 0 && (
-                                    <p className="text-muted small mt-2">Nenhuma planta encontrada no catálogo.</p>
+                                <button
+                                    type="button"
+                                    className={`wizard-catalog__toggle${catalogOpen ? " is-open" : ""}`}
+                                    onClick={() => setCatalogOpen(o => !o)}
+                                >
+                                    <span>📚 Usar dados de uma planta já cadastrada</span>
+                                    <span className="wizard-catalog__chevron">{catalogOpen ? "▲" : "▼"}</span>
+                                </button>
+                                {catalogOpen && (
+                                    <div className="wizard-catalog mt-2">
+                                        <div className="d-flex gap-2">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder="Buscar por nome popular ou científico..."
+                                                value={catalogQuery}
+                                                onChange={e => setCatalogQuery(e.target.value)}
+                                                onKeyDown={e => e.key === "Enter" && buscarNoCatalogo()}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-primary text-nowrap"
+                                                onClick={buscarNoCatalogo}
+                                                disabled={catalogLoading || !catalogQuery.trim()}
+                                            >
+                                                {catalogLoading ? "Buscando..." : "Buscar"}
+                                            </button>
+                                        </div>
+                                        {catalogResults.length > 0 && (
+                                            <ul className="wizard-catalog__list">
+                                                {catalogResults.map(p => (
+                                                    <li key={p._id}>
+                                                        <span className="fw-semibold">{p.name || "—"}</span>
+                                                        <em>{p.scientificName || "sem nome científico"}</em>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-sm btn-primary"
+                                                            onClick={() => usarDadosCadastrados(p._id)}
+                                                        >
+                                                            Usar dados
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                        {catalogSearched && catalogResults.length === 0 && (
+                                            <p className="text-muted small mt-2">Nenhuma planta encontrada no catálogo.</p>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                             <div className="col-12 mb-3">
@@ -919,10 +964,31 @@ export default function PlantFormWizard({
                                         <div>
                                             <div className="wizard-identify__title">🔍 Identificar com Pl@ntNet</div>
                                             <div className="wizard-identify__hint">
-                                                Envia a imagem para a IA identificar a planta e preenche os campos de taxonomia automaticamente.
+                                                Identifique por foto ou busque pelo nome para preencher a taxonomia automaticamente.
                                             </div>
                                         </div>
-                                        <div className="d-flex gap-2 flex-wrap">
+                                        <div className="wizard-identify__tabs" role="tablist">
+                                            <button
+                                                type="button"
+                                                role="tab"
+                                                className={`wizard-identify__tab${identifyMode === "imagem" ? " is-active" : ""}`}
+                                                onClick={() => setIdentifyMode("imagem")}
+                                            >
+                                                🖼️ Por imagem
+                                            </button>
+                                            <button
+                                                type="button"
+                                                role="tab"
+                                                className={`wizard-identify__tab${identifyMode === "nome" ? " is-active" : ""}`}
+                                                onClick={() => setIdentifyMode("nome")}
+                                            >
+                                                🔤 Por nome
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {identifyMode === "imagem" ? (
+                                        <div className="d-flex gap-2 flex-wrap wizard-identify__controles">
                                             <select
                                                 className="form-select form-select-sm wizard-identify__select"
                                                 value={identifyOrgan}
@@ -946,7 +1012,28 @@ export default function PlantFormWizard({
                                                 ) : "Identificar planta"}
                                             </button>
                                         </div>
-                                    </div>
+                                    ) : (
+                                        <div className="d-flex gap-2 flex-wrap wizard-identify__controles">
+                                            <input
+                                                type="text"
+                                                className="form-control wizard-identify__busca"
+                                                placeholder="Ex: Espada-de-São-Jorge ou Dracaena trifasciata..."
+                                                value={buscarQuery}
+                                                onChange={e => setBuscarQuery(e.target.value)}
+                                                onKeyDown={e => e.key === "Enter" && buscarPorNome()}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-primary wizard-identify__btn text-nowrap"
+                                                onClick={buscarPorNome}
+                                                disabled={buscarLoading || !buscarQuery.trim()}
+                                            >
+                                                {buscarLoading ? (
+                                                    <><span className="spinner-border spinner-border-sm me-2" />Buscando...</>
+                                                ) : "Buscar"}
+                                            </button>
+                                        </div>
+                                    )}
 
                                     {identifyErro && (
                                         <div className="wizard-identify__erro">{identifyErro}</div>
@@ -955,7 +1042,7 @@ export default function PlantFormWizard({
                                     {identifyResults.length > 0 && (
                                         <div className="wizard-identify__results">
                                             {identifyResults.map((r, i) => {
-                                                const pct = Math.round(r.score * 100)
+                                                const pct = r.score != null ? Math.round(r.score * 100) : null
                                                 const ativo = identifyActive === r.scientificName
                                                 return (
                                                     <button
@@ -966,11 +1053,13 @@ export default function PlantFormWizard({
                                                     >
                                                         <div className="wizard-identify__result-topo">
                                                             <span className="wizard-identify__nome">{r.scientificName}</span>
-                                                            <span className="wizard-identify__pct">{pct}%</span>
+                                                            {pct != null && <span className="wizard-identify__pct">{pct}%</span>}
                                                         </div>
-                                                        <div className="wizard-identify__score">
-                                                            <span className="wizard-identify__score-bar" style={{ width: `${pct}%` }} />
-                                                        </div>
+                                                        {pct != null && (
+                                                            <div className="wizard-identify__score">
+                                                                <span className="wizard-identify__score-bar" style={{ width: `${pct}%` }} />
+                                                            </div>
+                                                        )}
                                                         <div className="wizard-identify__meta">
                                                             {r.nomePopular && <span>{r.nomePopular}</span>}
                                                             {r.family && <span>Família: {r.family}</span>}
