@@ -4,8 +4,8 @@ import API_URL from "../config"
 import { encodeId } from "../idCodec"
 
 const MODEL_URL = `${process.env.PUBLIC_URL || ""}/my_model/`
-const TF_SRC = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"
-const TM_SRC = "https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"
+const TF_SRC = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"
+const TM_SRC = "https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.5/dist/teachablemachine-image.min.js"
 
 let scriptsPromise = null
 
@@ -231,15 +231,23 @@ export default function IdentificarPlanta() {
         setError(null)
         try {
             await loadTMScripts()
+        } catch (err) {
+            console.error("[IdentificarPlanta] Falha ao carregar bibliotecas TensorFlow:", err)
+            modelRef.current = null
+            setPhase("error")
+            setError("Não foi possível baixar as bibliotecas de IA (cdn.jsdelivr.net). Verifique sua conexão com a internet e tente novamente.")
+            return
+        }
+        try {
             const tmImage = window.tmImage
             const model = await tmImage.load(`${MODEL_URL}model.json`, `${MODEL_URL}metadata.json`)
             modelRef.current = model
             setPhase("ready")
         } catch (err) {
-            void err
+            console.error("[IdentificarPlanta] Falha ao carregar o modelo de IA:", err)
             modelRef.current = null
             setPhase("error")
-            setError("Não foi possível carregar o modelo de IA. Verifique sua conexão com a internet e tente novamente.")
+            setError("Não foi possível carregar o modelo de IA. Se o erro persistir, recarregue a página (Ctrl+F5) e tente novamente.")
         }
     }
 
