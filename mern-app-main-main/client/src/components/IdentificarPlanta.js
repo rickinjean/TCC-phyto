@@ -93,6 +93,7 @@ export default function IdentificarPlanta() {
     const [processError, setProcessError] = useState(null)
     const [mode, setMode] = useState("webcam")
     const [camStatus, setCamStatus] = useState("off")
+    const [camFacing, setCamFacing] = useState("user")
     const [camError, setCamError] = useState(null)
     const [processing, setProcessing] = useState(false)
     const [preview, setPreview] = useState(null)
@@ -174,7 +175,7 @@ export default function IdentificarPlanta() {
         }
     }, [runPredict])
 
-    const iniciarWebcam = useCallback(async () => {
+    const iniciarWebcam = useCallback(async (facing = camFacing) => {
         setCamStatus("starting")
         setCamError(null)
         setProcessError(null)
@@ -189,8 +190,9 @@ export default function IdentificarPlanta() {
         }
         stopWebcam()
         try {
-            const webcam = new tmImage.Webcam(224, 224, true)
-            await webcam.setup()
+            const webcam = new tmImage.Webcam(224, 224, facing !== "environment")
+            await webcam.setup({ facingMode: facing })
+            setCamFacing(facing)
             await webcam.play()
             webcamRef.current = webcam
             frameRef.current = 0
@@ -212,7 +214,12 @@ export default function IdentificarPlanta() {
                         : "Não foi possível iniciar a câmera. Verifique se ela está disponível e tente novamente."
             )
         }
-    }, [loopWebcam, stopWebcam])
+    }, [loopWebcam, stopWebcam, camFacing])
+
+    const alternarCamera = useCallback(() => {
+        const next = camFacing === "user" ? "environment" : "user"
+        iniciarWebcam(next)
+    }, [camFacing, iniciarWebcam])
 
     async function onFileSelect(e) {
         const file = e.target.files && e.target.files[0]
@@ -355,14 +362,24 @@ export default function IdentificarPlanta() {
                                         <div className="small text-muted text-center py-3">Abrindo câmera...</div>
                                     )}
                                     {camStatus === "error" && (
-                                        <div className="alert alert-warning small mb-2" role="alert">
+                                        <div className="text-center mb-2">
+                                            <button type="button" className="btn btn-sm btn-outline-secondary rounded-pill" onClick={alternarCamera}>
+                                                Tentar com a outra câmera
+                                            </button>
+                                        </div>
+                                    )}
+                                    {camStatus === "error" && (
+                                        <div className="alert alert-warning small mb-2 mt-0" role="alert">
                                             {camError}
                                         </div>
                                     )}
                                     {camStatus === "on" && (
-                                        <div className="text-center">
+                                        <div className="d-flex justify-content-center gap-2">
                                             <button type="button" className="btn btn-sm btn-outline-secondary rounded-pill" onClick={stopWebcam}>
                                                 Parar câmera
+                                            </button>
+                                            <button type="button" className="btn btn-sm btn-outline-primary rounded-pill" onClick={alternarCamera}>
+                                                🔁 Inverter câmera
                                             </button>
                                         </div>
                                     )}
