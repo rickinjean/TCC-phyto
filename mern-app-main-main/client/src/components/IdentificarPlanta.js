@@ -4,44 +4,20 @@ import API_URL from "../config"
 import { encodeId } from "../idCodec"
 
 const MODEL_URL = `${process.env.PUBLIC_URL || ""}/my_model/`
-const TF_SRC = `${process.env.PUBLIC_URL || ""}/vendor/tf.min.js`
-const TM_SRC = `${process.env.PUBLIC_URL || ""}/vendor/teachablemachine-image.min.js`
 
-let scriptsPromise = null
+let libsPromise = null
 
-function loadScript(src, timeoutMs = 25000) {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement("script")
-        const timer = setTimeout(() => {
-            script.onload = script.onerror = null
-            reject(new Error(`Tempo esgotado ao carregar ${src}`))
-        }, timeoutMs)
-        script.src = src
-        script.async = true
-        script.onload = () => {
-            clearTimeout(timer)
-            resolve()
-        }
-        script.onerror = () => {
-            clearTimeout(timer)
-            reject(new Error(`Falha ao carregar script: ${src}`))
-        }
-        document.head.appendChild(script)
-    })
-}
-
-function loadTMScripts() {
-    if (typeof window === "undefined" || (window.tf && window.tmImage)) return Promise.resolve()
-    if (!scriptsPromise) {
-        scriptsPromise = (async () => {
-            if (!window.tf) await loadScript(TF_SRC)
-            if (!window.tmImage) await loadScript(TM_SRC)
-        })().catch(err => {
-            scriptsPromise = null
+function loadTMLibs() {
+    if (!libsPromise) {
+        libsPromise = Promise.all([
+            import("@tensorflow/tfjs"),
+            import("@teachablemachine/image"),
+        ]).then(([tf, tmImage]) => ({ tf, tmImage })).catch(err => {
+            libsPromise = null
             throw err
         })
     }
-    return scriptsPromise
+    return libsPromise
 }
 
 function readAsDataURL(file) {
@@ -65,8 +41,7 @@ const ResultRow = ({ p, isTop }) => (
     </li>
 )
 
-async function loadModelComFallback(tmImage) {
-    const tf = window.tf
+async function loadModelComFallback(tf, tmImage) {
     const attempts = []
 
     const tryLoad = async () =>
@@ -98,6 +73,7 @@ async function loadModelComFallback(tmImage) {
 
 export default function IdentificarPlanta() {
     const modelRef = useRef(null)
+    const tmImageRef = useRef(null)
     const webcamRef = useRef(null)
     const rafRef = useRef(null)
     const frameRef = useRef(0)
@@ -192,7 +168,7 @@ export default function IdentificarPlanta() {
         setProcessError(null)
         setPredictions([])
         setLookup({ loading: false, match: null })
-        const tmImage = window.tmImage
+        const tmImage = tmImageRef.current
         if (!tmImage) {
             setCamError("Biblioteca de IA indisponível. Recarregue a página e tente novamente.")
             setCamStatus("error")
@@ -271,17 +247,9 @@ export default function IdentificarPlanta() {
         setPhase("loading")
         setError(null)
         try {
-            await loadTMScripts()
-        } catch (err) {
-            console.error("[IdentificarPlanta] Falha ao carregar bibliotecas TensorFlow:", err)
-            modelRef.current = null
-            setPhase("error")
-            setError(`Não foi possível carregar as bibliotecas de IA. ${err && err.message ? "Detalhe: " + err.message + "." : "Recarregue a página e tente novamente."}`)
-            return
-        }
-        try {
-            const tmImage = window.tmImage
-            const model = await loadModelComFallback(tmImage)
+            const { tf, tmImage } = await loadTMLibs()
+            tmImageRef.current = tmImage
+            const model = await loadModelComFallback(tf, tmImage)
             modelRef.current = model
             setPhase("ready")
         } catch (err) {
