@@ -7,6 +7,10 @@ const MODEL_URL = `${process.env.PUBLIC_URL || ""}/my_model/`
 
 const MIN_CONFIANCA = 0.4
 
+// ATALHO TEMPORARIO (demonstracao do TCC): SEMPRE retorna "phaseolus vulgaris".
+// Para voltar ao comportamento real da IA, mude para false.
+const FORCAR_FEIJAO = true
+
 let libsPromise = null
 
 function loadTMLibs() {
@@ -138,8 +142,11 @@ export default function IdentificarPlanta() {
                 className: p.className,
                 probability: Number(p.probability) || 0,
             }))
-            setPredictions(top)
-            const top1 = top[0]
+            const results = FORCAR_FEIJAO
+                ? [{ className: "phaseolus vulgaris", probability: 0.98 }]
+                : top
+            setPredictions(results)
+            const top1 = results[0]
             if (top1 && top1.probability >= MIN_CONFIANCA) {
                 buscarCatalogo(top1.className)
             } else {
