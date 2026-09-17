@@ -5,6 +5,8 @@ import { encodeId } from "../idCodec"
 
 const MODEL_URL = `${process.env.PUBLIC_URL || ""}/my_model/`
 
+const MIN_CONFIANCA = 0.4
+
 let libsPromise = null
 
 function loadTMLibs() {
@@ -92,6 +94,7 @@ export default function IdentificarPlanta() {
     const [preview, setPreview] = useState(null)
     const [predictions, setPredictions] = useState([])
     const [lookup, setLookup] = useState({ loading: false, match: null })
+    const [lowConf, setLowConf] = useState(null)
 
     const busyRef = useRef(false)
 
@@ -128,6 +131,7 @@ export default function IdentificarPlanta() {
         if (!model || busyRef.current) return
         busyRef.current = true
         setProcessError(null)
+        setLowConf(null)
         try {
             const pred = await model.predict(source)
             const top = (pred || []).slice(0, 3).map(p => ({
@@ -136,10 +140,11 @@ export default function IdentificarPlanta() {
             }))
             setPredictions(top)
             const top1 = top[0]
-            if (top1 && top1.probability >= 0.05) {
+            if (top1 && top1.probability >= MIN_CONFIANCA) {
                 buscarCatalogo(top1.className)
             } else {
                 setLookup({ loading: false, match: null })
+                if (top1) setLowConf(top1.probability)
             }
         } catch (err) {
             void err
@@ -168,6 +173,7 @@ export default function IdentificarPlanta() {
         setProcessError(null)
         setPredictions([])
         setLookup({ loading: false, match: null })
+        setLowConf(null)
         const tmImage = tmImageRef.current
         if (!tmImage) {
             setCamError("Biblioteca de IA indisponível. Recarregue a página e tente novamente.")
@@ -209,6 +215,7 @@ export default function IdentificarPlanta() {
         setProcessing(true)
         setPredictions([])
         setLookup({ loading: false, match: null })
+        setLowConf(null)
         stopWebcam()
         try {
             const dataUrl = await readAsDataURL(file)
@@ -239,6 +246,7 @@ export default function IdentificarPlanta() {
     function changeMode(next) {
         setMode(next)
         setProcessError(null)
+        setLowConf(null)
         if (next === "upload") stopWebcam()
     }
 
@@ -424,7 +432,12 @@ export default function IdentificarPlanta() {
                                                 Buscar “{lookup.match.query}” no catálogo →
                                             </Link>
                                         )}
-                                        {!lookup.loading && !lookup.match && <div className="small text-muted">Aguarde a predição...</div>}
+                                        {!lookup.loading && !lookup.match && lowConf !== null && (
+                                            <div className="small text-muted">
+                                                Confiança baixa ({Math.round(lowConf * 100)}%) — tente outra foto mais próxima da planta.
+                                            </div>
+                                        )}
+                                        {!lookup.loading && !lookup.match && lowConf === null && <div className="small text-muted">Aguarde a predição...</div>}
                                     </div>
                                 </div>
                             )}
