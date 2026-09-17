@@ -4,18 +4,28 @@ import API_URL from "../config"
 import { encodeId } from "../idCodec"
 
 const MODEL_URL = `${process.env.PUBLIC_URL || ""}/my_model/`
-const TF_SRC = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"
-const TM_SRC = "https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.5/dist/teachablemachine-image.min.js"
+const TF_SRC = `${process.env.PUBLIC_URL || ""}/vendor/tf.min.js`
+const TM_SRC = `${process.env.PUBLIC_URL || ""}/vendor/teachablemachine-image.min.js`
 
 let scriptsPromise = null
 
-function loadScript(src) {
+function loadScript(src, timeoutMs = 25000) {
     return new Promise((resolve, reject) => {
         const script = document.createElement("script")
+        const timer = setTimeout(() => {
+            script.onload = script.onerror = null
+            reject(new Error(`Tempo esgotado ao carregar ${src}`))
+        }, timeoutMs)
         script.src = src
         script.async = true
-        script.onload = resolve
-        script.onerror = () => reject(new Error(`Falha ao carregar script: ${src}`))
+        script.onload = () => {
+            clearTimeout(timer)
+            resolve()
+        }
+        script.onerror = () => {
+            clearTimeout(timer)
+            reject(new Error(`Falha ao carregar script: ${src}`))
+        }
         document.head.appendChild(script)
     })
 }
@@ -54,6 +64,37 @@ const ResultRow = ({ p, isTop }) => (
         </div>
     </li>
 )
+
+async function loadModelComFallback(tmImage) {
+    const tf = window.tf
+    const attempts = []
+
+    const tryLoad = async () =>
+        tmImage.load(`${MODEL_URL}model.json`, `${MODEL_URL}metadata.json`)
+
+    if (tf && tf.engine && typeof tf.engine().backendNames === "function") {
+        const available = tf.engine().backendNames()
+        for (const backend of ["webgl", "cpu"]) {
+            if (available.indexOf(backend) === -1) continue
+            try {
+                await tf.setBackend(backend)
+                await tf.ready()
+                return await tryLoad()
+            } catch (err) {
+                attempts.push(`${backend}: ${err && err.message}`)
+                console.error(`[IdentificarPlanta] Falha ao carregar o modelo com backend ${backend}:`, err)
+            }
+        }
+    }
+
+    try {
+        return await tryLoad()
+    } catch (err) {
+        attempts.push((err && err.message) || String(err))
+    }
+
+    throw new Error(attempts.length ? attempts.join(" | ") : "Erro desconhecido ao carregar o modelo.")
+}
 
 export default function IdentificarPlanta() {
     const modelRef = useRef(null)
@@ -235,19 +276,19 @@ export default function IdentificarPlanta() {
             console.error("[IdentificarPlanta] Falha ao carregar bibliotecas TensorFlow:", err)
             modelRef.current = null
             setPhase("error")
-            setError("Não foi possível baixar as bibliotecas de IA (cdn.jsdelivr.net). Verifique sua conexão com a internet e tente novamente.")
+            setError(`Não foi possível carregar as bibliotecas de IA. ${err && err.message ? "Detalhe: " + err.message + "." : "Recarregue a página e tente novamente."}`)
             return
         }
         try {
             const tmImage = window.tmImage
-            const model = await tmImage.load(`${MODEL_URL}model.json`, `${MODEL_URL}metadata.json`)
+            const model = await loadModelComFallback(tmImage)
             modelRef.current = model
             setPhase("ready")
         } catch (err) {
             console.error("[IdentificarPlanta] Falha ao carregar o modelo de IA:", err)
             modelRef.current = null
             setPhase("error")
-            setError("Não foi possível carregar o modelo de IA. Se o erro persistir, recarregue a página (Ctrl+F5) e tente novamente.")
+            setError(`Não foi possível carregar o modelo de IA. ${err && err.message ? "Detalhe: " + err.message : "Recarregue a página (Ctrl+F5) e tente novamente."}`)
         }
     }
 
