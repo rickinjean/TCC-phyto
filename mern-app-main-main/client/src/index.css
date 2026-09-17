@@ -6217,3 +6217,252 @@ html[data-theme="dark"] .wizard-catalog__list li em {
   color: #b4cdbd;
 }
 
+/* ==========================================================================
+   Identificação de planta com IA (Teachable Machine)
+   ========================================================================== */
+
+.home-section--identify {
+  padding-block: 3rem;
+}
+
+.identify {
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-lg);
+  background: var(--phyto-card-bg);
+}
+
+.identify__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.identify__icon {
+  flex: 0 0 auto;
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  border-radius: var(--phyto-radius-md);
+  background: var(--phyto-green-100);
+}
+
+.identify__title {
+  font-weight: 700;
+}
+
+.identify__subtitle {
+  font-size: 0.9rem;
+}
+
+.identify__loading {
+  color: var(--phyto-ink-soft);
+}
+
+.identify__tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-md);
+  background: var(--phyto-surface);
+}
+
+.identify__tab {
+  flex: 1;
+  border: 0;
+  padding: 0.5rem 1rem;
+  border-radius: var(--phyto-radius-sm);
+  background: transparent;
+  color: var(--phyto-ink-soft);
+  font-weight: 600;
+  transition: background 160ms var(--phyto-ease), color 160ms var(--phyto-ease);
+}
+
+.identify__tab:hover {
+  color: var(--phyto-green-700);
+}
+
+.identify__tab.is-active {
+  background: var(--phyto-green-600);
+  color: #fff;
+}
+
+.identify__body {
+  padding-top: 1.25rem;
+}
+
+.identify-webcam__host {
+  min-height: 224px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.identify-webcam__canvas {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--phyto-radius-md);
+  background: #000;
+  box-shadow: var(--phyto-shadow);
+}
+
+.identify-upload__preview {
+  display: block;
+  max-width: 240px;
+  width: 100%;
+  height: auto;
+  margin-top: 0.75rem;
+  border-radius: var(--phyto-radius-md);
+  border: 1px solid var(--phyto-border);
+}
+
+.identify-results__title {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.identify-results__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.identify-results__row {
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--phyto-radius-sm);
+  background: var(--phyto-surface);
+  border: 1px solid var(--phyto-border);
+}
+
+.identify-results__row--top {
+  border-color: rgba(47, 138, 93, 0.45);
+  background: var(--phyto-green-100);
+}
+
+.identify-results__class {
+  font-weight: 600;
+}
+
+.identify-results__row--top .identify-results__class {
+  color: var(--phyto-green-700);
+}
+
+.identify-results__prob {
+  font-size: 0.85rem;
+  color: var(--phyto-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.identify-results__bar {
+  height: 0.4rem;
+  margin-top: 0.35rem;
+  border-radius: 999px;
+  background: rgba(18, 60, 43, 0.1);
+  overflow: hidden;
+}
+
+.identify-results__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--phyto-green-700), var(--phyto-green-600));
+  transition: width 220ms var(--phyto-ease);
+}
+
+.identify-results__match {
+  font-size: 0.9rem;
+}
+
+.identify-results__link {
+  display: inline-block;
+  color: var(--phyto-green-700);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.identify-results__link:hover {
+  text-decoration: underline;
+}
+
+.identify-results__link--muted {
+  color: var(--phyto-ink-soft);
+  font-weight: 500;
+}
+
+.identify-toggle {
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-md);
+  background: var(--phyto-card-bg);
+  color: var(--phyto-ink);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  transition: border-color 160ms var(--phyto-ease), box-shadow 160ms var(--phyto-ease);
+}
+
+.identify-toggle:hover {
+  border-color: rgba(47, 138, 93, 0.45);
+  box-shadow: var(--phyto-shadow);
+}
+
+.identify-toggle.is-open {
+  border-color: rgba(47, 138, 93, 0.6);
+  color: var(--phyto-green-700);
+}
+
+html[data-theme="dark"] .identify,
+html[data-theme="dark"] .identify-toggle {
+  border-color: rgba(133, 214, 158, 0.2);
+  background: var(--phyto-card-bg);
+}
+
+html[data-theme="dark"] .identify__icon {
+  background: rgba(77, 187, 120, 0.16);
+}
+
+html[data-theme="dark"] .identify__tabs {
+  border-color: rgba(133, 214, 158, 0.22);
+  background: rgba(20, 44, 31, 0.9);
+}
+
+html[data-theme="dark"] .identify__tab {
+  color: #b4cdbd;
+}
+
+html[data-theme="dark"] .identify__tab:hover {
+  color: #dff8e7;
+}
+
+html[data-theme="dark"] .identify-results__row {
+  background: rgba(20, 44, 31, 0.9);
+  border-color: rgba(133, 214, 158, 0.2);
+}
+
+html[data-theme="dark"] .identify-results__row--top {
+  background: rgba(47, 138, 93, 0.18);
+  border-color: rgba(133, 214, 158, 0.45);
+}
+
+html[data-theme="dark"] .identify-results__row--top .identify-results__class {
+  color: var(--phyto-green-600);
+}
+
+html[data-theme="dark"] .identify-results__bar {
+  background: rgba(232, 243, 236, 0.12);
+}
+
+html[data-theme="dark"] .identify-results__link {
+  color: var(--phyto-green-600);
+}
+
+html[data-theme="dark"] .identify-toggle:hover {
+  border-color: rgba(133, 214, 158, 0.45);
+}
+
+html[data-theme="dark"] .identify-toggle.is-open {
+  border-color: rgba(133, 214, 158, 0.6);
+  color: #dff8e7;
+}
+

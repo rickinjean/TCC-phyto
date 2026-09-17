@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import API_URL from "../config"
 import { encodeId } from "../idCodec"
 import PlantImage from "./PlantImage"
+import IdentificarPlanta from "./IdentificarPlanta"
 import usePageTitle from "../usePageTitle"
 import { imgVariantProps } from "../getImageVariants"
 import { PLACEHOLDER_CARD } from "../placeholderImg"
@@ -218,6 +219,17 @@ export default function Home({ token = null }) {
                             </button>
                         </div>
                     </form>
+                </div>
+            </section>
+
+            {/* ── Identificação com IA ── */}
+            <section className="home-section home-section--identify px-3">
+                <div className="container">
+                    <div className="row justify-content-center">
+                        <div className="col-lg-10 col-xl-8">
+                            <IdentificarPlanta />
+                        </div>
+                    </div>
                 </div>
             </section>
 

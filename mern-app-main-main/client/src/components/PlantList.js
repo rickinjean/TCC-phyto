@@ -8,6 +8,7 @@ import ListaPicker from "./ListaPicker"
 import PlantCard from "./PlantCard"
 import PlantFilters, { FILTER_FIELDS, PAGE_SIZES, PAGE_SIZE_KEY, DEFAULT_PAGE_SIZE } from "./PlantFilters"
 import PlantPagination from "./PlantPagination"
+import IdentificarPlanta from "./IdentificarPlanta"
 import useColecoes from "../useColecoes"
 
 const EmptyState = ({ hasActiveFilters, onClear }) => (
@@ -53,6 +54,7 @@ export default function PlantList({ role, canFavorite = false }) {
     const [searchInput, setSearchInput] = useState(searchFromURL)
     const [searchText, setSearchText] = useState(searchFromURL)
     const [filtersOpen, setFiltersOpen] = useState(false)
+    const [identifyOpen, setIdentifyOpen] = useState(false)
     const [pageSize, setPageSize] = useState(() => {
         const stored = Number(localStorage.getItem(PAGE_SIZE_KEY))
         return PAGE_SIZES.includes(stored) ? stored : DEFAULT_PAGE_SIZE
@@ -238,6 +240,27 @@ export default function PlantList({ role, canFavorite = false }) {
                     </button>
                 </div>
             </form>
+
+            <div className="mb-4">
+                <button
+                    type="button"
+                    className={`identify-toggle btn w-100 d-flex align-items-center justify-content-between${identifyOpen ? " is-open" : ""}`}
+                    onClick={() => setIdentifyOpen(o => !o)}
+                    aria-expanded={identifyOpen}
+                    aria-controls="identify-panel"
+                >
+                    <span>
+                        <span className="me-2" aria-hidden="true">🌿</span>
+                        Identificar planta por foto
+                    </span>
+                    <i className={`fas ${identifyOpen ? "fa-chevron-up" : "fa-chevron-down"}`} aria-hidden="true"></i>
+                </button>
+                {identifyOpen && (
+                    <div id="identify-panel" className="mt-3">
+                        <IdentificarPlanta />
+                    </div>
+                )}
+            </div>
 
             <PlantFilters
                 filters={filters}
