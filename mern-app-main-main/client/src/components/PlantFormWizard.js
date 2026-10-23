@@ -3,6 +3,8 @@ import API_URL from "../config"
 import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
 import { decodeId } from "../idCodec"
+import MapPicker from "./MapPicker"
+import { coordenadaParaInput, validarParCoordenadas } from "../geo"
 
 import sortPorNome from "../sortOptions"
 
@@ -14,6 +16,7 @@ const BASE_STEPS = [
     { key: "cuidados", label: "Cuidados", icon: "🤲" },
     { key: "poda-pragas", label: "Poda e Pragas", icon: "✂️" },
     { key: "cultivo", label: "Cultivo", icon: "🌾" },
+    { key: "localizacao", label: "Localização", icon: "📍" },
 ]
 
 const REVIEW_STEP = { key: "revisao", label: "Revisão", icon: "✅" }
@@ -30,6 +33,7 @@ const INITIAL_FORM = {
     manha: "", amount: "", frequency: "", NPK: "", season: "", tools: "", prevention: "", monitoring: "",
     planting: "", exhibition: "", maintenance: "",
     station: "", spacing: "", iluminosity: "", protection: "", idealTemperature: "", tolerance: "",
+    latitude: "", longitude: "",
     imagesPath: [], imagePath: "",
 }
 
@@ -88,6 +92,12 @@ const REVIEW_GRUPOS = [
             ["planting", "Plantio"], ["propagation", "Propagação"], ["station", "Estação"], ["spacing", "Espaçamento"],
             ["exhibition", "Exposição"], ["iluminosity", "Horas de Sol"], ["protection", "Proteção"],
             ["maintenance", "Manutenção"], ["idealTemperature", "Temperatura Ideal"], ["tolerance", "Tolerância"],
+        ],
+    },
+    {
+        label: "📍 Localização da Coleta",
+        campos: [
+            ["latitude", "Latitude"], ["longitude", "Longitude"],
         ],
     },
 ]
@@ -548,6 +558,15 @@ export default function PlantFormWizard({
 
     function buildFormData() {
         const formData = new FormData()
+        // Coordenadas vazias precisam chegar como string vazia (não "null"),
+        // para o backend normalizar como null no MongoDB.
+        const anexarCampo = (key) => {
+            if (key === "latitude" || key === "longitude") {
+                formData.append(key, form[key] === null || form[key] === undefined ? "" : String(form[key]))
+            } else {
+                formData.append(key, form[key])
+            }
+        }
         if (mode === "edit") {
             Object.keys(form).forEach(key => {
                 if (key === "imagesPath") {
@@ -558,13 +577,13 @@ export default function PlantFormWizard({
                         : []
                     formData.append("imagesMeta", JSON.stringify(mantidas))
                 } else {
-                    formData.append(key, form[key])
+                    anexarCampo(key)
                 }
             })
         } else {
             Object.keys(form).forEach(key => {
                 if (key === "imagesPath" || key === "imagePath") return
-                formData.append(key, form[key])
+                anexarCampo(key)
             })
         }
         imageFiles.forEach(file => formData.append("images", file))
@@ -574,6 +593,15 @@ export default function PlantFormWizard({
     function handleSubmit(e) {
         e.preventDefault()
         if (submitting) return
+
+        const coords = validarParCoordenadas(form.latitude, form.longitude)
+        if (!coords.ok) {
+            showToast(coords.erro, "error")
+            const indiceLocalizacao = steps.findIndex(step => step.key === "localizacao")
+            if (indiceLocalizacao >= 0) setCurrentStep(indiceLocalizacao)
+            return
+        }
+
         setSubmitting(true)
         Promise.resolve(onSubmit({ formData: buildFormData(), showToast })).finally(() => setSubmitting(false))
     }
@@ -650,6 +678,13 @@ export default function PlantFormWizard({
     const isLastStep = currentStep === steps.length - 1
     const canGoBack = currentStep > 0
     const canAdvance = currentStep < steps.length - 1
+
+    const coordenadasErro = (String(form.latitude ?? "").trim() || String(form.longitude ?? "").trim())
+        ? (validarParCoordenadas(form.latitude, form.longitude).erro || "")
+        : ""
+    const coordenadasPreenchidas = [form.latitude, form.longitude]
+        .filter(valor => String(valor ?? "").trim())
+        .length
 
     // URL estável para o preview da primeira imagem (evita vazamento de memória)
     const previewUrl = useMemo(() => {
@@ -1101,6 +1136,87 @@ export default function PlantFormWizard({
                                 ["idealTemperature", "Temperatura Ideal", "Temperatura ideal..."],
                                 ["tolerance", "Tolerância", "Tolerância..."],
                             ])}
+                        </FieldGroup>
+                    </div>
+                )}
+
+                {/* ── STEP 7: LOCALIZAÇÃO DA COLETA ── */}
+                {currentStep === 7 && (
+                    <div className="wizard-step-content">
+                        <div className="wizard-step-header">
+                            <h4>📍 Localização da Coleta</h4>
+                            <p>Coordenadas geográficas do ponto onde a amostra foi coletada</p>
+                        </div>
+                        <FieldGroup
+                            id="localizacao"
+                            icon="🗺️"
+                            title="Coordenadas Geográficas"
+                            optional
+                            filled={coordenadasPreenchidas}
+                            total={2}
+                            hint="Preencha manualmente ou clique no mapa para capturar o ponto. A precisão é de até 6 casas decimais — o equivalente a Decimal(9,6)."
+                        >
+                            <div className="row">
+                                <div className="col-md-6 mb-3">
+                                    <FieldLabel optional>Latitude</FieldLabel>
+                                    <input
+                                        type="text"
+                                        className={`form-control ${coordenadasErro ? "is-invalid" : ""}`}
+                                        inputMode="decimal"
+                                        autoComplete="off"
+                                        spellCheck={false}
+                                        placeholder="Ex.: -29.123456"
+                                        value={form.latitude ?? ""}
+                                        onChange={e => updateForm({ latitude: e.target.value })}
+                                        aria-describedby="coord-latitude-help"
+                                        aria-invalid={Boolean(coordenadasErro)}
+                                    />
+                                    <small id="coord-latitude-help" className="phyto-coord-help">
+                                        Entre -90 e 90. Aceita vírgula ou ponto.
+                                    </small>
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <FieldLabel optional>Longitude</FieldLabel>
+                                    <input
+                                        type="text"
+                                        className={`form-control ${coordenadasErro ? "is-invalid" : ""}`}
+                                        inputMode="decimal"
+                                        autoComplete="off"
+                                        spellCheck={false}
+                                        placeholder="Ex.: -49.123456"
+                                        value={form.longitude ?? ""}
+                                        onChange={e => updateForm({ longitude: e.target.value })}
+                                        aria-describedby="coord-longitude-help"
+                                        aria-invalid={Boolean(coordenadasErro)}
+                                    />
+                                    <small id="coord-longitude-help" className="phyto-coord-help">
+                                        Entre -180 e 180. Aceita vírgula ou ponto.
+                                    </small>
+                                </div>
+                            </div>
+
+                            <MapPicker
+                                latitude={form.latitude}
+                                longitude={form.longitude}
+                                onChange={({ latitude, longitude }) => updateForm({
+                                    latitude: coordenadaParaInput(latitude),
+                                    longitude: coordenadaParaInput(longitude),
+                                })}
+                            />
+
+                            <div className="phyto-coord-actions">
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    onClick={() => updateForm({ latitude: "", longitude: "" })}
+                                    disabled={coordenadasPreenchidas === 0}
+                                >
+                                    Limpar coordenadas
+                                </button>
+                                {coordenadasErro && (
+                                    <p className="phyto-coord-error" role="alert">{coordenadasErro}</p>
+                                )}
+                            </div>
                         </FieldGroup>
                     </div>
                 )}

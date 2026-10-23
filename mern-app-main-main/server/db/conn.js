@@ -32,6 +32,9 @@ const INDEX_SPECS = [
         { key: { userId: 1 }, options: {} },
         { key: { status: 1 }, options: {} },
     ] },
+    { collection: "plants", indexes: [
+        { key: { latitude: 1, longitude: 1 }, options: { partialFilterExpression: { latitude: { $type: "number" }, longitude: { $type: "number" } } } },
+    ] },
     { collection: "messages", indexes: [
         { key: { createdAt: -1 }, options: {} },
     ] },

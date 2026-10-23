@@ -10,6 +10,8 @@ import { imgVariantProps } from "../getImageVariants";
 import FavoriteButton from "./FavoriteButton";
 import useColecoes from "../useColecoes";
 import mapeamentoColecoes from "../mapeamentoColecoes";
+import PlantLocationMap from "./PlantLocationMap";
+import { parseCoordenada, coordenadasValidas, formatarCoordenada, linkOpenStreetMap } from "../geo";
 
 function QuickBadge({ icon, label, value }) {
   if (!value || value === "—") return null;
@@ -193,6 +195,10 @@ export default function PlantDetails({ canFavorite = false }) {
   const hasSingleImage = !hasImages && plant.imagePath;
   const hasAnyImage = hasImages || hasSingleImage;
   const total = hasImages ? plant.imagesPath.length : 0;
+  const coordenadaLatitude = parseCoordenada(plant.latitude);
+  const coordenadaLongitude = parseCoordenada(plant.longitude);
+  const temCoordenadas = coordenadasValidas(coordenadaLatitude, coordenadaLongitude);
+  const osmLink = temCoordenadas ? linkOpenStreetMap(coordenadaLatitude, coordenadaLongitude) : null;
   const colecoes = canFavorite ? listasDe(realId) : [];
   const corColecao = canFavorite ? corDaPlanta(realId) : null;
   const textoColecoes = canFavorite ? textoDe(realId) : "Adicionar a uma coleção";
@@ -311,6 +317,41 @@ export default function PlantDetails({ canFavorite = false }) {
             </div>
           </div>
 
+        </div>
+
+        {/* ── MAPA DE OCORRÊNCIAS (logo abaixo das fotos) ── */}
+        <div className="container plant-details-map-shell">
+          <SectionCard title="Mapa de Ocorrências" icon="📍">
+            {temCoordenadas ? (
+              <>
+                <PlantLocationMap
+                  latitude={coordenadaLatitude}
+                  longitude={coordenadaLongitude}
+                  nomePopular={plant.name}
+                />
+                <div className="plant-location-meta">
+                  <div className="plant-location-coords">
+                    <span><strong>Latitude:</strong> {formatarCoordenada(coordenadaLatitude, "latitude")}</span>
+                    <span><strong>Longitude:</strong> {formatarCoordenada(coordenadaLongitude, "longitude")}</span>
+                  </div>
+                  {osmLink && (
+                    <a
+                      className="plant-location-link"
+                      href={osmLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Abrir no OpenStreetMap <span aria-hidden="true">↗</span>
+                    </a>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="plant-location-empty">
+                <span aria-hidden="true">📍</span> Coordenadas não registradas para esta amostra.
+              </p>
+            )}
+          </SectionCard>
         </div>
 
         <div className="container plant-details-info-shell">

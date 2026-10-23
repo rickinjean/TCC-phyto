@@ -5982,3 +5982,180 @@ html[data-theme="dark"] .wizard-catalog__list li em {
 }
 
 
+
+
+/* ==========================================================
+   MAPAS (Leaflet + OpenStreetMap)
+   ========================================================== */
+
+.plant-details-map-shell {
+  margin-bottom: clamp(1.5rem, 4vw, 3rem);
+}
+
+.plant-details-map-shell .plant-details-card {
+  height: auto;
+}
+
+.phyto-map {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-md);
+  background: #dceee3;
+  /* Isola o z-index dos painéis do Leaflet (até 800) para não sobrepor
+     navbar/modais do Bootstrap. */
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+
+.phyto-map--public {
+  height: clamp(280px, 45vw, 460px);
+}
+
+.phyto-map--picker {
+  height: clamp(300px, 40vw, 420px);
+  cursor: crosshair;
+}
+
+.phyto-map-pin {
+  border: 0;
+  background: transparent;
+}
+
+.phyto-map .leaflet-control-zoom a,
+.leaflet-touch .phyto-map .leaflet-control-zoom a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  line-height: 1;
+  font-size: 1.25rem;
+}
+
+.phyto-map .leaflet-control-attribution {
+  font-size: 0.7rem;
+}
+
+.phyto-map-popup {
+  color: #1f3d2b;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.phyto-map-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.65rem;
+}
+
+.phyto-map-toolbar__status {
+  font-size: 0.85rem;
+  color: #4d6b5b;
+}
+
+.phyto-map-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  color: #71827a;
+}
+
+.phyto-coord-help {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: #71827a;
+}
+
+.phyto-coord-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.85rem;
+}
+
+.phyto-coord-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.plant-location-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.85rem;
+}
+
+.plant-location-coords {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  color: var(--phyto-ink);
+  font-size: 0.9rem;
+}
+
+.plant-location-link {
+  color: var(--phyto-green-600);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.plant-location-link:hover,
+.plant-location-link:focus-visible {
+  text-decoration: underline;
+}
+
+.plant-location-empty {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border: 1px dashed rgba(31, 107, 73, 0.28);
+  border-radius: var(--phyto-radius-sm);
+  background: rgba(230, 243, 235, 0.45);
+  color: #71827a;
+  font-weight: 600;
+  text-align: center;
+}
+
+html[data-theme="dark"] .phyto-map {
+  border-color: rgba(133, 214, 158, 0.22);
+}
+
+html[data-theme="dark"] .phyto-map-toolbar__status,
+html[data-theme="dark"] .phyto-map-hint,
+html[data-theme="dark"] .phyto-coord-help {
+  color: #b4cdbd;
+}
+
+html[data-theme="dark"] .plant-location-empty {
+  border-color: rgba(133, 214, 158, 0.22);
+  background: rgba(20, 44, 31, 0.6);
+  color: #b4cdbd;
+}
+
+html[data-theme="dark"] .plant-location-coords {
+  color: #e8f7ec;
+}
+
+html[data-theme="dark"] .plant-location-link {
+  color: #85d69e;
+}
+
+@media (max-width: 575.98px) {
+  .phyto-map--public,
+  .phyto-map--picker {
+    height: 280px;
+  }
+
+  .plant-location-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
