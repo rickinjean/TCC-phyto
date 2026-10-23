@@ -6034,6 +6034,31 @@ html[data-theme="dark"] .wizard-catalog__list li em {
   font-size: 1.25rem;
 }
 
+/* Seletor de camadas (Mapa / Relevo / Satélite): alvo de toque confortável
+   no celular e painel compacto quando aberto. */
+.phyto-map .leaflet-control-layers {
+  border-radius: var(--phyto-radius-md);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+}
+
+.phyto-map .leaflet-control-layers-toggle,
+.leaflet-touch .phyto-map .leaflet-control-layers-toggle {
+  width: 40px;
+  height: 40px;
+  background-size: 22px 22px;
+}
+
+.phyto-map .leaflet-control-layers-expanded {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.phyto-map .leaflet-control-layers label {
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
 .phyto-map .leaflet-control-attribution {
   font-size: 0.7rem;
 }

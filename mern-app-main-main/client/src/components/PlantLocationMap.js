@@ -1,10 +1,8 @@
 import { useEffect, useRef } from "react"
 import L from "leaflet"
 import {
-    OSM_TILE_URL,
-    OSM_ATTRIBUTION,
-    OSM_MAX_ZOOM,
-    OSM_REFERRER_POLICY,
+    ZOOM_MAXIMO_MAPA,
+    adicionarCamadasBase,
     criarIconePin,
     coordenadasValidas,
     parseCoordenada,
@@ -34,15 +32,12 @@ export default function PlantLocationMap({ latitude, longitude, nomePopular, hei
         const map = L.map(containerRef.current, {
             center: [lat, lng],
             zoom: ZOOM_DETALHE,
+            maxZoom: ZOOM_MAXIMO_MAPA,
             scrollWheelZoom: false,
             zoomControl: true,
         })
 
-        L.tileLayer(OSM_TILE_URL, {
-            maxZoom: OSM_MAX_ZOOM,
-            attribution: OSM_ATTRIBUTION,
-            referrerPolicy: OSM_REFERRER_POLICY,
-        }).addTo(map)
+        adicionarCamadasBase(map)
 
         const marker = L.marker([lat, lng], {
             icon: criarIconePin(),

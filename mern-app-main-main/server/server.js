@@ -38,7 +38,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-eval'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "data:", "blob:", "https://lh3.googleusercontent.com", "https://avatars.githubusercontent.com", "https://tile.openstreetmap.org", "https://*.tile.openstreetmap.org"],
+            imgSrc: ["'self'", "data:", "blob:", "https://lh3.googleusercontent.com", "https://avatars.githubusercontent.com", "https://tile.openstreetmap.org", "https://*.tile.openstreetmap.org", "https://*.tile.openstreetmap.fr", "https://tile.opentopomap.org", "https://*.tile.opentopomap.org", "https://server.arcgisonline.com"],
             fontSrc: ["'self'", "data:"],
             connectSrc: ["'self'"],
             objectSrc: ["'none'"],

@@ -1,17 +1,67 @@
 import L from "leaflet"
 
-// Camada base do OpenStreetMap (sem chave de API). A atribuição é obrigatória
-// pelos termos de uso: https://www.openstreetmap.org/copyright
-export const OSM_TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-export const OSM_ATTRIBUTION =
-    '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
-export const OSM_MAX_ZOOM = 19
-
 // Os servidores de tile do OSM exigem que o site se identifique pelo header
 // Referer (https://wiki.openstreetmap.org/wiki/Blocked). O servidor já envia
 // este valor via Helmet; declarar também na camada garante o mesmo
 // comportamento em qualquer contexto e sobrevive a mudanças de política.
 export const OSM_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+// Zoom máximo do mapa. Cada camada declara o próprio limite de renderização em
+// maxNativeZoom; acima dele o Leaflet amplia o tile existente em vez de deixar
+// a área cinza.
+export const ZOOM_MAXIMO_MAPA = 19
+
+// Camadas base com dados do OpenStreetMap. Nenhuma exige chave de API.
+// A atribuição é obrigatória pelos termos de cada provedor.
+export const BASE_LAYERS = [
+    {
+        id: "mapa",
+        nome: "Mapa",
+        url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+        atribuicao:
+            '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors, tiles <a href="https://hot.openstreetmap.org/" target="_blank" rel="noopener noreferrer">HOT</a>',
+        maxNativeZoom: 19,
+    },
+    {
+        id: "relevo",
+        nome: "Relevo",
+        url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+        atribuicao:
+            '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors, SRTM | &copy; <a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a> (CC-BY-SA)',
+        maxNativeZoom: 17,
+    },
+    {
+        id: "satelite",
+        nome: "Satélite",
+        url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        atribuicao:
+            'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener noreferrer">Esri</a> &mdash; Source: Esri, Maxar, Earthstar Geographics',
+        maxNativeZoom: 19,
+    },
+]
+
+// Habilita as três camadas, ativa a primeira ("Mapa") e adiciona o seletor no
+// canto superior direito, recolhido para não cobrir o mapa em telas pequenas.
+export function adicionarCamadasBase(map) {
+    const camadas = {}
+
+    BASE_LAYERS.forEach((base) => {
+        camadas[base.nome] = L.tileLayer(base.url, {
+            attribution: base.atribuicao,
+            maxZoom: ZOOM_MAXIMO_MAPA,
+            maxNativeZoom: base.maxNativeZoom,
+            referrerPolicy: OSM_REFERRER_POLICY,
+        })
+    })
+
+    camadas[BASE_LAYERS[0].nome].addTo(map)
+
+    L.control
+        .layers(camadas, null, { position: "topright", collapsed: true })
+        .addTo(map)
+
+    return camadas
+}
 
 const CASAS = 6
 

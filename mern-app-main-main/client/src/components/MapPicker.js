@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import L from "leaflet"
 import {
-    OSM_TILE_URL,
-    OSM_ATTRIBUTION,
-    OSM_MAX_ZOOM,
-    OSM_REFERRER_POLICY,
+    ZOOM_MAXIMO_MAPA,
+    adicionarCamadasBase,
     criarIconePin,
     coordenadasValidas,
     parseCoordenada,
@@ -54,15 +52,12 @@ export default function MapPicker({ latitude, longitude, onChange, height }) {
         const map = L.map(containerRef.current, {
             center: temCoordenadas ? [lat, lng] : CENTRO_BRASIL,
             zoom: temCoordenadas ? ZOOM_DETALHE : ZOOM_BRASIL,
+            maxZoom: ZOOM_MAXIMO_MAPA,
             scrollWheelZoom: false,
             zoomControl: true,
         })
 
-        L.tileLayer(OSM_TILE_URL, {
-            maxZoom: OSM_MAX_ZOOM,
-            attribution: OSM_ATTRIBUTION,
-            referrerPolicy: OSM_REFERRER_POLICY,
-        }).addTo(map)
+        adicionarCamadasBase(map)
 
         if (temCoordenadas) {
             posicionarMarcador(map, markerRef, [lat, lng], onChangeRef)
