@@ -4,6 +4,7 @@ import {
     OSM_TILE_URL,
     OSM_ATTRIBUTION,
     OSM_MAX_ZOOM,
+    OSM_REFERRER_POLICY,
     criarIconePin,
     coordenadasValidas,
     parseCoordenada,
@@ -40,6 +41,7 @@ export default function PlantLocationMap({ latitude, longitude, nomePopular, hei
         L.tileLayer(OSM_TILE_URL, {
             maxZoom: OSM_MAX_ZOOM,
             attribution: OSM_ATTRIBUTION,
+            referrerPolicy: OSM_REFERRER_POLICY,
         }).addTo(map)
 
         const marker = L.marker([lat, lng], {

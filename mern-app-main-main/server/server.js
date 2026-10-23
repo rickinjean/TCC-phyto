@@ -47,6 +47,12 @@ app.use(helmet({
         },
     },
     crossOriginResourcePolicy: isProduction ? { policy: "same-origin" } : { policy: "cross-origin" },
+    // O padrão do Helmet é "no-referrer", que remove o header Referer das
+    // requisições. As tiles do OpenStreetMap exigem esse header para
+    // identificar o site, senão devolvem o tile de bloqueio
+    // (https://wiki.openstreetmap.org/wiki/Blocked). "strict-origin-when-
+    // cross-origin" envia apenas a origem para domínios externos.
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }))
 
 const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")

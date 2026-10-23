@@ -4,6 +4,7 @@ import {
     OSM_TILE_URL,
     OSM_ATTRIBUTION,
     OSM_MAX_ZOOM,
+    OSM_REFERRER_POLICY,
     criarIconePin,
     coordenadasValidas,
     parseCoordenada,
@@ -60,6 +61,7 @@ export default function MapPicker({ latitude, longitude, onChange, height }) {
         L.tileLayer(OSM_TILE_URL, {
             maxZoom: OSM_MAX_ZOOM,
             attribution: OSM_ATTRIBUTION,
+            referrerPolicy: OSM_REFERRER_POLICY,
         }).addTo(map)
 
         if (temCoordenadas) {

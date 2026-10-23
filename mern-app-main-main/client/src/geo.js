@@ -7,6 +7,12 @@ export const OSM_ATTRIBUTION =
     '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
 export const OSM_MAX_ZOOM = 19
 
+// Os servidores de tile do OSM exigem que o site se identifique pelo header
+// Referer (https://wiki.openstreetmap.org/wiki/Blocked). O servidor já envia
+// este valor via Helmet; declarar também na camada garante o mesmo
+// comportamento em qualquer contexto e sobrevive a mudanças de política.
+export const OSM_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 const CASAS = 6
 
 function arredondar(numero) {
