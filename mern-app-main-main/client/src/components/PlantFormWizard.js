@@ -301,6 +301,8 @@ export default function PlantFormWizard({
     const [catalogLoading, setCatalogLoading] = useState(false)
     const [catalogSearched, setCatalogSearched] = useState(false)
     const [catalogOpen, setCatalogOpen] = useState(false)
+    const [sugestaoGbif, setSugestaoGbif] = useState(null)
+    const [sugerindoGbif, setSugerindoGbif] = useState(false)
     const autoSaveTimer = useRef(null)
 
     const steps = withReview ? [...BASE_STEPS, REVIEW_STEP] : BASE_STEPS
@@ -312,6 +314,52 @@ export default function PlantFormWizard({
 
     function updateForm(value) {
         setForm(prev => ({ ...prev, ...value }))
+    }
+
+    // Consulta a distribuição da WCVP no GBIF. O resultado fica em prévia:
+    // nada é gravado no formulário sem o clique em "Aplicar sugestão".
+    async function sugerirPeloGbif() {
+        const nome = String(form.scientificName || "").trim()
+        if (!nome) {
+            showToast("Preencha o nome científico para consultar o GBIF.", "error")
+            return
+        }
+
+        setSugerindoGbif(true)
+        setSugestaoGbif(null)
+        try {
+            const resposta = await authFetch(
+                `${API_URL}/plant/sugerir-distribuicao?nome=${encodeURIComponent(nome)}`
+            )
+            if (!resposta) {
+                showToast("Sessão expirada. Faça login novamente.", "error")
+                return
+            }
+            const dados = await resposta.json().catch(() => null)
+            if (!resposta.ok || !dados || !dados.ok) {
+                showToast((dados && dados.message) || "Não foi possível consultar o GBIF agora.", "error")
+                return
+            }
+            setSugestaoGbif(dados)
+        } catch {
+            showToast("Erro ao conectar ao GBIF. Tente novamente.", "error")
+        } finally {
+            setSugerindoGbif(false)
+        }
+    }
+
+    function aplicarSugestaoGbif() {
+        if (!sugestaoGbif) return
+        const atual = distribuicaoDaPlanta(form)
+        updateForm({
+            distribuicao: {
+                nativa: sugestaoGbif.nativa,
+                cultivada: sugestaoGbif.cultivada,
+                fonte: atual.fonte || sugestaoGbif.fonte,
+            },
+        })
+        setSugestaoGbif(null)
+        showToast("Distribuição do GBIF aplicada. Revise os países no mapa.")
     }
 
     useEffect(() => {
@@ -347,10 +395,10 @@ export default function PlantFormWizard({
                 }
                 const data = await res.json()
                 const formLimpo = { ...data }
-        delete formLimpo.latitude
-        delete formLimpo.longitude
-        formLimpo.distribuicao = distribuicaoDaPlanta(formLimpo)
-        setForm(prev => ({ ...prev, ...formLimpo, name: "", scientificName: "" }))
+                delete formLimpo.latitude
+                delete formLimpo.longitude
+                formLimpo.distribuicao = distribuicaoDaPlanta(formLimpo)
+                setForm(prev => ({ ...prev, ...formLimpo, name: "", scientificName: "" }))
                 showToast("Planta clonada! Ajuste nome e científico antes de salvar.")
             } catch {
                 showToast("Erro ao conectar ao servidor para clonar.", "error")
@@ -1148,6 +1196,89 @@ export default function PlantFormWizard({
                             total={3}
                             hint="Escolha o pincel e clique nos países. Use a busca para ilhas pequenas. A fonte informada aparece na ficha pública."
                         >
+                            <div className="phyto-gbif">
+                                <div className="phyto-gbif__head">
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-success"
+                                        onClick={sugerirPeloGbif}
+                                        disabled={sugerindoGbif}
+                                    >
+                                        {sugerindoGbif ? "Consultando GBIF…" : "🔎 Sugerir pelo GBIF"}
+                                    </button>
+                                    <small className="phyto-dist-help">
+                                        Consulta a distribuição da WCVP (Kew) pelo nome científico
+                                        informado em “Dados Básicos”. Nada é alterado sem sua confirmação.
+                                    </small>
+                                </div>
+
+                                {sugestaoGbif && (() => {
+                                    const totalSugerido = sugestaoGbif.nativa.length + sugestaoGbif.cultivada.length
+                                    return (
+                                        <div className="phyto-gbif__preview">
+                                            <p className="phyto-gbif__titulo">
+                                                Sugestão para <strong>{sugestaoGbif.cientifico}</strong>
+                                                <span className="phyto-gbif__confianca">
+                                                    {sugestaoGbif.correspondencia}% de correspondência
+                                                </span>
+                                            </p>
+
+                                            {totalSugerido === 0 ? (
+                                                <p className="phyto-gbif__vazio">
+                                                    O GBIF não tem registros da WCVP para esta espécie.
+                                                    Marque os países manualmente.
+                                                </p>
+                                            ) : (
+                                                <>
+                                                    <p className="phyto-gbif__resumo">
+                                                        <strong>{sugestaoGbif.nativa.length}</strong>{" "}
+                                                        {sugestaoGbif.nativa.length === 1 ? "país nativo" : "países nativos"}
+                                                        {" · "}
+                                                        <strong>{sugestaoGbif.cultivada.length}</strong>{" "}
+                                                        {sugestaoGbif.cultivada.length === 1
+                                                            ? "país cultivado/introduzido"
+                                                            : "países cultivados/introduzidos"}
+                                                    </p>
+                                                </>
+                                            )}
+
+                                            <p className="phyto-gbif__fonte">
+                                                Fonte: {sugestaoGbif.fonte} · {sugestaoGbif.totalRegistros}{" "}
+                                                {sugestaoGbif.totalRegistros === 1 ? "registro" : "registros"}
+                                                {sugestaoGbif.ignoradas > 0 &&
+                                                    ` · ${sugestaoGbif.ignoradas} sem país correspondente`}
+                                            </p>
+
+                                            <div className="phyto-gbif__acoes">
+                                                {totalSugerido > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-success"
+                                                        onClick={aplicarSugestaoGbif}
+                                                    >
+                                                        Aplicar sugestão
+                                                    </button>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    onClick={() => setSugestaoGbif(null)}
+                                                >
+                                                    Descartar
+                                                </button>
+                                            </div>
+
+                                            {totalSugerido > 0 && (
+                                                <p className="phyto-gbif__aviso">
+                                                    Aplicar substitui os países marcados agora. Você pode ajustar
+                                                    no mapa depois.
+                                                </p>
+                                            )}
+                                        </div>
+                                    )
+                                })()}
+                            </div>
+
                             <MapaDistribuicao
                                 editavel
                                 nativa={dist.nativa}

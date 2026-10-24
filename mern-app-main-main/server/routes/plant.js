@@ -1,4 +1,5 @@
 const express = require("express")
+const axios = require("axios")
 const plantRoutes = express.Router()
 const dbo = require("../db/conn")
 const ObjectId = require("mongodb").ObjectId
@@ -295,6 +296,170 @@ plantRoutes.route("/plant/featured").get(asyncHandler(async function (req, res) 
             .toArray()
     }
     res.status(200).json(result)
+}))
+
+/* ==================================================
+   SUGESTÃO DE DISTRIBUIÇÃO PELO GBIF
+================================================== */
+const TDWG_PAISES = require("../data/tdwg-paises.json")
+
+const GBIF_API = "https://api.gbif.org/v1"
+const GBIF_FONTE = "GBIF – World Checklist of Vascular Plants (WCVP)"
+const GBIF_TIMEOUT_MS = 8000
+const GBIF_CONFIANCA_MINIMA = 95
+const GBIF_CACHE_TTL_MS = 60 * 60 * 1000
+const GBIF_CACHE_MAXIMO = 200
+const GBIF_MAX_PAGINAS = 5
+const GBIF_LIMITE_PAGINA = 1000
+
+// Cache em memória: a mesma espécie costuma ser consultada várias vezes
+// enquanto o administrador revisa a ficha.
+const gbifCache = new Map()
+
+async function gbifGet(caminho) {
+    const resposta = await axios.get(`${GBIF_API}${caminho}`, {
+        timeout: GBIF_TIMEOUT_MS,
+        headers: { "User-Agent": "Phytografia (TCC; https://tcc-phyto.onrender.com)" },
+    })
+    return resposta.data
+}
+
+// O GBIF identifica as regiões da WCVP como "TDWG:XXX".
+function codigoTdwg(registro) {
+    const local = typeof registro.locationId === "string" ? registro.locationId.trim() : ""
+    const encontrado = /^TDWG:([A-Za-z]{3})$/.exec(local)
+    return encontrado ? encontrado[1].toUpperCase() : null
+}
+
+async function distribuicoesGbif(chave) {
+    const registros = []
+    let offset = 0
+    for (let pagina = 0; pagina < GBIF_MAX_PAGINAS; pagina++) {
+        const dados = await gbifGet(`/species/${chave}/distributions?limit=${GBIF_LIMITE_PAGINA}&offset=${offset}`)
+        const resultados = Array.isArray(dados.results) ? dados.results : []
+        registros.push(...resultados)
+        if (dados.endOfRecords !== false || resultados.length === 0) break
+        offset += resultados.length
+    }
+    return registros
+}
+
+// Regra: só registros da WCVP (World Checklist of Vascular Plants).
+// Sem establishmentMeans = nativa; "INTRODUCED" = cultivada/introduzida.
+function classificacaoGbif(registros) {
+    const nativa = new Set()
+    const cultivada = new Set()
+    let totalRegistros = 0
+    let ignoradas = 0
+
+    for (const registro of registros) {
+        if (!String(registro.source || "").includes("World Checklist of Vascular Plants")) continue
+        totalRegistros++
+        const codigo = codigoTdwg(registro)
+        const pais = codigo ? TDWG_PAISES[codigo] : null
+        if (!pais) {
+            ignoradas++
+            continue
+        }
+        if (String(registro.establishmentMeans || "").toUpperCase() === "INTRODUCED") {
+            cultivada.add(pais)
+        } else {
+            nativa.add(pais)
+        }
+    }
+
+    // Nativa vence quando o mesmo país aparece nas duas categorias.
+    return {
+        nativa: [...nativa].sort(),
+        cultivada: [...cultivada].filter(pais => !nativa.has(pais)).sort(),
+        totalRegistros,
+        ignoradas,
+    }
+}
+
+plantRoutes.route("/plant/sugerir-distribuicao").get(authenticateToken, authorizeRoles("ADM"), asyncHandler(async function (req, res) {
+    const nome = String(req.query.nome || "").trim()
+    if (!nome) {
+        return res.status(400).json({
+            ok: false,
+            motivo: "nome-obrigatorio",
+            message: "Informe o nome científico para consultar o GBIF.",
+        })
+    }
+    if (nome.length > 120) {
+        return res.status(400).json({
+            ok: false,
+            motivo: "nome-longo",
+            message: "O nome científico deve ter no máximo 120 caracteres.",
+        })
+    }
+
+    const chaveCache = nome.toLowerCase()
+    const emCache = gbifCache.get(chaveCache)
+    if (emCache && emCache.expira > Date.now()) {
+        return res.status(200).json(emCache.valor)
+    }
+
+    try {
+        const correspondencia = await gbifGet(`/species/match?name=${encodeURIComponent(nome)}`)
+        const confianca = Number(correspondencia && correspondencia.confidence) || 0
+
+        if (!correspondencia || correspondencia.matchType === "NONE" || !correspondencia.usageKey) {
+            return res.status(422).json({
+                ok: false,
+                motivo: "nao-encontrado",
+                message: "Espécie não encontrada no GBIF. Confira a grafia do nome científico.",
+            })
+        }
+        if (confianca < GBIF_CONFIANCA_MINIMA) {
+            return res.status(422).json({
+                ok: false,
+                motivo: "baixa-confianca",
+                message: `O GBIF encontrou uma correspondência fraca (${confianca}% de confiança) para "${nome}". Confira o nome científico.`,
+            })
+        }
+
+        const chave = correspondencia.acceptedUsageKey || correspondencia.usageKey
+        const registros = await distribuicoesGbif(chave)
+        const { nativa, cultivada, totalRegistros, ignoradas } = classificacaoGbif(registros)
+
+        const valor = {
+            ok: true,
+            cientifico: correspondencia.scientificName || nome,
+            correspondencia: confianca,
+            nativa,
+            cultivada,
+            fonte: GBIF_FONTE,
+            totalRegistros,
+            ignoradas,
+        }
+
+        gbifCache.set(chaveCache, { expira: Date.now() + GBIF_CACHE_TTL_MS, valor })
+        if (gbifCache.size > GBIF_CACHE_MAXIMO) {
+            gbifCache.delete(gbifCache.keys().next().value)
+        }
+        return res.status(200).json(valor)
+    } catch (erro) {
+        if (erro.code === "ECONNABORTED" || erro.code === "ETIMEDOUT") {
+            return res.status(504).json({
+                ok: false,
+                motivo: "tempo-esgotado",
+                message: "O GBIF demorou para responder. Tente novamente em instantes.",
+            })
+        }
+        if (erro.response && erro.response.status === 404) {
+            return res.status(422).json({
+                ok: false,
+                motivo: "nao-encontrado",
+                message: "Espécie não encontrada no GBIF.",
+            })
+        }
+        return res.status(502).json({
+            ok: false,
+            motivo: "gbif-indisponivel",
+            message: "Não foi possível consultar o GBIF agora. Tente novamente.",
+        })
+    }
 }))
 
 /* ==================================================
