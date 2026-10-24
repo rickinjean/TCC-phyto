@@ -5985,8 +5985,26 @@ html[data-theme="dark"] .wizard-catalog__list li em {
 
 
 /* ==========================================================
-   MAPAS (Leaflet + OpenStreetMap)
+   MAPA DE DISTRIBUIÇÃO (Leaflet + Natural Earth, sem tiles)
    ========================================================== */
+
+:root {
+  --phyto-dist-nativa: #2f7d4f;
+  --phyto-dist-cultivada: #c98a1e;
+  --phyto-dist-vazia: #e2e9e3;
+  --phyto-dist-borda: #b7c7bc;
+  --phyto-dist-destaque: #1f6b49;
+  --phyto-dist-fundo: #f3f8f4;
+}
+
+html[data-theme="dark"] {
+  --phyto-dist-nativa: #4fae74;
+  --phyto-dist-cultivada: #e0a83e;
+  --phyto-dist-vazia: #1f3529;
+  --phyto-dist-borda: #33513f;
+  --phyto-dist-destaque: #85d69e;
+  --phyto-dist-fundo: #12241a;
+}
 
 .plant-details-map-shell {
   margin-bottom: clamp(1.5rem, 4vw, 3rem);
@@ -6001,7 +6019,7 @@ html[data-theme="dark"] .wizard-catalog__list li em {
   overflow: hidden;
   border: 1px solid var(--phyto-border);
   border-radius: var(--phyto-radius-md);
-  background: #dceee3;
+  background: var(--phyto-dist-fundo);
   /* Isola o z-index dos painéis do Leaflet (até 800) para não sobrepor
      navbar/modais do Bootstrap. */
   position: relative;
@@ -6009,157 +6027,305 @@ html[data-theme="dark"] .wizard-catalog__list li em {
   isolation: isolate;
 }
 
-.phyto-map--public {
-  height: clamp(280px, 45vw, 460px);
+.phyto-dist-map {
+  height: clamp(260px, 42vw, 460px);
 }
 
-.phyto-map--picker {
-  height: clamp(300px, 40vw, 420px);
-  cursor: crosshair;
+.leaflet-container.phyto-dist-map {
+  background: var(--phyto-dist-fundo);
+  font: inherit;
 }
 
-.phyto-map-pin {
-  border: 0;
-  background: transparent;
-}
-
-.phyto-map .leaflet-control-zoom a,
-.leaflet-touch .phyto-map .leaflet-control-zoom a {
+.phyto-dist-map .leaflet-bar a,
+.leaflet-touch .phyto-dist-map .leaflet-bar a {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   line-height: 1;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
+  color: var(--phyto-ink);
+  background: var(--phyto-card-bg);
+  border-bottom-color: var(--phyto-border);
 }
 
-/* Seletor de camadas (Mapa / Relevo / Satélite): alvo de toque confortável
-   no celular e painel compacto quando aberto. */
-.phyto-map .leaflet-control-layers {
-  border-radius: var(--phyto-radius-md);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+.phyto-dist-map .leaflet-bar a:hover,
+.phyto-dist-map .leaflet-bar a:focus-visible {
+  background: var(--phyto-surface);
+  color: var(--phyto-green-600);
 }
 
-.phyto-map .leaflet-control-layers-toggle,
-.leaflet-touch .phyto-map .leaflet-control-layers-toggle {
-  width: 40px;
-  height: 40px;
-  background-size: 22px 22px;
+.leaflet-tooltip.phyto-dist-tooltip {
+  padding: 4px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: #10231a;
+  color: #f2fbf5;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
-.phyto-map .leaflet-control-layers-expanded {
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  line-height: 1.6;
+.leaflet-tooltip-top.phyto-dist-tooltip::before {
+  border-top-color: #10231a;
 }
 
-.phyto-map .leaflet-control-layers label {
-  margin-bottom: 0;
+.phyto-dist-map .leaflet-interactive {
   cursor: pointer;
 }
 
-.phyto-map .leaflet-control-attribution {
-  font-size: 0.7rem;
-}
+/* ── Editor (wizard) ── */
 
-.phyto-map-popup {
-  color: #1f3d2b;
-  font-size: 0.95rem;
-  line-height: 1.35;
-}
-
-.phyto-map-toolbar {
+.phyto-dist-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
   flex-wrap: wrap;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.7rem;
 }
 
-.phyto-map-toolbar__status {
+.phyto-dist-brushes {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--phyto-border);
+  border-radius: 999px;
+  background: var(--phyto-card-bg);
+}
+
+.phyto-dist-brush {
+  border: 0;
+  background: transparent;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--phyto-ink);
+  cursor: pointer;
+}
+
+.phyto-dist-brush + .phyto-dist-brush {
+  border-left: 1px solid var(--phyto-border);
+}
+
+.phyto-dist-brush:focus-visible {
+  outline: 2px solid var(--phyto-green-600);
+  outline-offset: -2px;
+}
+
+.phyto-dist-brush--nativa.is-active {
+  background: var(--phyto-dist-nativa);
+  color: #ffffff;
+}
+
+.phyto-dist-brush--cultivada.is-active {
+  background: var(--phyto-dist-cultivada);
+  color: #231a06;
+}
+
+.phyto-dist-brush--apagar.is-active {
+  background: #6c757d;
+  color: #ffffff;
+}
+
+.phyto-dist-search {
+  position: relative;
+  min-width: 190px;
+}
+
+.phyto-dist-search input {
+  min-width: 190px;
+}
+
+.phyto-dist-search__list {
+  position: absolute;
+  z-index: 900;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow: auto;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  background: var(--phyto-card-bg);
+  border: 1px solid var(--phyto-border);
+  border-radius: var(--phyto-radius-sm);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+}
+
+.phyto-dist-search__list button {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--phyto-ink);
   font-size: 0.85rem;
-  color: #4d6b5b;
+  text-align: left;
 }
 
-.phyto-map-toolbar__status--ok {
-  color: #1f6b49;
+.phyto-dist-search__list button:hover,
+.phyto-dist-search__list button:focus-visible {
+  background: rgba(31, 107, 73, 0.12);
 }
 
-.phyto-map-toolbar__status--aviso {
-  color: #b54708;
-  font-weight: 600;
+.phyto-dist-search__list small {
+  color: var(--phyto-ink-soft);
+  font-size: 0.72rem;
 }
 
-.phyto-map-toolbar__status--erro {
-  color: #b42318;
-  font-weight: 600;
-}
-
-.phyto-map-hint {
-  margin: 0.5rem 0 0;
+.phyto-dist-count {
+  display: inline-flex;
+  gap: 0.7rem;
+  margin: 0;
   font-size: 0.82rem;
-  color: #71827a;
+  color: var(--phyto-ink-soft);
 }
 
-.phyto-coord-help {
+.phyto-dist-count__item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.phyto-dist-count__item::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+}
+
+.phyto-dist-count__item--nativa::before {
+  background: var(--phyto-dist-nativa);
+}
+
+.phyto-dist-count__item--cultivada::before {
+  background: var(--phyto-dist-cultivada);
+}
+
+.phyto-dist-confirm {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.phyto-dist-help {
   display: block;
   margin-top: 0.35rem;
   font-size: 0.78rem;
-  color: #71827a;
+  color: var(--phyto-ink-soft);
 }
 
-.phyto-coord-actions {
+.phyto-dist-map-wrap {
+  position: relative;
+}
+
+.phyto-dist-status {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 0.85rem;
-}
-
-.phyto-coord-error {
+  justify-content: center;
   margin: 0;
-  color: #b42318;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.plant-location-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 0.85rem;
-}
-
-.plant-location-coords {
-  display: flex;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  color: var(--phyto-ink);
+  border-radius: var(--phyto-radius-md);
+  background: var(--phyto-dist-fundo);
+  color: var(--phyto-ink-soft);
   font-size: 0.9rem;
 }
 
-.plant-location-links {
+.phyto-dist-status--erro {
+  color: #b42318;
+  font-weight: 700;
+}
+
+/* ── Legenda ── */
+
+.phyto-dist-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.1rem;
+  margin: 0.7rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--phyto-ink);
+}
+
+.phyto-dist-legend li {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.4rem;
+}
+
+.phyto-dist-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--phyto-dist-borda);
+  border-radius: 4px;
+}
+
+.phyto-dist-swatch--nativa {
+  background: var(--phyto-dist-nativa);
+}
+
+.phyto-dist-swatch--cultivada {
+  background: var(--phyto-dist-cultivada);
+}
+
+.phyto-dist-swatch--vazia {
+  background: var(--phyto-dist-vazia);
+}
+
+.phyto-dist-attribution {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: var(--phyto-ink-soft);
+}
+
+/* ── Ficha pública ── */
+
+.plant-dist-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
   flex-wrap: wrap;
+  margin-top: 0.85rem;
 }
 
-.plant-location-link {
-  color: var(--phyto-green-600);
+.plant-dist-resumo {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--phyto-ink);
+}
+
+.plant-dist-fonte {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--phyto-ink-soft);
+}
+
+.plant-dist-listas {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--phyto-ink);
+}
+
+.plant-dist-listas summary {
+  cursor: pointer;
   font-weight: 700;
-  text-decoration: none;
+  color: var(--phyto-green-600);
 }
 
-.plant-location-link:hover,
-.plant-location-link:focus-visible {
-  text-decoration: underline;
+.plant-dist-listas p {
+  margin: 0.4rem 0 0;
+  line-height: 1.45;
 }
 
-.plant-location-empty {
+.plant-dist-empty {
   margin: 0;
   padding: 1rem 1.1rem;
   border: 1px dashed rgba(31, 107, 73, 0.28);
@@ -6170,50 +6336,24 @@ html[data-theme="dark"] .wizard-catalog__list li em {
   text-align: center;
 }
 
-html[data-theme="dark"] .phyto-map {
-  border-color: rgba(133, 214, 158, 0.22);
-}
-
-html[data-theme="dark"] .phyto-map-toolbar__status,
-html[data-theme="dark"] .phyto-map-hint,
-html[data-theme="dark"] .phyto-coord-help {
-  color: #b4cdbd;
-}
-
-/* Avisos e erros precisam manter contraste no tema escuro. */
-html[data-theme="dark"] .phyto-map-toolbar__status--aviso {
-  color: #f5c26b;
-}
-
-html[data-theme="dark"] .phyto-map-toolbar__status--erro {
-  color: #ff9b8f;
-}
-
-html[data-theme="dark"] .phyto-map-toolbar__status--ok {
-  color: #85d69e;
-}
-
-html[data-theme="dark"] .plant-location-empty {
+html[data-theme="dark"] .plant-dist-empty {
   border-color: rgba(133, 214, 158, 0.22);
   background: rgba(20, 44, 31, 0.6);
   color: #b4cdbd;
 }
 
-html[data-theme="dark"] .plant-location-coords {
-  color: #e8f7ec;
-}
-
-html[data-theme="dark"] .plant-location-link {
-  color: #85d69e;
-}
-
 @media (max-width: 575.98px) {
-  .phyto-map--public,
-  .phyto-map--picker {
-    height: 280px;
+  .phyto-dist-map {
+    height: 300px;
   }
 
-  .plant-location-meta {
+  .phyto-dist-search,
+  .phyto-dist-search input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .plant-dist-meta {
     align-items: flex-start;
     flex-direction: column;
   }

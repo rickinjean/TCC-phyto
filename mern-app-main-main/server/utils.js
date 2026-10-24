@@ -23,84 +23,61 @@ const CAMPOS_PLANTA = [
     "manha", "amount", "frequency", "NPK", "season", "tools", "prevention", "monitoring",
     "planting", "exhibition", "maintenance",
     "station", "spacing", "iluminosity", "protection", "idealTemperature", "tolerance",
-    "latitude", "longitude",
+    "distribuicao",
 ]
 
-// Precisão equivalente a Decimal(9,6): 6 casas decimais.
-const CASAS_COORDENADA = 6
+// Whitelist de países (ISO alpha-3) aceitos no campo distribuicao.
+const PAISES_ISO = new Set(require("./data/paises-iso.json"))
+const LIMITE_PAISES = PAISES_ISO.size
+const TAMANHO_MAXIMO_FONTE = 160
 
-const COORDENADAS = {
-    latitude: { min: -90, max: 90, rotulo: "Latitude" },
-    longitude: { min: -180, max: 180, rotulo: "Longitude" },
-}
-
-// Aceita Number ou string (com ponto ou vírgula decimal), devolve Number
-// arredondado a 6 casas, null quando vazio e NaN quando inválido.
-function parseCoordenada(valor) {
-    if (valor === undefined || valor === null) return null
-    if (typeof valor === "number") {
-        return Number.isFinite(valor) ? arredondarCoordenada(valor) : NaN
+function listaDePaises(valor) {
+    if (!Array.isArray(valor)) return []
+    const vistos = new Set()
+    for (const item of valor) {
+        if (typeof item !== "string") continue
+        const codigo = item.trim().toUpperCase()
+        if (!/^[A-Z]{3}$/.test(codigo) || !PAISES_ISO.has(codigo)) continue
+        vistos.add(codigo)
     }
-    if (typeof valor !== "string") return NaN
-    const texto = valor.trim().replace(",", ".")
-    if (!texto) return null
-    const numero = Number(texto)
-    return Number.isFinite(numero) ? arredondarCoordenada(numero) : NaN
+    return [...vistos].slice(0, LIMITE_PAISES)
 }
 
-function arredondarCoordenada(numero) {
-    const fator = 10 ** CASAS_COORDENADA
-    const arredondado = Math.round(numero * fator) / fator
-    return Object.is(arredondado, -0) ? 0 : arredondado
-}
-
-// Valida e normaliza o par latitude/longitude recebido do formulário.
-// Regras: ambos opcionais, mas precisam ser informados juntos; faixa
-// geográfica válida; até 6 casas decimais.
-function normalizarCoordenadas(origem) {
-    const body = origem || {}
-    const latitude = parseCoordenada(body.latitude)
-    const longitude = parseCoordenada(body.longitude)
-
-    for (const [campo, valor] of [["latitude", latitude], ["longitude", longitude]]) {
-        if (Number.isNaN(valor)) {
-            return { ok: false, erro: `${COORDENADAS[campo].rotulo} inválida. Use um número decimal (ex.: -29.123456).` }
+// Normaliza a distribuição geográfica recebida do formulário.
+// Regras: só códigos ISO conhecidos, sem repetição, sem sobreposição entre
+// nativa e cultivada (nativa vence) e fonte com no máximo 160 caracteres.
+function normalizarDistribuicao(valor) {
+    let bruto = valor
+    if (typeof bruto === "string") {
+        try {
+            bruto = JSON.parse(bruto)
+        } catch {
+            bruto = null
         }
     }
-
-    const temLatitude = latitude !== null
-    const temLongitude = longitude !== null
-    if (temLatitude !== temLongitude) {
-        return { ok: false, erro: "Informe latitude e longitude juntas ou deixe ambas em branco." }
+    if (!bruto || typeof bruto !== "object" || Array.isArray(bruto)) {
+        return { nativa: [], cultivada: [], fonte: "" }
     }
 
-    for (const [campo, valor] of [["latitude", latitude], ["longitude", longitude]]) {
-        if (valor === null) continue
-        const { min, max, rotulo } = COORDENADAS[campo]
-        if (valor < min || valor > max) {
-            return { ok: false, erro: `${rotulo} deve estar entre ${min} e ${max}.` }
-        }
-    }
+    const nativa = listaDePaises(bruto.nativa)
+    const conjuntoNativa = new Set(nativa)
+    const cultivada = listaDePaises(bruto.cultivada).filter(codigo => !conjuntoNativa.has(codigo))
+    const fonte = typeof bruto.fonte === "string"
+        ? bruto.fonte.trim().slice(0, TAMANHO_MAXIMO_FONTE)
+        : ""
 
-    return { ok: true, latitude, longitude }
+    return { nativa, cultivada, fonte }
 }
 
 // Monta o corpo { campo: req.body[campo] } a partir de CAMPOS_PLANTA.
-// Coordenadas são sempre normalizadas: string vazia vira null e nunca é
-// gravada como texto no MongoDB.
+// A distribuição é sempre normalizada antes de ir para o MongoDB.
 function plantaCorpo(req) {
     const corpo = {}
     for (const campo of CAMPOS_PLANTA) {
+        if (campo === "distribuicao") continue
         corpo[campo] = req.body[campo]
     }
-    const coords = normalizarCoordenadas(req.body)
-    if (coords.ok) {
-        corpo.latitude = coords.latitude
-        corpo.longitude = coords.longitude
-    } else {
-        corpo.latitude = null
-        corpo.longitude = null
-    }
+    corpo.distribuicao = normalizarDistribuicao(req.body.distribuicao)
     return corpo
 }
 
@@ -109,6 +86,5 @@ module.exports = {
     asyncHandler,
     CAMPOS_PLANTA,
     plantaCorpo,
-    parseCoordenada,
-    normalizarCoordenadas,
+    normalizarDistribuicao,
 }

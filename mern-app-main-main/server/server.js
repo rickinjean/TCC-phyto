@@ -38,7 +38,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-eval'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "data:", "blob:", "https://lh3.googleusercontent.com", "https://avatars.githubusercontent.com", "https://tile.openstreetmap.org", "https://*.tile.openstreetmap.org", "https://*.tile.openstreetmap.fr", "https://tile.opentopomap.org", "https://*.tile.opentopomap.org", "https://server.arcgisonline.com"],
+            imgSrc: ["'self'", "data:", "blob:", "https://lh3.googleusercontent.com", "https://avatars.githubusercontent.com"],
             fontSrc: ["'self'", "data:"],
             connectSrc: ["'self'"],
             objectSrc: ["'none'"],
@@ -47,11 +47,9 @@ app.use(helmet({
         },
     },
     crossOriginResourcePolicy: isProduction ? { policy: "same-origin" } : { policy: "cross-origin" },
-    // O padrão do Helmet é "no-referrer", que remove o header Referer das
-    // requisições. As tiles do OpenStreetMap exigem esse header para
-    // identificar o site, senão devolvem o tile de bloqueio
-    // (https://wiki.openstreetmap.org/wiki/Blocked). "strict-origin-when-
-    // cross-origin" envia apenas a origem para domínios externos.
+    // Privacidade: envia apenas a origem para outros domínios. O mapa de
+    // distribuição não usa tiles externos, então nada depende dessa política —
+    // ela segue como padrão seguro para as imagens externas restantes.
     referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }))
 

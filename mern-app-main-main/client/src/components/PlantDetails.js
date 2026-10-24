@@ -10,8 +10,8 @@ import { imgVariantProps } from "../getImageVariants";
 import FavoriteButton from "./FavoriteButton";
 import useColecoes from "../useColecoes";
 import mapeamentoColecoes from "../mapeamentoColecoes";
-import PlantLocationMap from "./PlantLocationMap";
-import { parseCoordenada, coordenadasValidas, formatarCoordenada, linkOpenStreetMap, linkStreetView } from "../geo";
+import MapaDistribuicao from "./MapaDistribuicao";
+import { distribuicaoDaPlanta, nomesDe } from "../distribuicao";
 
 function QuickBadge({ icon, label, value }) {
   if (!value || value === "—") return null;
@@ -195,11 +195,8 @@ export default function PlantDetails({ canFavorite = false }) {
   const hasSingleImage = !hasImages && plant.imagePath;
   const hasAnyImage = hasImages || hasSingleImage;
   const total = hasImages ? plant.imagesPath.length : 0;
-  const coordenadaLatitude = parseCoordenada(plant.latitude);
-  const coordenadaLongitude = parseCoordenada(plant.longitude);
-  const temCoordenadas = coordenadasValidas(coordenadaLatitude, coordenadaLongitude);
-  const osmLink = temCoordenadas ? linkOpenStreetMap(coordenadaLatitude, coordenadaLongitude) : null;
-  const streetViewLink = temCoordenadas ? linkStreetView(coordenadaLatitude, coordenadaLongitude) : null;
+  const distribuicao = distribuicaoDaPlanta(plant);
+  const temDistribuicao = distribuicao.nativa.length > 0 || distribuicao.cultivada.length > 0;
   const colecoes = canFavorite ? listasDe(realId) : [];
   const corColecao = canFavorite ? corDaPlanta(realId) : null;
   const textoColecoes = canFavorite ? textoDe(realId) : "Adicionar a uma coleção";
@@ -320,50 +317,42 @@ export default function PlantDetails({ canFavorite = false }) {
 
         </div>
 
-        {/* ── MAPA DE OCORRÊNCIAS (logo abaixo das fotos) ── */}
+        {/* ── DISTRIBUIÇÃO GEOGRÁFICA (logo abaixo das fotos) ── */}
         <div className="container plant-details-map-shell">
-          <SectionCard title="Mapa de Ocorrências" icon="📍">
-            {temCoordenadas ? (
+          <SectionCard title="Distribuição Geográfica" icon="🌍">
+            {temDistribuicao ? (
               <>
-                <PlantLocationMap
-                  latitude={coordenadaLatitude}
-                  longitude={coordenadaLongitude}
-                  nomePopular={plant.name}
+                <MapaDistribuicao
+                  nativa={distribuicao.nativa}
+                  cultivada={distribuicao.cultivada}
                 />
-                <div className="plant-location-meta">
-                  <div className="plant-location-coords">
-                    <span><strong>Latitude:</strong> {formatarCoordenada(coordenadaLatitude, "latitude")}</span>
-                    <span><strong>Longitude:</strong> {formatarCoordenada(coordenadaLongitude, "longitude")}</span>
-                  </div>
-                  {(osmLink || streetViewLink) && (
-                    <div className="plant-location-links">
-                      {osmLink && (
-                        <a
-                          className="plant-location-link"
-                          href={osmLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Abrir no OpenStreetMap <span aria-hidden="true">↗</span>
-                        </a>
-                      )}
-                      {streetViewLink && (
-                        <a
-                          className="plant-location-link"
-                          href={streetViewLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Ver no Street View <span aria-hidden="true">↗</span>
-                        </a>
-                      )}
-                    </div>
+                <div className="plant-dist-meta">
+                  <p className="plant-dist-resumo">
+                    <strong>{distribuicao.nativa.length}</strong>{" "}
+                    {distribuicao.nativa.length === 1 ? "país nativo" : "países nativos"}
+                    {" · "}
+                    <strong>{distribuicao.cultivada.length}</strong>{" "}
+                    {distribuicao.cultivada.length === 1 ? "país cultivado/introduzido" : "países cultivados/introduzidos"}
+                  </p>
+                  {distribuicao.fonte && (
+                    <p className="plant-dist-fonte">Fonte: {distribuicao.fonte}</p>
                   )}
                 </div>
+                <details className="plant-dist-listas">
+                  <summary>Ver lista de países</summary>
+                  <p>
+                    <strong>Nativa:</strong>{" "}
+                    {nomesDe(distribuicao.nativa).join(", ") || "—"}
+                  </p>
+                  <p>
+                    <strong>Cultivada / introduzida:</strong>{" "}
+                    {nomesDe(distribuicao.cultivada).join(", ") || "—"}
+                  </p>
+                </details>
               </>
             ) : (
-              <p className="plant-location-empty">
-                <span aria-hidden="true">📍</span> Coordenadas não registradas para esta amostra.
+              <p className="plant-dist-empty">
+                <span aria-hidden="true">🌍</span> Distribuição geográfica não registrada para esta amostra.
               </p>
             )}
           </SectionCard>

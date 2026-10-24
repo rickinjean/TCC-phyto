@@ -3,8 +3,8 @@ import API_URL from "../config"
 import authFetch from "../authFetch"
 import mapeamentoColecoes from "../mapeamentoColecoes"
 import { decodeId } from "../idCodec"
-import MapPicker from "./MapPicker"
-import { coordenadaParaInput, validarParCoordenadas } from "../geo"
+import MapaDistribuicao from "./MapaDistribuicao"
+import { distribuicaoDaPlanta, nomesDe } from "../distribuicao"
 
 import sortPorNome from "../sortOptions"
 
@@ -16,7 +16,7 @@ const BASE_STEPS = [
     { key: "cuidados", label: "Cuidados", icon: "🤲" },
     { key: "poda-pragas", label: "Poda e Pragas", icon: "✂️" },
     { key: "cultivo", label: "Cultivo", icon: "🌾" },
-    { key: "localizacao", label: "Localização", icon: "📍" },
+    { key: "distribuicao", label: "Distribuição", icon: "🌍" },
 ]
 
 const REVIEW_STEP = { key: "revisao", label: "Revisão", icon: "✅" }
@@ -33,7 +33,7 @@ const INITIAL_FORM = {
     manha: "", amount: "", frequency: "", NPK: "", season: "", tools: "", prevention: "", monitoring: "",
     planting: "", exhibition: "", maintenance: "",
     station: "", spacing: "", iluminosity: "", protection: "", idealTemperature: "", tolerance: "",
-    latitude: "", longitude: "",
+    distribuicao: { nativa: [], cultivada: [], fonte: "" },
     imagesPath: [], imagePath: "",
 }
 
@@ -92,12 +92,6 @@ const REVIEW_GRUPOS = [
             ["planting", "Plantio"], ["propagation", "Propagação"], ["station", "Estação"], ["spacing", "Espaçamento"],
             ["exhibition", "Exposição"], ["iluminosity", "Horas de Sol"], ["protection", "Proteção"],
             ["maintenance", "Manutenção"], ["idealTemperature", "Temperatura Ideal"], ["tolerance", "Tolerância"],
-        ],
-    },
-    {
-        label: "📍 Localização da Coleta",
-        campos: [
-            ["latitude", "Latitude"], ["longitude", "Longitude"],
         ],
     },
 ]
@@ -352,7 +346,11 @@ export default function PlantFormWizard({
                     return
                 }
                 const data = await res.json()
-                setForm(prev => ({ ...prev, ...data, name: "", scientificName: "" }))
+                const formLimpo = { ...data }
+        delete formLimpo.latitude
+        delete formLimpo.longitude
+        formLimpo.distribuicao = distribuicaoDaPlanta(formLimpo)
+        setForm(prev => ({ ...prev, ...formLimpo, name: "", scientificName: "" }))
                 showToast("Planta clonada! Ajuste nome e científico antes de salvar.")
             } catch {
                 showToast("Erro ao conectar ao servidor para clonar.", "error")
@@ -402,7 +400,13 @@ export default function PlantFormWizard({
             if (saved) {
                 const draft = JSON.parse(saved)
                 if (draft?.form?.name) {
-                    setForm(draft.form)
+                    // Rascunhos antigos podem conter latitude/longitude, que não
+                    // fazem mais parte do formulário.
+                    const formLimpo = { ...draft.form }
+                    delete formLimpo.latitude
+                    delete formLimpo.longitude
+                    formLimpo.distribuicao = distribuicaoDaPlanta(formLimpo)
+                    setForm(formLimpo)
                     setCurrentStep(draft.currentStep || 0)
                     setHasDraft(true)
                 }
@@ -558,14 +562,14 @@ export default function PlantFormWizard({
 
     function buildFormData() {
         const formData = new FormData()
-        // Coordenadas vazias precisam chegar como string vazia (não "null"),
-        // para o backend normalizar como null no MongoDB.
+        // O objeto de distribuição vai como JSON em um único campo do FormData.
         const anexarCampo = (key) => {
-            if (key === "latitude" || key === "longitude") {
-                formData.append(key, form[key] === null || form[key] === undefined ? "" : String(form[key]))
-            } else {
-                formData.append(key, form[key])
+            if (key === "distribuicao") {
+                const dist = distribuicaoDaPlanta(form)
+                formData.append("distribuicao", JSON.stringify(dist))
+                return
             }
+            formData.append(key, form[key] ?? "")
         }
         if (mode === "edit") {
             Object.keys(form).forEach(key => {
@@ -593,14 +597,6 @@ export default function PlantFormWizard({
     function handleSubmit(e) {
         e.preventDefault()
         if (submitting) return
-
-        const coords = validarParCoordenadas(form.latitude, form.longitude)
-        if (!coords.ok) {
-            showToast(coords.erro, "error")
-            const indiceLocalizacao = steps.findIndex(step => step.key === "localizacao")
-            if (indiceLocalizacao >= 0) setCurrentStep(indiceLocalizacao)
-            return
-        }
 
         setSubmitting(true)
         Promise.resolve(onSubmit({ formData: buildFormData(), showToast })).finally(() => setSubmitting(false))
@@ -679,12 +675,8 @@ export default function PlantFormWizard({
     const canGoBack = currentStep > 0
     const canAdvance = currentStep < steps.length - 1
 
-    const coordenadasErro = (String(form.latitude ?? "").trim() || String(form.longitude ?? "").trim())
-        ? (validarParCoordenadas(form.latitude, form.longitude).erro || "")
-        : ""
-    const coordenadasPreenchidas = [form.latitude, form.longitude]
-        .filter(valor => String(valor ?? "").trim())
-        .length
+    const dist = distribuicaoDaPlanta(form)
+    const distPreenchida = dist.nativa.length + dist.cultivada.length + (dist.fonte ? 1 : 0)
 
     // URL estável para o preview da primeira imagem (evita vazamento de memória)
     const previewUrl = useMemo(() => {
@@ -1140,82 +1132,48 @@ export default function PlantFormWizard({
                     </div>
                 )}
 
-                {/* ── STEP 7: LOCALIZAÇÃO DA COLETA ── */}
+                {/* ── STEP 7: DISTRIBUIÇÃO GEOGRÁFICA ── */}
                 {currentStep === 7 && (
                     <div className="wizard-step-content">
                         <div className="wizard-step-header">
-                            <h4>📍 Localização da Coleta</h4>
-                            <p>Coordenadas geográficas do ponto onde a amostra foi coletada</p>
+                            <h4>🌍 Distribuição Geográfica</h4>
+                            <p>Onde a espécie é nativa e onde é cultivada ou introduzida</p>
                         </div>
                         <FieldGroup
-                            id="localizacao"
+                            id="distribuicao"
                             icon="🗺️"
-                            title="Coordenadas Geográficas"
+                            title="Países de Ocorrência"
                             optional
-                            filled={coordenadasPreenchidas}
-                            total={2}
-                            hint="Preencha manualmente ou clique no mapa para capturar o ponto. A precisão é de até 6 casas decimais — o equivalente a Decimal(9,6)."
+                            filled={distPreenchida}
+                            total={3}
+                            hint="Escolha o pincel e clique nos países. Use a busca para ilhas pequenas. A fonte informada aparece na ficha pública."
                         >
-                            <div className="row">
-                                <div className="col-md-6 mb-3">
-                                    <FieldLabel optional>Latitude</FieldLabel>
-                                    <input
-                                        type="text"
-                                        className={`form-control ${coordenadasErro ? "is-invalid" : ""}`}
-                                        inputMode="decimal"
-                                        autoComplete="off"
-                                        spellCheck={false}
-                                        placeholder="Ex.: -29.123456"
-                                        value={form.latitude ?? ""}
-                                        onChange={e => updateForm({ latitude: e.target.value })}
-                                        aria-describedby="coord-latitude-help"
-                                        aria-invalid={Boolean(coordenadasErro)}
-                                    />
-                                    <small id="coord-latitude-help" className="phyto-coord-help">
-                                        Entre -90 e 90. Aceita vírgula ou ponto.
-                                    </small>
-                                </div>
-                                <div className="col-md-6 mb-3">
-                                    <FieldLabel optional>Longitude</FieldLabel>
-                                    <input
-                                        type="text"
-                                        className={`form-control ${coordenadasErro ? "is-invalid" : ""}`}
-                                        inputMode="decimal"
-                                        autoComplete="off"
-                                        spellCheck={false}
-                                        placeholder="Ex.: -49.123456"
-                                        value={form.longitude ?? ""}
-                                        onChange={e => updateForm({ longitude: e.target.value })}
-                                        aria-describedby="coord-longitude-help"
-                                        aria-invalid={Boolean(coordenadasErro)}
-                                    />
-                                    <small id="coord-longitude-help" className="phyto-coord-help">
-                                        Entre -180 e 180. Aceita vírgula ou ponto.
-                                    </small>
-                                </div>
-                            </div>
-
-                            <MapPicker
-                                latitude={form.latitude}
-                                longitude={form.longitude}
-                                onChange={({ latitude, longitude }) => updateForm({
-                                    latitude: coordenadaParaInput(latitude),
-                                    longitude: coordenadaParaInput(longitude),
+                            <MapaDistribuicao
+                                editavel
+                                nativa={dist.nativa}
+                                cultivada={dist.cultivada}
+                                onChange={({ nativa, cultivada }) => updateForm({
+                                    distribuicao: { ...dist, nativa, cultivada },
                                 })}
                             />
 
-                            <div className="phyto-coord-actions">
-                                <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-secondary"
-                                    onClick={() => updateForm({ latitude: "", longitude: "" })}
-                                    disabled={coordenadasPreenchidas === 0}
-                                >
-                                    Limpar coordenadas
-                                </button>
-                                {coordenadasErro && (
-                                    <p className="phyto-coord-error" role="alert">{coordenadasErro}</p>
-                                )}
+                            <div className="row mt-3">
+                                <div className="col-lg-8">
+                                    <FieldLabel optional>Fonte da informação</FieldLabel>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        maxLength={160}
+                                        placeholder="Ex.: POWO – Plants of the World Online (Kew), out/2026"
+                                        value={dist.fonte}
+                                        onChange={evento => updateForm({
+                                            distribuicao: { ...dist, fonte: evento.target.value },
+                                        })}
+                                    />
+                                    <small className="phyto-dist-help">
+                                        Consulte o POWO (powo.science.kew.org) para confirmar a distribuição nativa.
+                                    </small>
+                                </div>
                             </div>
                         </FieldGroup>
                     </div>
@@ -1260,6 +1218,29 @@ export default function PlantFormWizard({
                                         <h6 className="fw-bold">Resumo Rápido</h6>
                                         <p>{form.simpleDescription}</p>
                                     </>
+                                )}
+                                {(dist.nativa.length > 0 || dist.cultivada.length > 0 || dist.fonte) && (
+                                    <div className="plant-review__grupo mt-3">
+                                        <h6 className="fw-bold">🌍 Distribuição Geográfica</h6>
+                                        <div className="row">
+                                            <div className="col-md-6 mb-2">
+                                                <small className="text-muted d-block">Nativa ({dist.nativa.length})</small>
+                                                <span className="fw-semibold">{nomesDe(dist.nativa).join(", ") || "—"}</span>
+                                            </div>
+                                            <div className="col-md-6 mb-2">
+                                                <small className="text-muted d-block">
+                                                    Cultivada / introduzida ({dist.cultivada.length})
+                                                </small>
+                                                <span className="fw-semibold">{nomesDe(dist.cultivada).join(", ") || "—"}</span>
+                                            </div>
+                                            {dist.fonte && (
+                                                <div className="col-12 mb-2">
+                                                    <small className="text-muted d-block">Fonte</small>
+                                                    <span className="fw-semibold">{dist.fonte}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 )}
                                 {REVIEW_GRUPOS.map(g => {
                                     const itens = g.campos

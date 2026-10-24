@@ -8,7 +8,7 @@ const multer = require("multer")
 const sharp = require("sharp")
 const { getBucket } = require("../gridfs")
 const { authenticateToken, authorizeRoles } = require("../middleware/auth")
-const { escapeRegex, asyncHandler, plantaCorpo, normalizarCoordenadas } = require("../utils")
+const { escapeRegex, asyncHandler, plantaCorpo } = require("../utils")
 
 // Variantes com/sem acento para busca tolerante a diacríticos
 const DIACRITIC_VARIANTS = {
@@ -319,12 +319,6 @@ plantRoutes.route("/plant/:id").get(asyncHandler(async function (req, res) {
 plantRoutes.route("/plant/add").post(authenticateToken, authorizeRoles("ADM"), upload.fields([{ name: "images", maxCount: 5 }]), async function (req, res) {
     const db_connect = dbo.getDb()
 
-    // Coordenadas: valida antes de processar uploads para evitar trabalho à toa.
-    const coords = normalizarCoordenadas(req.body)
-    if (!coords.ok) {
-        return res.status(400).json({ message: coords.erro })
-    }
-
     const files = req.files?.images || []
     let imagensSalvas = []
     try {
@@ -388,11 +382,6 @@ plantRoutes.route("/plant/:id").put(authenticateToken, authorizeRoles("ADM"), up
         return res.status(400).json({ message: "ID inválido" })
     }
     const myquery = { _id: new ObjectId(id) }
-
-    const coords = normalizarCoordenadas(req.body)
-    if (!coords.ok) {
-        return res.status(400).json({ message: coords.erro })
-    }
 
     const updateFields = plantaCorpo(req)
 
