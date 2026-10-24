@@ -463,6 +463,77 @@ plantRoutes.route("/plant/sugerir-distribuicao").get(authenticateToken, authoriz
 }))
 
 /* ==================================================
+   SUGESTÃO DE DISTRIBUIÇÃO PELA FLORA E FUNGA DO BRASIL
+================================================== */
+const FLORA_BRASIL_API = "https://servicos.jbrj.gov.br/v2/flora/taxon"
+const FLORA_BRASIL_FONTE = "Flora e Funga do Brasil — Jardim Botânico do Rio de Janeiro"
+const FLORA_BRASIL_TIMEOUT_MS = 10000
+const floraBrasilCache = new Map()
+const UFS_BRASIL = new Set(["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"])
+
+plantRoutes.route("/plant/sugerir-distribuicao/flora-brasil").get(authenticateToken, authorizeRoles("ADM"), asyncHandler(async function (req, res) {
+    const nome = String(req.query.nome || "").trim()
+    if (!nome) {
+        return res.status(400).json({ ok: false, message: "Informe o nome científico para consultar a Flora e Funga do Brasil." })
+    }
+    if (nome.length > 120) {
+        return res.status(400).json({ ok: false, message: "O nome científico deve ter no máximo 120 caracteres." })
+    }
+
+    const chaveCache = nome.toLocaleLowerCase("pt-BR")
+    const emCache = floraBrasilCache.get(chaveCache)
+    if (emCache && emCache.expira > Date.now()) return res.status(200).json(emCache.valor)
+
+    try {
+        const resposta = await axios.get(`${FLORA_BRASIL_API}/${encodeURIComponent(nome)}`, {
+            timeout: FLORA_BRASIL_TIMEOUT_MS,
+            headers: { "User-Agent": "Phytografia (TCC; https://tcc-phyto.onrender.com)" },
+        })
+        const resultados = Array.isArray(resposta.data) ? resposta.data : [resposta.data]
+        const registro = resultados.find(item => item && item.taxon && item.taxon.scientificname)
+        if (!registro) {
+            return res.status(422).json({ ok: false, motivo: "nao-encontrado", message: "Espécie não encontrada na Flora e Funga do Brasil. Confira o nome científico." })
+        }
+
+        const distribuicoes = Array.isArray(registro.distribuition) ? registro.distribuition : []
+        const nativa = distribuicoes.some(item => String(item.establishmentmeans || "").toLocaleUpperCase("pt-BR").includes("NATIVA"))
+        const introduzida = distribuicoes.some(item => /INTRODUZ|NATURALIZ|CULTIVAD/i.test(String(item.establishmentmeans || "")))
+        const estados = [...new Set(distribuicoes
+            .map(item => String(item.locationid || "").toUpperCase().match(/^BR-([A-Z]{2})$/)?.[1])
+            .filter(uf => uf && UFS_BRASIL.has(uf)))].sort()
+        const dominios = [...new Set(distribuicoes.flatMap(item => {
+            const valores = item.occurrenceremarks && item.occurrenceremarks.phytogeographicDomain
+            return Array.isArray(valores) ? valores : []
+        }).filter(Boolean))].sort()
+        const endemica = distribuicoes.some(item => /END[ÊE]MICA/i.test(String(item.occurrenceremarks && item.occurrenceremarks.endemism || "")))
+        const valor = {
+            ok: true,
+            cientifico: registro.taxon.scientificname,
+            correspondencia: null,
+            nativa: nativa ? ["BRA"] : [],
+            cultivada: !nativa && introduzida ? ["BRA"] : [],
+            estados,
+            dominios,
+            endemica,
+            totalRegistros: distribuicoes.length,
+            ignoradas: 0,
+            fonte: FLORA_BRASIL_FONTE,
+        }
+        floraBrasilCache.set(chaveCache, { expira: Date.now() + 60 * 60 * 1000, valor })
+        if (floraBrasilCache.size > 200) floraBrasilCache.delete(floraBrasilCache.keys().next().value)
+        return res.status(200).json(valor)
+    } catch (erro) {
+        if (erro.code === "ECONNABORTED" || erro.code === "ETIMEDOUT") {
+            return res.status(504).json({ ok: false, motivo: "tempo-esgotado", message: "A Flora e Funga do Brasil demorou para responder. Tente novamente." })
+        }
+        if (erro.response && erro.response.status === 404) {
+            return res.status(422).json({ ok: false, motivo: "nao-encontrado", message: "Espécie não encontrada na Flora e Funga do Brasil." })
+        }
+        return res.status(502).json({ ok: false, motivo: "flora-brasil-indisponivel", message: "Não foi possível consultar a Flora e Funga do Brasil agora." })
+    }
+}))
+
+/* ==================================================
    BUSCAR PLANTA POR ID
 ================================================== */
 plantRoutes.route("/plant/:id").get(asyncHandler(async function (req, res) {

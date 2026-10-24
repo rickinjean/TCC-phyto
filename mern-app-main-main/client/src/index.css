@@ -6372,6 +6372,11 @@ html[data-theme="dark"] .plant-dist-empty {
   flex-wrap: wrap;
 }
 
+.phyto-dist-source {
+  flex: 1 1 260px;
+  max-width: 420px;
+}
+
 .phyto-gbif__head .phyto-dist-help {
   margin: 0;
   max-width: 48ch;

@@ -301,8 +301,9 @@ export default function PlantFormWizard({
     const [catalogLoading, setCatalogLoading] = useState(false)
     const [catalogSearched, setCatalogSearched] = useState(false)
     const [catalogOpen, setCatalogOpen] = useState(false)
-    const [sugestaoGbif, setSugestaoGbif] = useState(null)
-    const [sugerindoGbif, setSugerindoGbif] = useState(false)
+    const [fonteDistribuicao, setFonteDistribuicao] = useState("gbif")
+    const [sugestaoDistribuicao, setSugestaoDistribuicao] = useState(null)
+    const [sugerindoDistribuicao, setSugerindoDistribuicao] = useState(false)
     const autoSaveTimer = useRef(null)
 
     const steps = withReview ? [...BASE_STEPS, REVIEW_STEP] : BASE_STEPS
@@ -316,20 +317,22 @@ export default function PlantFormWizard({
         setForm(prev => ({ ...prev, ...value }))
     }
 
-    // Consulta a distribuição da WCVP no GBIF. O resultado fica em prévia:
-    // nada é gravado no formulário sem o clique em "Aplicar sugestão".
-    async function sugerirPeloGbif() {
+    // Consulta a fonte selecionada. O resultado fica em prévia até ser aplicado.
+    async function sugerirDistribuicaoPelaFonte() {
         const nome = String(form.scientificName || "").trim()
         if (!nome) {
-            showToast("Preencha o nome científico para consultar o GBIF.", "error")
+            showToast("Preencha o nome científico para consultar a fonte.", "error")
             return
         }
 
-        setSugerindoGbif(true)
-        setSugestaoGbif(null)
+        setSugerindoDistribuicao(true)
+        setSugestaoDistribuicao(null)
         try {
+            const endpoint = fonteDistribuicao === "flora-brasil"
+                ? "/plant/sugerir-distribuicao/flora-brasil"
+                : "/plant/sugerir-distribuicao"
             const resposta = await authFetch(
-                `${API_URL}/plant/sugerir-distribuicao?nome=${encodeURIComponent(nome)}`
+                `${API_URL}${endpoint}?nome=${encodeURIComponent(nome)}`
             )
             if (!resposta) {
                 showToast("Sessão expirada. Faça login novamente.", "error")
@@ -337,29 +340,29 @@ export default function PlantFormWizard({
             }
             const dados = await resposta.json().catch(() => null)
             if (!resposta.ok || !dados || !dados.ok) {
-                showToast((dados && dados.message) || "Não foi possível consultar o GBIF agora.", "error")
+                showToast((dados && dados.message) || "Não foi possível consultar esta fonte agora.", "error")
                 return
             }
-            setSugestaoGbif(dados)
+            setSugestaoDistribuicao(dados)
         } catch {
-            showToast("Erro ao conectar ao GBIF. Tente novamente.", "error")
+            showToast("Erro ao conectar à fonte de distribuição. Tente novamente.", "error")
         } finally {
-            setSugerindoGbif(false)
+            setSugerindoDistribuicao(false)
         }
     }
 
-    function aplicarSugestaoGbif() {
-        if (!sugestaoGbif) return
+    function aplicarSugestaoDistribuicao() {
+        if (!sugestaoDistribuicao) return
         const atual = distribuicaoDaPlanta(form)
         updateForm({
             distribuicao: {
-                nativa: sugestaoGbif.nativa,
-                cultivada: sugestaoGbif.cultivada,
-                fonte: atual.fonte || sugestaoGbif.fonte,
+                nativa: sugestaoDistribuicao.nativa,
+                cultivada: sugestaoDistribuicao.cultivada,
+                fonte: sugestaoDistribuicao.fonte || atual.fonte,
             },
         })
-        setSugestaoGbif(null)
-        showToast("Distribuição do GBIF aplicada. Revise os países no mapa.")
+        setSugestaoDistribuicao(null)
+        showToast("Sugestão aplicada. Revise a distribuição no mapa.")
     }
 
     useEffect(() => {
@@ -1198,55 +1201,84 @@ export default function PlantFormWizard({
                         >
                             <div className="phyto-gbif">
                                 <div className="phyto-gbif__head">
+                                    <label className="phyto-dist-help" htmlFor="fonte-distribuicao">Fonte de distribuição</label>
+                                    <select
+                                        id="fonte-distribuicao"
+                                        className="form-select form-select-sm phyto-dist-source"
+                                        value={fonteDistribuicao}
+                                        onChange={evento => {
+                                            setFonteDistribuicao(evento.target.value)
+                                            setSugestaoDistribuicao(null)
+                                        }}
+                                    >
+                                        <option value="gbif">GBIF — distribuição global (WCVP/Kew)</option>
+                                        <option value="flora-brasil">Flora e Funga do Brasil (JBRJ)</option>
+                                    </select>
                                     <button
                                         type="button"
                                         className="btn btn-sm btn-outline-success"
-                                        onClick={sugerirPeloGbif}
-                                        disabled={sugerindoGbif}
+                                        onClick={sugerirDistribuicaoPelaFonte}
+                                        disabled={sugerindoDistribuicao}
                                     >
-                                        {sugerindoGbif ? "Consultando GBIF…" : "🔎 Sugerir pelo GBIF"}
+                                        {sugerindoDistribuicao ? "Consultando fonte…" : "🔎 Buscar distribuição"}
                                     </button>
                                     <small className="phyto-dist-help">
-                                        Consulta a distribuição da WCVP (Kew) pelo nome científico
-                                        informado em “Dados Básicos”. Nada é alterado sem sua confirmação.
+                                        A busca usa o nome científico de “Dados Básicos”. O mapa só muda depois de aplicar a prévia.
                                     </small>
                                 </div>
 
-                                {sugestaoGbif && (() => {
-                                    const totalSugerido = sugestaoGbif.nativa.length + sugestaoGbif.cultivada.length
+                                {sugestaoDistribuicao && (() => {
+                                    const totalSugerido = sugestaoDistribuicao.nativa.length + sugestaoDistribuicao.cultivada.length
                                     return (
                                         <div className="phyto-gbif__preview">
                                             <p className="phyto-gbif__titulo">
-                                                Sugestão para <strong>{sugestaoGbif.cientifico}</strong>
-                                                <span className="phyto-gbif__confianca">
-                                                    {sugestaoGbif.correspondencia}% de correspondência
-                                                </span>
+                                                Sugestão para <strong>{sugestaoDistribuicao.cientifico}</strong>
+                                                {Number.isFinite(sugestaoDistribuicao.correspondencia) && (
+                                                    <span className="phyto-gbif__confianca">
+                                                        {sugestaoDistribuicao.correspondencia}% de correspondência
+                                                    </span>
+                                                )}
                                             </p>
 
                                             {totalSugerido === 0 ? (
                                                 <p className="phyto-gbif__vazio">
-                                                    O GBIF não tem registros da WCVP para esta espécie.
-                                                    Marque os países manualmente.
+                                                    Esta fonte não retornou países para a espécie. Você ainda pode marcar a distribuição manualmente.
                                                 </p>
                                             ) : (
                                                 <>
                                                     <p className="phyto-gbif__resumo">
-                                                        <strong>{sugestaoGbif.nativa.length}</strong>{" "}
-                                                        {sugestaoGbif.nativa.length === 1 ? "país nativo" : "países nativos"}
+                                                        <strong>{sugestaoDistribuicao.nativa.length}</strong>{" "}
+                                                        {sugestaoDistribuicao.nativa.length === 1 ? "país nativo" : "países nativos"}
                                                         {" · "}
-                                                        <strong>{sugestaoGbif.cultivada.length}</strong>{" "}
-                                                        {sugestaoGbif.cultivada.length === 1
+                                                        <strong>{sugestaoDistribuicao.cultivada.length}</strong>{" "}
+                                                        {sugestaoDistribuicao.cultivada.length === 1
                                                             ? "país cultivado/introduzido"
                                                             : "países cultivados/introduzidos"}
                                                     </p>
+                                                    {sugestaoDistribuicao.estados && sugestaoDistribuicao.estados.length > 0 && (
+                                                        <p className="phyto-gbif__resumo">
+                                                            Estados brasileiros: <strong>{sugestaoDistribuicao.estados.join(", ")}</strong>
+                                                            {sugestaoDistribuicao.endemica && " · espécie endêmica no Brasil"}
+                                                        </p>
+                                                    )}
+                                                    {sugestaoDistribuicao.dominios && sugestaoDistribuicao.dominios.length > 0 && (
+                                                        <p className="phyto-gbif__resumo">
+                                                            Domínios fitogeográficos: <strong>{sugestaoDistribuicao.dominios.join(", ")}</strong>
+                                                        </p>
+                                                    )}
+                                                    {sugestaoDistribuicao.estados && sugestaoDistribuicao.estados.length > 0 && (
+                                                        <p className="phyto-gbif__aviso">
+                                                            A fonte detalha estados, mas o mapa atual representa países; ao aplicar, o Brasil será marcado como nativo.
+                                                        </p>
+                                                    )}
                                                 </>
                                             )}
 
                                             <p className="phyto-gbif__fonte">
-                                                Fonte: {sugestaoGbif.fonte} · {sugestaoGbif.totalRegistros}{" "}
-                                                {sugestaoGbif.totalRegistros === 1 ? "registro" : "registros"}
-                                                {sugestaoGbif.ignoradas > 0 &&
-                                                    ` · ${sugestaoGbif.ignoradas} sem país correspondente`}
+                                                Fonte: {sugestaoDistribuicao.fonte} · {sugestaoDistribuicao.totalRegistros}{" "}
+                                                {sugestaoDistribuicao.totalRegistros === 1 ? "registro" : "registros"}
+                                                {sugestaoDistribuicao.ignoradas > 0 &&
+                                                    ` · ${sugestaoDistribuicao.ignoradas} sem país correspondente`}
                                             </p>
 
                                             <div className="phyto-gbif__acoes">
@@ -1254,7 +1286,7 @@ export default function PlantFormWizard({
                                                     <button
                                                         type="button"
                                                         className="btn btn-sm btn-success"
-                                                        onClick={aplicarSugestaoGbif}
+                                                        onClick={aplicarSugestaoDistribuicao}
                                                     >
                                                         Aplicar sugestão
                                                     </button>
@@ -1262,7 +1294,7 @@ export default function PlantFormWizard({
                                                 <button
                                                     type="button"
                                                     className="btn btn-sm btn-outline-secondary"
-                                                    onClick={() => setSugestaoGbif(null)}
+                                                    onClick={() => setSugestaoDistribuicao(null)}
                                                 >
                                                     Descartar
                                                 </button>
