@@ -6,9 +6,9 @@ import L from "leaflet"
 // comportamento em qualquer contexto e sobrevive a mudanças de política.
 export const OSM_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
-// Zoom máximo do mapa. Cada camada declara o próprio limite de renderização em
-// maxNativeZoom; acima dele o Leaflet amplia o tile existente em vez de deixar
-// a área cinza.
+// Zoom máximo do mapa: o maior zoom nativo entre as camadas (ver BASE_LAYERS).
+// Cada camada tem o próprio teto e nenhuma é ampliada acima da resolução
+// nativa — assim o mapa nunca fica pixelado.
 export const ZOOM_MAXIMO_MAPA = 19
 
 // Camadas base com dados do OpenStreetMap. Nenhuma exige chave de API.
@@ -20,7 +20,7 @@ export const BASE_LAYERS = [
         url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
         atribuicao:
             '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors, tiles <a href="https://hot.openstreetmap.org/" target="_blank" rel="noopener noreferrer">HOT</a>',
-        maxNativeZoom: 19,
+        maxZoom: 19,
     },
     {
         id: "relevo",
@@ -28,7 +28,7 @@ export const BASE_LAYERS = [
         url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
         atribuicao:
             '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors, SRTM | &copy; <a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a> (CC-BY-SA)',
-        maxNativeZoom: 17,
+        maxZoom: 17,
     },
     {
         id: "satelite",
@@ -36,7 +36,7 @@ export const BASE_LAYERS = [
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         atribuicao:
             'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener noreferrer">Esri</a> &mdash; Source: Esri, Maxar, Earthstar Geographics',
-        maxNativeZoom: 19,
+        maxZoom: 19,
     },
 ]
 
@@ -48,13 +48,20 @@ export function adicionarCamadasBase(map) {
     BASE_LAYERS.forEach((base) => {
         camadas[base.nome] = L.tileLayer(base.url, {
             attribution: base.atribuicao,
-            maxZoom: ZOOM_MAXIMO_MAPA,
-            maxNativeZoom: base.maxNativeZoom,
+            maxZoom: base.maxZoom,
             referrerPolicy: OSM_REFERRER_POLICY,
         })
     })
 
     camadas[BASE_LAYERS[0].nome].addTo(map)
+
+    // O teto do mapa acompanha a camada ativa: o Relevo só tem tiles até 17,
+    // então acima disso o Leaflet ampliaria a imagem. setMaxZoom já rebaixa o
+    // zoom atual quando ele passa do novo limite.
+    map.on("baselayerchange", (evento) => {
+        const base = BASE_LAYERS.find((item) => item.nome === evento.name)
+        if (base) map.setMaxZoom(base.maxZoom)
+    })
 
     L.control
         .layers(camadas, null, { position: "topright", collapsed: true })
