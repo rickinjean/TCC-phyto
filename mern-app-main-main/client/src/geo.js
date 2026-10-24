@@ -116,6 +116,16 @@ export function linkOpenStreetMap(latitude, longitude) {
     return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`
 }
 
+// Street View pelo esquema oficial de URLs do Google Maps: não exige chave de
+// API e, no celular, abre direto no app do Google Maps.
+// https://developers.google.com/maps/documentation/urls/get-started#street-view-action
+export function linkStreetView(latitude, longitude) {
+    const lat = parseCoordenada(latitude)
+    const lng = parseCoordenada(longitude)
+    if (!coordenadasValidas(lat, lng)) return null
+    return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`
+}
+
 // Validação compartilhada pelo formulário (aviso em tempo real e envio).
 export function validarParCoordenadas(latitude, longitude) {
     const lat = parseCoordenada(latitude)

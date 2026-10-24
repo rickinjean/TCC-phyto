@@ -6082,6 +6082,20 @@ html[data-theme="dark"] .wizard-catalog__list li em {
   color: #4d6b5b;
 }
 
+.phyto-map-toolbar__status--ok {
+  color: #1f6b49;
+}
+
+.phyto-map-toolbar__status--aviso {
+  color: #b54708;
+  font-weight: 600;
+}
+
+.phyto-map-toolbar__status--erro {
+  color: #b42318;
+  font-weight: 600;
+}
+
 .phyto-map-hint {
   margin: 0.5rem 0 0;
   font-size: 0.82rem;
@@ -6127,6 +6141,13 @@ html[data-theme="dark"] .wizard-catalog__list li em {
   font-size: 0.9rem;
 }
 
+.plant-location-links {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
 .plant-location-link {
   color: var(--phyto-green-600);
   font-weight: 700;
@@ -6157,6 +6178,19 @@ html[data-theme="dark"] .phyto-map-toolbar__status,
 html[data-theme="dark"] .phyto-map-hint,
 html[data-theme="dark"] .phyto-coord-help {
   color: #b4cdbd;
+}
+
+/* Avisos e erros precisam manter contraste no tema escuro. */
+html[data-theme="dark"] .phyto-map-toolbar__status--aviso {
+  color: #f5c26b;
+}
+
+html[data-theme="dark"] .phyto-map-toolbar__status--erro {
+  color: #ff9b8f;
+}
+
+html[data-theme="dark"] .phyto-map-toolbar__status--ok {
+  color: #85d69e;
 }
 
 html[data-theme="dark"] .plant-location-empty {
