@@ -36,8 +36,8 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-eval'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'", "'unsafe-eval'", "https://unpkg.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
             imgSrc: ["'self'", "data:", "blob:", "https://lh3.googleusercontent.com", "https://avatars.githubusercontent.com"],
             fontSrc: ["'self'", "data:"],
             connectSrc: ["'self'"],
@@ -194,6 +194,7 @@ const suggestionsRoutes = require("./routes/suggestions")
 app.use(suggestionsRoutes)
 app.use("/api", require("./routes/messages"))
 app.use(require("./routes/stats"))
+app.use("/api/glossario", require("./routes/glossario"))
 const dbo = require("./db/conn")
 
 app.get("/health", function(req, res) {

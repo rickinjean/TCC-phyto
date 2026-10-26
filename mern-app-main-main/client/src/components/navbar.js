@@ -7,6 +7,7 @@ const ADMIN_LINKS = [
     { to: "/userlist", icon: "📋", titulo: "Lista de Usuários", curto: "L. Usuários" },
     { to: "/messages", icon: "✉️", titulo: "Mensagens", curto: "Mensagens" },
     { to: "/moderar-sugestoes", icon: "🗂", titulo: "Moderar Sugestões", curto: "Moderar Sugestões" },
+    { to: "/glossario", icon: "📖", titulo: "Glossário Botânico", curto: "Glossário" },
     { to: "/createplant", icon: "🌱", titulo: "Cadastrar Planta", curto: "C. Plantas" },
 ];
 

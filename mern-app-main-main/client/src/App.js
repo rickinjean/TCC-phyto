@@ -20,6 +20,8 @@ import Sugestao from './components/Sugestao'
 import SugestaoModeracao from './components/SugestaoModeracao'
 import ErrorBoundary from './ErrorBoundary'
 import API_URL from "./config"
+import GlossarioAdmin from "./components/GlossarioAdmin"
+import GlossarioGlobal from "./glossario"
 
 const urlParams = new URLSearchParams(window.location.search)
 const oauthToken = urlParams.get('token')
@@ -210,6 +212,7 @@ const App = () => {
 
     return (
         <div className="d-flex flex-column min-vh-100">
+            <GlossarioGlobal />
             <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
             <Navbar token={token} role={role} userName={userName} userAvatar={userAvatar} onLogout={handleLogout} />
             <main className="app-main flex-fill" id="conteudo">
@@ -222,6 +225,7 @@ const App = () => {
                         <Route path="/plantlist" element={<PlantList role={role} canFavorite={Boolean(token)} />} />
                         <Route path="/userlist" element={token && role === "ADM" ? <UserList /> : <Navigate to={token ? "/" : "/login"} replace />} />
                         <Route path="/messages" element={token && role === "ADM" ? <MessageList /> : <Navigate to={token ? "/" : "/login"} replace />} />
+                        <Route path="/glossario" element={token && role === "ADM" ? <GlossarioAdmin /> : <Navigate to={token ? "/" : "/login"} replace />} />
                         <Route path="/edit/:id" element={token && role === "ADM" ? <Edit /> : <Navigate to={token ? "/" : "/login"} replace />} />
                         <Route path="/editplant/:id" element={token && role === "ADM" ? <Editplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />
                         <Route path="/createplant" element={token && role === "ADM" ? <Createplant /> : <Navigate to={token ? "/plantlist" : "/login"} replace />} />

@@ -6336,6 +6336,40 @@ html[data-theme="dark"] {
   text-align: center;
 }
 
+.termo-acessivel {
+  border-bottom: 1px dashed #2ecc71;
+  color: inherit;
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.termo-acessivel:hover,
+.termo-acessivel:focus-visible {
+  color: #238b54;
+  outline-offset: 2px;
+}
+
+.tippy-box[data-theme~='phyto'] {
+  max-width: min(320px, calc(100vw - 24px)) !important;
+  padding: 0.15rem 0.25rem;
+  border-radius: 10px;
+  background: #18352a;
+  color: #f7fff9;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26);
+  overflow-wrap: anywhere;
+}
+
+.tippy-box[data-theme~='phyto'] > .tippy-arrow::before {
+  color: #18352a;
+}
+
+html[data-theme="dark"] .termo-acessivel:hover,
+html[data-theme="dark"] .termo-acessivel:focus-visible {
+  color: #72d095;
+}
+
 html[data-theme="dark"] .plant-dist-empty {
   border-color: rgba(133, 214, 158, 0.22);
   background: rgba(20, 44, 31, 0.6);
