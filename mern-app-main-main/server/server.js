@@ -194,7 +194,6 @@ const suggestionsRoutes = require("./routes/suggestions")
 app.use(suggestionsRoutes)
 app.use("/api", require("./routes/messages"))
 app.use(require("./routes/stats"))
-app.use("/api/glossario", require("./routes/glossario"))
 const dbo = require("./db/conn")
 
 app.get("/health", function(req, res) {

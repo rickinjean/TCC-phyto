@@ -38,9 +38,6 @@ const INDEX_SPECS = [
     { collection: "messages", indexes: [
         { key: { createdAt: -1 }, options: {} },
     ] },
-    { collection: "glossario", indexes: [
-        { key: { termoNormalizado: 1 }, options: { unique: true } },
-    ] },
 ]
 
 // Compara um índice existente com a spec desejada pela key pattern e pelas
