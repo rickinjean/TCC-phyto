@@ -10,6 +10,7 @@ const sharp = require("sharp")
 const { getBucket } = require("../gridfs")
 const { authenticateToken, authorizeRoles } = require("../middleware/auth")
 const { escapeRegex, asyncHandler, plantaCorpo } = require("../utils")
+const { paginateFind } = require("../pagination")
 
 // Variantes com/sem acento para busca tolerante a diacríticos
 const DIACRITIC_VARIANTS = {
@@ -28,8 +29,7 @@ function searchRegex(term) {
     return new RegExp(pattern, "i")
 }
 
-// Coleções de dicionário permitidas — usada como whitelist para as rotas
-// dinâmicas /collections e para o cache de /collections/all
+// Coleções de dicionário permitidas — usada como whitelist para as rotas dinâmicas.
 const COLLECTIONS = [
     "fruit", "origin", "type", "propagation", "toxicity", "dificulty",
     "height", "flowercolor", "foliage", "flowering", "light", "water",
@@ -40,32 +40,6 @@ const COLLECTIONS = [
 ]
 
 const COLLECTIONS_SET = new Set(COLLECTIONS)
-
-// Cache simples em memória para /collections/all (TTL 60s).
-// Invalidado a cada inserção/remoção de item de dicionário.
-let collectionsCache = { data: null, fetchedAt: 0 }
-const COLLECTIONS_TTL_MS = 60 * 1000
-
-function clearCollectionsCache() {
-    collectionsCache = { data: null, fetchedAt: 0 }
-}
-
-async function loadAllCollections() {
-    const db_connect = dbo.getDb()
-    const now = Date.now()
-    if (collectionsCache.data && now - collectionsCache.fetchedAt < COLLECTIONS_TTL_MS) {
-        return collectionsCache.data
-    }
-    const results = await Promise.all(
-        COLLECTIONS.map(name =>
-            db_connect.collection(name).find({}).toArray().catch(() => [])
-        )
-    )
-    const all = {}
-    COLLECTIONS.forEach((name, i) => { all[name] = results[i] })
-    collectionsCache = { data: all, fetchedAt: now }
-    return all
-}
 
 // Salvar diretamente em memória e gravar no GridFS (MongoDB), não no disco
 const upload = multer({
@@ -265,9 +239,10 @@ plantRoutes.route("/plant").get(asyncHandler(async function (req, res) {
         ]
     }
 
-    const result = await db_connect.collection("plants")
-        .find(filter, { projection: LIST_PROJECTION })
-        .toArray()
+    const result = await paginateFind(
+        db_connect.collection("plants"), filter, LIST_PROJECTION, req.query,
+        { defaultLimit: 24, maxLimit: 100, sort: { name: 1, _id: 1 } }
+    )
     res.status(200).json(result)
 }))
 
@@ -700,33 +675,50 @@ plantRoutes.route("/plant/:id").delete(authenticateToken, authorizeRoles("ADM"),
 })
 
 /* ==================================================
-   ROTAS DINÂMICAS PARA TRATAR TODAS AS SELEÇÕES
+   ROTAS DINÂMICAS PAGINADAS PARA TRATAR AS SELEÇÕES
 ================================================== */
 
-// LISTAR TODAS AS COLEÇÕES DE UMA VEZ (evita N+1 no frontend)
-plantRoutes.route("/collections/all").get(async function (req, res) {
-    try {
-        const all = await loadAllCollections()
-        res.status(200).json(all)
-    } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar coleções: " + error.message })
+// Resolver apenas os valores usados por uma ficha, sem carregar os dicionários completos.
+plantRoutes.route("/collections/resolve").post(asyncHandler(async function (req, res) {
+    const requested = req.body && typeof req.body === "object" ? req.body : {}
+    const entries = Object.entries(requested)
+    if (entries.length > COLLECTIONS.length || entries.some(([name]) => !COLLECTIONS_SET.has(name))) {
+        return res.status(400).json({ message: "Coleção inválida" })
     }
-})
+
+    const db_connect = dbo.getDb()
+    const resolved = {}
+    await Promise.all(entries.map(async ([name, rawId]) => {
+        if (typeof rawId !== "string" || !rawId || rawId.length > 100) return
+        const query = ObjectId.isValid(rawId) ? { _id: new ObjectId(rawId) } : { _id: rawId }
+        const item = await db_connect.collection(name).findOne(query, { projection: { _id: 1, name: 1 } })
+        if (item) resolved[name] = item
+    }))
+    res.status(200).json(resolved)
+}))
 
 // LISTAR ELEMENTOS DE UMA COLEÇÃO DINAMICAMENTE
-plantRoutes.route("/collections/:name").get(async function (req, res) {
+plantRoutes.route("/collections/:name").get(asyncHandler(async function (req, res) {
     const colecaoAlvo = req.params.name
     if (!COLLECTIONS_SET.has(colecaoAlvo)) {
         return res.status(404).json({ message: "Coleção inválida" })
     }
     const db_connect = dbo.getDb()
-    try {
-        const result = await db_connect.collection(colecaoAlvo).find({}).toArray()
-        res.status(200).json(result)
-    } catch (error) {
-        res.status(500).json({ message: `Erro ao buscar itens de ${colecaoAlvo}: ` + error.message })
-    }
-})
+    const result = await paginateFind(
+        db_connect.collection(colecaoAlvo), {}, { _id: 1, name: 1 }, req.query,
+        { defaultLimit: 100, maxLimit: 100, sort: { name: 1, _id: 1 } }
+    )
+    res.status(200).json(result)
+}))
+
+plantRoutes.route("/collections/:name/:id").get(asyncHandler(async function (req, res) {
+    const { name, id } = req.params
+    if (!COLLECTIONS_SET.has(name)) return res.status(404).json({ message: "Coleção inválida" })
+    const query = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { _id: id }
+    const item = await dbo.getDb().collection(name).findOne(query, { projection: { _id: 1, name: 1 } })
+    if (!item) return res.status(404).json({ message: "Item não encontrado" })
+    res.status(200).json(item)
+}))
 
 // ADICIONAR ELEMENTO EM UMA COLEÇÃO DINAMICAMENTE
 plantRoutes.route("/collections/:name/add").post(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
@@ -738,7 +730,6 @@ plantRoutes.route("/collections/:name/add").post(authenticateToken, authorizeRol
     const novoItem = { name: req.body.name }
     try {
         const result = await db_connect.collection(colecaoAlvo).insertOne(novoItem)
-        clearCollectionsCache()
         res.status(201).json({ _id: result.insertedId, name: req.body.name })
     } catch (error) {
         res.status(500).json({ message: `Erro ao salvar em ${colecaoAlvo}: ` + error.message })
@@ -766,7 +757,6 @@ plantRoutes.route("/collections/:name/:id").delete(authenticateToken, authorizeR
             return res.status(404).json({ message: "Item não encontrado." })
         }
 
-        clearCollectionsCache()
         res.status(200).json({ message: "Item deletado com sucesso!" })
     } catch (error) {
         res.status(500).json({ message: `Erro ao deletar de ${colecaoAlvo}: ` + error.message })

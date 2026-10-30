@@ -11,6 +11,7 @@ const mongodb = require("mongodb")
 const pinoHttp = require("pino-http")
 const logger = require("./logger")
 const { getBucket } = require("./gridfs")
+const { parseConnectSources } = require("./csp")
 
 if (!process.env.JWT_SECRET) {
     logger.error("ERRO: JWT_SECRET não está definida. Crie um arquivo .env na pasta server/ com essa variável.")
@@ -28,6 +29,18 @@ app.set('trust proxy', 1)
 
 const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER
 
+function safeRequestUrl(rawUrl) {
+    try {
+        const url = new URL(rawUrl, "http://localhost")
+        if (/^\/auth\/(google|github)\/callback$/.test(url.pathname) || url.searchParams.has("oauthCode")) {
+            return url.pathname
+        }
+        return rawUrl
+    } catch {
+        return rawUrl
+    }
+}
+
 // Headers de segurança (helmet). CSP com política restrita compatível com o
 // build do CRA (CSP desabilitado antes para evitar regressão). CORP é
 // liberado (cross-origin) só no dev, onde o frontend em :3000 carrega
@@ -40,7 +53,7 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
             imgSrc: ["'self'", "data:", "blob:", "https://lh3.googleusercontent.com", "https://avatars.githubusercontent.com"],
             fontSrc: ["'self'", "data:"],
-            connectSrc: ["'self'"],
+            connectSrc: ["'self'", ...parseConnectSources(process.env.CSP_CONNECT_SRC)],
             objectSrc: ["'none'"],
             baseUri: ["'self'"],
             frameAncestors: ["'none'"],
@@ -104,7 +117,7 @@ app.use(pinoHttp({
     },
     serializers: {
         res(res) { return { statusCode: res.statusCode } },
-        req(req) { return { method: req.method, url: req.url } },
+        req(req) { return { method: req.method, url: safeRequestUrl(req.url) } },
     },
 }))
 
@@ -174,6 +187,7 @@ const refreshLimiter = rateLimit({
 
 app.use("/user/login", loginLimiter)
 app.use("/user/register", loginLimiter)
+app.use("/user/resend-verification", loginLimiter)
 app.use("/auth/refresh", refreshLimiter)
 
 process.on("unhandledRejection", (reason) => {
@@ -203,6 +217,7 @@ app.get("/health", function(req, res) {
 const SITEMAP_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
 const SITEMAP_PADDING = "~"
 const SITE_URL = process.env.SITE_URL || "https://tcc-phyto.onrender.com"
+const SITEMAP_MAX_URLS = 50000
 
 function encodeId(id) {
     if (!id) return id
@@ -224,7 +239,12 @@ app.get("/sitemap.xml", async function (req, res) {
     const today = new Date().toISOString().slice(0, 10)
     let plants = []
     try {
-        plants = await db_connect.collection("plants").find({}, { projection: { _id: 1 } }).toArray()
+        // Sitemaps são limitados a 50 mil URLs; manter a consulta e a memória limitadas.
+        plants = await db_connect.collection("plants")
+            .find({}, { projection: { _id: 1 } })
+            .sort({ _id: 1 })
+            .limit(Math.max(0, SITEMAP_MAX_URLS - 4))
+            .toArray()
     } catch (error) {
         logger.error(error, "Erro ao gerar sitemap")
     }

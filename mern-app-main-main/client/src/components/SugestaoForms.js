@@ -163,7 +163,7 @@ export function FormNovaPlanta({ nova, tipos, origens, setCampoNova }) {
     )
 }
 
-export function FormCorrecao({ plantas, plantaId, onPlanta, campo, onCampo, texto, onTexto }) {
+export function FormCorrecao({ plantas, plantaId, onPlanta, onBuscaPlanta, campo, onCampo, texto, onTexto }) {
     return (
         <Secao
             emoji="✏️"
@@ -178,6 +178,7 @@ export function FormCorrecao({ plantas, plantaId, onPlanta, campo, onCampo, text
                     value={plantaId}
                     options={plantas}
                     onChange={onPlanta}
+                    onSearch={onBuscaPlanta}
                 />
             </div>
             <div className="mb-3">

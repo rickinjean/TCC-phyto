@@ -21,6 +21,10 @@ const INDEX_SPECS = [
         { key: { tokenHash: 1 }, options: {} },
         { key: { expiresAt: 1 }, options: { expireAfterSeconds: 0 } },
     ] },
+    { collection: "oauth_codes", indexes: [
+        { key: { codeHash: 1 }, options: { unique: true } },
+        { key: { expiresAt: 1 }, options: { expireAfterSeconds: 0 } },
+    ] },
     { collection: "userlist_items", indexes: [
         { key: { listId: 1 }, options: {} },
         { key: { plantId: 1 }, options: {} },

@@ -98,15 +98,13 @@ const REVIEW_GRUPOS = [
 
 export async function loadCollectionOptions(setOpcoesBanco) {
     try {
-        const res = await fetch(`${API_URL}/collections/all`)
-        if (res.ok) {
-            const all = await res.json()
-            const mapped = {}
-            for (const [key, meta] of Object.entries(mapeamentoColecoes)) {
-                mapped[key] = sortPorNome(all[meta.colecao] || [], key)
-            }
-            setOpcoesBanco(mapped)
-        }
+        const entries = await Promise.all(Object.entries(mapeamentoColecoes).map(async ([key, meta]) => {
+            const res = await fetch(`${API_URL}/collections/${encodeURIComponent(meta.colecao)}?page=1&limit=100`)
+            if (!res.ok) return [key, []]
+            const page = await res.json()
+            return [key, sortPorNome(Array.isArray(page.data) ? page.data : [], key)]
+        }))
+        setOpcoesBanco(Object.fromEntries(entries))
     } catch (err) {
         console.error("Erro ao carregar coleções:", err)
     }
@@ -492,10 +490,10 @@ export default function PlantFormWizard({
     async function buscarPlantaPorNome(nome) {
         if (!nome) return []
         try {
-            const res = await authFetch(`${API_URL}/plant?search=${encodeURIComponent(nome)}`)
+            const res = await authFetch(`${API_URL}/plant?search=${encodeURIComponent(nome)}&page=1&limit=100`)
             if (!res || !res.ok) return []
-            const lista = await res.json()
-            return Array.isArray(lista) ? lista : []
+            const result = await res.json()
+            return Array.isArray(result.data) ? result.data : []
         } catch {
             return []
         }

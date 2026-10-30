@@ -14,6 +14,7 @@ export default function Sugestao() {
     const [tipos, setTipos] = useState([])
     const [origens, setOrigens] = useState([])
     const [plantas, setPlantas] = useState([])
+    const [buscaPlanta, setBuscaPlanta] = useState("")
     const [plantaId, setPlantaId] = useState("")
     const [plantaNome, setPlantaNome] = useState("")
     const [campo, setCampo] = useState("")
@@ -30,30 +31,43 @@ export default function Sugestao() {
     useEffect(() => {
         async function loadOpcoes() {
             try {
-                const [plantRes, typeRes, originRes] = await Promise.all([
-                    fetch(`${API_URL}/plant`),
+                const [typeRes, originRes] = await Promise.all([
                     fetch(`${API_URL}/collections/type`),
                     fetch(`${API_URL}/collections/origin`)
                 ])
-                if (plantRes.ok) {
-                    const data = await plantRes.json()
-                    setPlantas(data.map(p => ({
-                        _id: p._id,
-                        name: p.scientificName ? `${p.name} — ${p.scientificName}` : p.name
-                    })))
-                }
                 if (typeRes.ok) {
-                    const data = await typeRes.json()
-                    setTipos(Array.isArray(data) ? data.filter(t => t && t.name) : [])
+                    const result = await typeRes.json()
+                    setTipos(Array.isArray(result.data) ? result.data.filter(t => t && t.name) : [])
                 }
                 if (originRes.ok) {
-                    const data = await originRes.json()
-                    setOrigens(Array.isArray(data) ? data.filter(o => o && o.name) : [])
+                    const result = await originRes.json()
+                    setOrigens(Array.isArray(result.data) ? result.data.filter(o => o && o.name) : [])
                 }
             } catch { /* lista de plantas/opções indisponível adia a escolha */ }
         }
         loadOpcoes()
     }, [])
+
+    useEffect(() => {
+        const controller = new AbortController()
+        const timer = setTimeout(async () => {
+            try {
+                const params = new URLSearchParams({ page: "1", limit: "100" })
+                if (buscaPlanta.trim()) params.set("search", buscaPlanta.trim())
+                const response = await fetch(`${API_URL}/plant?${params}`, { signal: controller.signal })
+                if (!response.ok) return
+                const result = await response.json()
+                const data = Array.isArray(result.data) ? result.data : []
+                setPlantas(data.map(p => ({
+                    _id: p._id,
+                    name: p.scientificName ? `${p.name} — ${p.scientificName}` : p.name
+                })))
+            } catch (error) {
+                if (error.name !== "AbortError") console.error("Erro ao buscar plantas:", error)
+            }
+        }, 250)
+        return () => { clearTimeout(timer); controller.abort() }
+    }, [buscaPlanta])
 
     function setCampoNova(campo, valor) {
         setNova(prev => ({ ...prev, [campo]: valor }))
@@ -184,6 +198,7 @@ export default function Sugestao() {
                     <FormCorrecao
                         plantas={plantas}
                         plantaId={plantaId}
+                        onBuscaPlanta={setBuscaPlanta}
                         onPlanta={(id) => {
                             setPlantaId(id)
                             const sel = plantas.find(p => p._id === id)

@@ -4,9 +4,59 @@ const axios = require("axios")
 const dbo = require("../db/conn")
 const { signToken } = require("../middleware/auth")
 const { createSession } = require("./sessions")
+const { createOpaqueValue, stateMatches, createOAuthCode, consumeOAuthCode } = require("../oauthSecurity")
 const logger = require("../logger")
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
+const OAUTH_CALLBACK_BASE_URL = process.env.OAUTH_CALLBACK_BASE_URL
+    || ((process.env.NODE_ENV === "production" || process.env.RENDER) ? FRONTEND_URL : "http://localhost:5050")
+const OAUTH_STATE_TTL_SECONDS = 600
+
+function cookieName(provider) {
+    return `phyto_oauth_${provider}_state`
+}
+
+function callbackPath(provider) {
+    return `/auth/${provider}/callback`
+}
+
+function secureCookie() {
+    return process.env.NODE_ENV === "production" || Boolean(process.env.RENDER)
+}
+
+function writeStateCookie(res, provider, state, clear = false) {
+    const secure = secureCookie() ? "; Secure" : ""
+    const maxAge = clear ? 0 : OAUTH_STATE_TTL_SECONDS
+    res.setHeader("Set-Cookie", `${cookieName(provider)}=${clear ? "" : state}; Path=${callbackPath(provider)}; Max-Age=${maxAge}; HttpOnly; SameSite=Lax${secure}`)
+}
+
+function readCookie(req, name) {
+    const cookie = (req.headers.cookie || "").split(";").map(part => part.trim()).find(part => part.startsWith(`${name}=`))
+    return cookie ? cookie.slice(name.length + 1) : null
+}
+
+function redirectUri(provider) {
+    return `${OAUTH_CALLBACK_BASE_URL}${callbackPath(provider)}`
+}
+
+function redirectWithError(res, provider, error) {
+    writeStateCookie(res, provider, null, true)
+    res.set("Cache-Control", "no-store")
+    return res.redirect(`${FRONTEND_URL}/login?error=${encodeURIComponent(error)}`)
+}
+
+async function redirectWithOAuthCode(res, user, provider) {
+    const code = await createOAuthCode(dbo.getDb(), user._id)
+    writeStateCookie(res, provider, null, true)
+    res.set({ "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" })
+    return res.redirect(`${FRONTEND_URL}/?oauthCode=${encodeURIComponent(code)}`)
+}
+
+function startOAuth(res, provider, params) {
+    const state = createOpaqueValue()
+    writeStateCookie(res, provider, state)
+    params.set("state", state)
+}
 
 async function generateUsername(name, db) {
     const base = (name || "usuario")
@@ -67,21 +117,26 @@ async function findOrCreateUser(profile, provider) {
 authRoutes.get("/auth/google", (req, res) => {
     const params = new URLSearchParams({
         client_id: process.env.GOOGLE_CLIENT_ID,
-        redirect_uri: `${FRONTEND_URL}/auth/google/callback`,
+        redirect_uri: redirectUri("google"),
         response_type: "code",
         scope: "openid profile email",
         access_type: "offline",
         prompt: "consent",
     })
+    startOAuth(res, "google", params)
     res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`)
 })
 
 authRoutes.get("/auth/google/callback", async (req, res) => {
-    const db_connect = dbo.getDb()
-    const { code } = req.query
+    const { code, state, error } = req.query
 
-    if (!code) {
-        return res.redirect(`${FRONTEND_URL}/login?error=no_code`)
+    if (error) return redirectWithError(res, "google", "google_cancelled")
+    const expectedState = readCookie(req, cookieName("google"))
+    if (!stateMatches(expectedState, state)) {
+        return redirectWithError(res, "google", "oauth_state_invalid")
+    }
+    if (typeof code !== "string" || !code) {
+        return redirectWithError(res, "google", "no_code")
     }
 
     try {
@@ -89,7 +144,7 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
             code,
             client_id: process.env.GOOGLE_CLIENT_ID,
             client_secret: process.env.GOOGLE_CLIENT_SECRET,
-            redirect_uri: `${FRONTEND_URL}/auth/google/callback`,
+            redirect_uri: redirectUri("google"),
             grant_type: "authorization_code",
         })
 
@@ -99,20 +154,18 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
             headers: { Authorization: `Bearer ${access_token}` },
         })
 
-        const { id, email, name, picture } = userRes.data
+        const { id, email, name, picture, verified_email } = userRes.data
+        if (verified_email !== true) throw new Error("Google account email is not verified")
 
         const user = await findOrCreateUser(
             { id, email, name, avatar: picture },
             "google"
         )
 
-        const token = signToken({ userId: user._id, tipo: user.function, name: user.name, avatar: user.avatar || null })
-        const refreshToken = await createSession(db_connect, user)
-
-        res.redirect(`${FRONTEND_URL}/?token=${encodeURIComponent(token)}&refreshToken=${encodeURIComponent(refreshToken)}`)
+        return await redirectWithOAuthCode(res, user, "google")
     } catch (error) {
         logger.error({ erro: error.response?.data || error.message }, "[OAuth Google] Erro")
-        res.redirect(`${FRONTEND_URL}/login?error=google_failed`)
+        return redirectWithError(res, "google", "google_failed")
     }
 })
 
@@ -121,18 +174,23 @@ authRoutes.get("/auth/google/callback", async (req, res) => {
 authRoutes.get("/auth/github", (req, res) => {
     const params = new URLSearchParams({
         client_id: process.env.GITHUB_CLIENT_ID,
-        redirect_uri: `${FRONTEND_URL}/auth/github/callback`,
+        redirect_uri: redirectUri("github"),
         scope: "user:email",
     })
+    startOAuth(res, "github", params)
     res.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`)
 })
 
 authRoutes.get("/auth/github/callback", async (req, res) => {
-    const db_connect = dbo.getDb()
-    const { code } = req.query
+    const { code, state, error } = req.query
 
-    if (!code) {
-        return res.redirect(`${FRONTEND_URL}/login?error=no_code`)
+    if (error) return redirectWithError(res, "github", "github_cancelled")
+    const expectedState = readCookie(req, cookieName("github"))
+    if (!stateMatches(expectedState, state)) {
+        return redirectWithError(res, "github", "oauth_state_invalid")
+    }
+    if (typeof code !== "string" || !code) {
+        return redirectWithError(res, "github", "no_code")
     }
 
     try {
@@ -142,7 +200,7 @@ authRoutes.get("/auth/github/callback", async (req, res) => {
                 client_id: process.env.GITHUB_CLIENT_ID,
                 client_secret: process.env.GITHUB_CLIENT_SECRET,
                 code,
-                redirect_uri: `${FRONTEND_URL}/auth/github/callback`,
+                redirect_uri: redirectUri("github"),
             },
             { headers: { Accept: "application/json" } }
         )
@@ -157,7 +215,9 @@ authRoutes.get("/auth/github/callback", async (req, res) => {
             headers: { Authorization: `Bearer ${access_token}` },
         })
 
-        const primaryEmail = emailsRes.data.find(e => e.primary)?.email || emailsRes.data[0]?.email
+        const primaryEmail = emailsRes.data.find(e => e.primary && e.verified)?.email
+            || emailsRes.data.find(e => e.verified)?.email
+        if (!primaryEmail) throw new Error("GitHub account has no verified email")
 
         const { id, name, avatar_url } = userRes.data
 
@@ -168,13 +228,30 @@ authRoutes.get("/auth/github/callback", async (req, res) => {
             "github"
         )
 
-        const token = signToken({ userId: user._id, tipo: user.function, name: user.name, avatar: user.avatar || null })
-        const refreshToken = await createSession(db_connect, user)
-
-        res.redirect(`${FRONTEND_URL}/?token=${encodeURIComponent(token)}&refreshToken=${encodeURIComponent(refreshToken)}`)
+        return await redirectWithOAuthCode(res, user, "github")
     } catch (error) {
         logger.error({ erro: error.response?.data || error.message }, "Erro no OAuth GitHub")
-        res.redirect(`${FRONTEND_URL}/login?error=github_failed`)
+        return redirectWithError(res, "github", "github_failed")
+    }
+})
+
+authRoutes.post("/auth/exchange", async (req, res) => {
+    res.set("Cache-Control", "no-store")
+    const code = req.body && req.body.code
+    if (typeof code !== "string") return res.status(400).json({ mensagem: "Código de autorização ausente" })
+
+    try {
+        const consumed = await consumeOAuthCode(dbo.getDb().collection("oauth_codes"), code)
+        if (!consumed) return res.status(401).json({ mensagem: "Código de autorização inválido ou expirado" })
+        const user = await dbo.getDb().collection("users").findOne({ _id: consumed.userId })
+        if (!user) return res.status(401).json({ mensagem: "Conta não encontrada" })
+
+        const token = signToken({ userId: user._id, tipo: user.function, name: user.name || user.user, avatar: user.avatar || null })
+        const refreshToken = await createSession(dbo.getDb(), user)
+        return res.json({ token, refreshToken })
+    } catch (error) {
+        logger.error(error, "Erro ao trocar código OAuth")
+        return res.status(500).json({ mensagem: "Não foi possível concluir o login social" })
     }
 })
 

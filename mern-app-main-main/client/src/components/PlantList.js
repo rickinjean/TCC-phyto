@@ -33,6 +33,7 @@ const EmptyState = ({ hasActiveFilters, onClear }) => (
 export default function PlantList({ role, canFavorite = false }) {
     usePageTitle("Catálogo de Plantas", "Explore o catálogo digital de plantas do Phytografia: fichas técnicas de cultivo, origem e classificação botânica.", "/plantlist")
     const [plants, setPlants] = useState([])
+    const [serverPagination, setServerPagination] = useState({ page: 1, limit: 12, total: 0, totalPages: 1 })
     const [loading, setLoading] = useState(true)
     const [fetchError, setFetchError] = useState(null)
     const [collectionOptions, setCollectionOptions] = useState({})
@@ -77,7 +78,7 @@ export default function PlantList({ role, canFavorite = false }) {
                             return [key, []]
                         }
                         const data = await res.json()
-                        return [key, sortPorNome(data, key)]
+                        return [key, sortPorNome(Array.isArray(data.data) ? data.data : [], key)]
                     } catch (err) {
                         console.error(`Erro ao buscar collection "${key}":`, err)
                         return [key, []]
@@ -89,7 +90,7 @@ export default function PlantList({ role, canFavorite = false }) {
         loadCollections()
     }, [])
 
-    const fetchPlants = useCallback(async (activeFilters, searchQuery) => {
+    const fetchPlants = useCallback(async (activeFilters, searchQuery, page, limit, signal) => {
         setLoading(true)
         setFetchError(null)
         try {
@@ -98,23 +99,29 @@ export default function PlantList({ role, canFavorite = false }) {
                 if (value) params.append(key, value)
             })
             if (searchQuery) params.append("search", searchQuery)
-            const qs = params.toString()
-            const url = qs ? `${API_URL}/plant?${qs}` : `${API_URL}/plant/`
-            const response = await fetch(url)
+            params.set("page", String(page))
+            params.set("limit", String(limit))
+            const url = `${API_URL}/plant?${params.toString()}`
+            const response = await fetch(url, { signal })
             if (!response.ok) {
                 setFetchError(`Erro ao carregar plantas: ${response.statusText}`)
                 return
             }
-            const data = await response.json()
-            setPlants(data)
+            const result = await response.json()
+            setPlants(Array.isArray(result.data) ? result.data : [])
+            setServerPagination(result.pagination || { page, limit, total: 0, totalPages: 1 })
+        } catch (error) {
+            if (error.name !== "AbortError") setFetchError("Erro ao conectar com o servidor")
         } finally {
-            setLoading(false)
+            if (!signal || !signal.aborted) setLoading(false)
         }
     }, [])
 
     useEffect(() => {
-        fetchPlants(filters, searchText)
-    }, [filters, searchText, fetchPlants])
+        const controller = new AbortController()
+        fetchPlants(filters, searchText, currentPage, pageSize, controller.signal)
+        return () => controller.abort()
+    }, [filters, searchText, currentPage, pageSize, fetchPlants])
 
     function handleFilterChange(key, value) {
         setFilters(prev => {
@@ -158,10 +165,10 @@ export default function PlantList({ role, canFavorite = false }) {
 
     const hasActiveFilters = Object.keys(filters).length > 0 || searchInput.trim().length > 0
 
-    const totalPlants = plants.length
-    const totalPages = Math.max(1, Math.ceil(totalPlants / pageSize))
-    const safePage = Math.min(currentPage, totalPages)
-    const visiblePlants = plants.slice((safePage - 1) * pageSize, safePage * pageSize)
+    const totalPlants = serverPagination.total
+    const totalPages = serverPagination.totalPages || 1
+    const safePage = serverPagination.page || 1
+    const visiblePlants = plants
 
     useEffect(() => {
         setCurrentPage(1)
@@ -190,9 +197,7 @@ export default function PlantList({ role, canFavorite = false }) {
         if (!window.confirm("Deseja remover esta planta da lista?")) return
 
         const res = await authFetch(`${API_URL}/plant/${id}`, { method: "DELETE" })
-        if (res && res.ok) {
-            setPlants(prev => prev.filter(p => p._id !== id))
-        }
+        if (res && res.ok) fetchPlants(filters, searchText, currentPage, pageSize)
     }
 
     return (
@@ -205,7 +210,7 @@ export default function PlantList({ role, canFavorite = false }) {
                         </h3>
                         {!loading && (
                             <span className="plant-list-page__count">
-                                {plants.length} {plants.length === 1 ? "planta" : "plantas"} {hasActiveFilters ? "encontradas" : "cadastradas"}
+                                {totalPlants} {totalPlants === 1 ? "planta" : "plantas"} {hasActiveFilters ? "encontradas" : "cadastradas"}
                             </span>
                         )}
                     </div>

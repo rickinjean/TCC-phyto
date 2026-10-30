@@ -71,19 +71,24 @@ export default function PlantDetails({ canFavorite = false }) {
         const data = await response.json();
         if (!data || !data.name) { if (!cancelled) setNotFound(true); return; }
 
-        const collectionsRes = await fetch(`${API_URL}/collections/all`);
-        const allCollections = collectionsRes.ok ? await collectionsRes.json() : {};
-
+        const requestedCollections = {};
         const resolved = {};
         for (const field of Object.keys(COLLECTION_MAP)) {
-          const colName = COLLECTION_MAP[field];
-          const list = allCollections[colName];
-          if (data[field] && list) {
-            const match = list.find(item => item._id === data[field]);
-            resolved[`${field}Data`] = match ? match.name : null;
-          } else {
-            resolved[`${field}Data`] = null;
-          }
+          const collectionName = COLLECTION_MAP[field];
+          if (data[field]) requestedCollections[collectionName] = String(data[field]);
+        }
+        let resolvedCollections = {};
+        if (Object.keys(requestedCollections).length) {
+          const collectionsRes = await fetch(`${API_URL}/collections/resolve`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestedCollections),
+          });
+          if (collectionsRes.ok) resolvedCollections = await collectionsRes.json();
+        }
+        for (const field of Object.keys(COLLECTION_MAP)) {
+          const item = resolvedCollections[COLLECTION_MAP[field]];
+          resolved[`${field}Data`] = item ? item.name : null;
         }
 
         if (!cancelled) {

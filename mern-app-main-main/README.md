@@ -1,106 +1,69 @@
-# MERN App Básico
+# Phytografia
 
-![my picture](https://github.com/mathlbraga/mern-app-main/blob/main/mern-app.png)
+Aplicação MERN para consulta e gestão de fichas botânicas. O projeto usa React 18, Express, MongoDB, JWT e integrações de login social com Google e GitHub.
 
-Uma aplicação full-stack [MERN](https://www.mongodb.com/mern-stack) para gerenciamento de informações de usuários.
+## Requisitos
 
-## Sobre o projeto
+- Node.js 18 ou superior
+- MongoDB acessível pela aplicação
+- SMTP configurado para permitir novos cadastros com confirmação de e-mail
 
-Esta é uma aplicação MERN full-stack que gerencia informações básicas de usuários. O app utiliza um banco de dados de usuários hospedado no MongoDB Atlas e exibe os dados utilizando React.
+## Configuração local
 
-## Tecnologias Utilizadas
+1. Instale as dependências:
 
-**Client:** React, Bootstrap
+   ```bash
+   cd server && npm ci
+   cd ../client && npm ci
+   ```
 
-**Server:** NodeJS, ExpressJS
+2. Copie `server/.env.example` para `server/.env` e preencha os valores privados. O banco usado pela aplicação chama-se `phytografia`.
 
-**Banco de dados:** MongoDB
+3. Configure `JWT_SECRET`, `JWT_REFRESH_SECRET` e `MONGODB_URI`. Para gerar segredos localmente, use `openssl rand -hex 32` duas vezes e informe os resultados em variáveis diferentes.
 
-## Rodando Localmente
+4. Para habilitar cadastros, configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` e `SMTP_PASS`. Contas criadas ficam pendentes até a confirmação do link enviado. Sem SMTP, o endpoint de cadastro responde com erro de configuração e não cria uma conta ativa.
 
-Clone o repositório
+5. Para login social, configure as credenciais de Google e GitHub. Registre estes callbacks nos respectivos provedores:
+
+   - `http://localhost:5050/auth/google/callback`
+   - `http://localhost:5050/auth/github/callback`
+
+   `OAUTH_CALLBACK_BASE_URL` define a origem dos callbacks no servidor; `FRONTEND_URL` define para onde o navegador volta após o login.
+
+   Em produção, configure `OAUTH_CALLBACK_BASE_URL` como a origem pública do servidor Express e cadastre os dois caminhos acima nos provedores. Se o frontend e a API forem servidos pela mesma origem, use essa origem nos dois valores.
+
+6. Em desenvolvimento, inicie os serviços em terminais separados:
+
+   ```bash
+   cd server && npm run dev
+   cd client && npm start
+   ```
+
+   Ou use `npm run dev` na raiz `mern-app-main-main` para iniciar ambos.
+
+## Paginação da API
+
+O catálogo e as opções de seleção retornam páginas limitadas. O limite padrão do catálogo é 24; o máximo por resposta é 100. Para opções de coleções, o padrão e o máximo são 100.
+
+```text
+GET /plant?page=1&limit=24&search=ipê
+GET /collections/type?page=1&limit=100
+```
+
+As respostas têm o formato `{ data, pagination }`, com total de registros, página atual, número de páginas e indicadores de navegação. `POST /collections/resolve` resolve apenas os valores referenciados por uma ficha. A rota antiga `/collections/all` foi removida para evitar respostas sem limite.
+
+## Login social
+
+Os fluxos Google e GitHub validam o parâmetro OAuth `state` contra um cookie HttpOnly de curta duração. Após o callback, o servidor redireciona com um código aleatório de uso único, válido por dois minutos. O frontend troca esse código por tokens via `POST /auth/exchange`; access e refresh tokens não são enviados na URL. O login social só aceita endereços de e-mail confirmados pelo provedor.
+
+Se o `REACT_APP_API_URL` do frontend apontar para outra origem, inclua somente a origem da API em `CSP_CONNECT_SRC`, por exemplo `https://api.exemplo.com`. A política CSP não permite curingas.
+
+## Testes
+
+Execute os testes automatizados do servidor com:
 
 ```bash
-  git clone https://github.com/mathlbraga/mern-app-main.git
+cd server && npm test
 ```
 
-Acesse o diretório do projeto
-
-```bash
-  cd mern-app-main
-```
-
-Instale as dependências do servidor
-
-```bash
-  cd server
-  npm install
-```
-Instale as dependências do cliente
-
-```bash
-  cd client
-  npm install
-```
-
-Configure o parâmetro de conexão com o Atlas em `server/db/conn.js` com sua URI do Atlas:
-```
-  Db = "mongodb+srv://<username>:<password>@cluster0.xyz123.mongodb.net/?retryWrites=true&w=majority"
-```
-
-Altere o nome do banco de dados em`server/db/conn.js` para o seu:
-
-``` 
-  _db = client.db("test") 
-```
-Inicie o servidor
-
-```bash
-  cd server
-  node server.js
-```
-Inicie o Cliente
-
-```bash
-  cd client
-  npm start
-```
-  
-
-## Funcionalidades do projeto
-
-- O usuário pode **Criar** informações de um usuário e gerenciá-las.
-
-- **Exibição** das informações dos usuários, incluindo nome, nome de usuário, e-mail e função.
-
-- Ações **Alterar** and **Excluir** também estão disponíveis.
-
-## Saiba mais
-
-**FrontEnd**
-
-* Para aprender React, consulte a [React documentation](https://reactjs.org/).
-
-* Veja também a [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-* Comece com o [Bootstrap](https://www.w3schools.com/bootstrap5/index.php), o framework mais popular para construção de sites responsivos e mobile-first.
-
-**BackEnd**
-
-* [Node.js Tutorial](https://www.w3schools.com/nodejs/default.asp)
-
-* [ExpressJS Tutorial](https://www.tutorialspoint.com/expressjs/index.htm)
-
-**Database**
-
-* [MongoDB Tutorial](https://www.w3schools.com/mongodb/)
-
-* Siga o guia [Get Started with MongoDB Atlas](https://www.mongodb.com/docs/atlas/getting-started/) para criar um cluster, conectar-se a ele e carregar seus dados.
-
-**Fullstack**
-
-* Aprenda tudo sobre o [MERN stack](https://www.mongodb.com/languages/mern-stack-tutorial) com este guia passo a passo para desenvolver uma aplicação CRUD simples do zero.
-
-## Aplicação Online
-
-<a href="#">Live fullstack MERN app</a>
+Os testes usam o runner nativo `node:test` e cobrem limites e metadados da paginação, allowlist da CSP, validação de `state` e consumo único dos códigos OAuth.

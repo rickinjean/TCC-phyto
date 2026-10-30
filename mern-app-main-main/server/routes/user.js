@@ -88,6 +88,12 @@ userRoutes.route('/user/register').post(registerValidation, checkValidation, asy
     const senha = req.body.senha
     const tipoUsuario = "User"
 
+    if (!smtpConfigurado) {
+        return res.status(503).json({
+            mensagem: 'O cadastro exige confirmação por e-mail, mas o envio ainda não está configurado. Configure SMTP_HOST, SMTP_USER e SMTP_PASS no servidor.',
+        })
+    }
+
     try {
         if (!user || !email || !senha) {
             return res.status(400).json({ mensagem: 'Nome de usuário, email e senha são obrigatórios' });
@@ -109,13 +115,22 @@ userRoutes.route('/user/register').post(registerValidation, checkValidation, asy
         const expUser = escapeRegex(user)
         const userExistente = await db_connect.collection("users").findOne({ user: { $regex: new RegExp(`^${expUser}$`, "i") } })
         if (userExistente) {
-            return res.status(400).json({ mensagem: 'Este nome de usuário já está em uso' });
+            const podeReenviar = userExistente.emailVerified === false
+                && String(userExistente.email || "").toLowerCase() === email
+                && typeof userExistente.senha === "string"
+            return res.status(400).json({ mensagem: 'Este nome de usuário já está em uso', podeReenviar });
         }
 
         const expEmail = escapeRegex(email)
         const emailExistente = await db_connect.collection("users").findOne({ email: { $regex: new RegExp(`^${expEmail}$`, "i") } })
         if (emailExistente) {
-            return res.status(400).json({ mensagem: 'Este email já está cadastrado' });
+            const podeReenviar = emailExistente.emailVerified === false && typeof emailExistente.senha === "string"
+            return res.status(409).json({
+                mensagem: podeReenviar
+                    ? 'Este e-mail já tem um cadastro pendente. Reenvie a confirmação para ativar a conta.'
+                    : 'Este email já está cadastrado',
+                podeReenviar,
+            });
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -127,32 +142,29 @@ userRoutes.route('/user/register').post(registerValidation, checkValidation, asy
             email,
             senha: senhaHash,
             function: tipoUsuario,
-            emailVerified: !smtpConfigurado,
+            emailVerified: false,
         }
 
-        if (smtpConfigurado) {
-            novoUsuario.emailVerified = false
-            novoUsuario.verificationToken = crypto.randomBytes(32).toString("hex")
-            novoUsuario.verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
-        }
+        novoUsuario.verificationToken = crypto.randomBytes(32).toString("hex")
+        novoUsuario.verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
         const result = await db_connect.collection("users").insertOne(novoUsuario);
 
-        if (smtpConfigurado) {
-            const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
-            const link = `${FRONTEND_URL}/verify?token=${novoUsuario.verificationToken}`
-            try {
-                await enviarEmailConfirmacao(user, email, link)
-            } catch (erroEmail) {
-                logger.error(erroEmail, "Erro ao enviar email de confirmação")
-            }
+        const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
+        const link = `${FRONTEND_URL}/verify?token=${novoUsuario.verificationToken}`
+        try {
+            await enviarEmailConfirmacao(user, email, link)
+        } catch (erroEmail) {
+            logger.error({ err: erroEmail, userId: result.insertedId }, "Erro ao enviar email de confirmação")
+            return res.status(502).json({
+                mensagem: 'Sua conta foi criada, mas não conseguimos enviar o e-mail de confirmação. Tente reenviar o link.',
+                podeReenviar: true,
+            })
         }
 
         return res.status(201).json({
-            mensagem: smtpConfigurado
-                ? 'Cadastro realizado! Confirme seu e-mail no link que enviamos para ativar a conta.'
-                : 'Usuário cadastrado com sucesso',
-            precisaConfirmarEmail: smtpConfigurado
+            mensagem: 'Cadastro realizado! Confirme seu e-mail no link que enviamos para ativar a conta.',
+            precisaConfirmarEmail: true,
         });
     } catch (error) {
         logger.error(error, "Erro ao cadastrar usuário")
@@ -160,6 +172,41 @@ userRoutes.route('/user/register').post(registerValidation, checkValidation, asy
     }
 }
 );
+
+userRoutes.route('/user/resend-verification').post(async function (req, res) {
+    if (!smtpConfigurado) {
+        return res.status(503).json({ mensagem: 'O envio de e-mail ainda não está configurado no servidor.' })
+    }
+
+    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : ""
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ mensagem: 'Informe um e-mail válido.' })
+    }
+
+    try {
+        const db_connect = dbo.getDb()
+        const usuario = await db_connect.collection("users").findOne({ email, emailVerified: false, senha: { $type: "string" } })
+
+        // Resposta genérica para não revelar se um e-mail está cadastrado.
+        if (!usuario) {
+            return res.json({ mensagem: 'Se houver uma conta pendente para esse endereço, enviaremos um novo link.' })
+        }
+
+        const token = crypto.randomBytes(32).toString("hex")
+        await db_connect.collection("users").updateOne(
+            { _id: usuario._id, emailVerified: false },
+            { $set: { verificationToken: token, verificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000) } }
+        )
+
+        const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
+        const link = `${FRONTEND_URL}/verify?token=${token}`
+        await enviarEmailConfirmacao(usuario.name || usuario.user, email, link)
+        return res.json({ mensagem: 'Se houver uma conta pendente para esse endereço, enviaremos um novo link.' })
+    } catch (error) {
+        logger.error(error, "Erro ao reenviar email de confirmação")
+        return res.status(502).json({ mensagem: 'Não foi possível enviar o e-mail agora. Tente novamente mais tarde.' })
+    }
+})
 
 userRoutes.route('/user/verify').get(async function (req, res) {
     const db_connect = dbo.getDb()

@@ -22,18 +22,24 @@ import ErrorBoundary from './ErrorBoundary'
 import API_URL from "./config"
 
 const urlParams = new URLSearchParams(window.location.search)
-const oauthToken = urlParams.get('token')
-const oauthRefreshToken = urlParams.get('refreshToken')
+const oauthCode = urlParams.get('oauthCode')
 const oauthError = urlParams.get('error')
-if (oauthToken) {
-    localStorage.setItem('token', oauthToken)
-    window.history.replaceState({}, '', window.location.pathname)
+if (oauthCode || oauthError) {
+    if (oauthError) sessionStorage.setItem('oauthError', oauthError)
+    window.history.replaceState({}, '', `${window.location.pathname}${window.location.hash}`)
 }
-if (oauthRefreshToken) {
-    localStorage.setItem('refreshToken', oauthRefreshToken)
-}
-if (oauthError) {
-    window.history.replaceState({}, '', window.location.pathname)
+
+let oauthExchangePromise = null
+
+function exchangeOAuthCode(code) {
+    if (!oauthExchangePromise) {
+        oauthExchangePromise = fetch(`${API_URL}/auth/exchange`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
+        }).then(async response => response.ok ? response.json() : null).catch(() => null)
+    }
+    return oauthExchangePromise
 }
 
 function base64UrlDecode(str) {
@@ -92,6 +98,7 @@ const App = () => {
         return parseJwt(storedToken)?.avatar || null
     });
     const [hydrating, setHydrating] = useState(() => {
+        if (oauthCode) return true
         const stored = localStorage.getItem('token')
         const storedRefresh = localStorage.getItem('refreshToken')
         if (stored && !isTokenExpired(stored)) return false
@@ -104,6 +111,27 @@ const App = () => {
             try {
                 const storedToken = localStorage.getItem('token')
                 const storedRefresh = localStorage.getItem('refreshToken')
+
+                if (oauthCode) {
+                    const data = await exchangeOAuthCode(oauthCode)
+                    if (!data || !data.token || !data.refreshToken) {
+                        localStorage.removeItem('token')
+                        localStorage.removeItem('refreshToken')
+                        sessionStorage.setItem('oauthError', 'oauth_exchange_failed')
+                        if (!cancelled) window.location.replace('/login?error=oauth_exchange_failed')
+                        return
+                    }
+                    if (!cancelled) {
+                        localStorage.setItem('token', data.token)
+                        localStorage.setItem('refreshToken', data.refreshToken)
+                        setToken(data.token)
+                        const payload = parseJwt(data.token)
+                        setRole(payload?.tipo || null)
+                        setUserName(payload?.name || null)
+                        setUserAvatar(payload?.avatar || null)
+                    }
+                    return
+                }
 
                 // Access token ainda válido: nada a fazer.
                 if (storedToken && !isTokenExpired(storedToken)) return

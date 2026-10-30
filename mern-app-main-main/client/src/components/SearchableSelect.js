@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useRef } from "react"
 
-export default function SearchableSelect({ campo, placeholder, value, options, onChange, onManage, onDelete }) {
+export default function SearchableSelect({ campo, placeholder, value, options, onChange, onManage, onDelete, onSearch }) {
     const [open, setOpen] = useState(false)
     const [query, setQuery] = useState("")
+    const [selectedLabel, setSelectedLabel] = useState("")
     const ref = useRef(null)
 
     const selected = options.find(opt => opt._id === value)
+
+    useEffect(() => {
+        if (selected) setSelectedLabel(selected.name)
+    }, [selected])
 
     useEffect(() => {
         function handleClickOutside(e) {
@@ -21,9 +26,12 @@ export default function SearchableSelect({ campo, placeholder, value, options, o
         .filter(opt => !query || opt.name.toLowerCase().includes(query.toLowerCase()))
 
     function handleSelect(id) {
+        const option = options.find(opt => opt._id === id)
+        setSelectedLabel(option?.name || "")
         onChange(id)
         setOpen(false)
         setQuery("")
+        if (onSearch) onSearch("")
     }
 
     return (
@@ -33,8 +41,8 @@ export default function SearchableSelect({ campo, placeholder, value, options, o
                     type="text"
                     id={`select-${campo || "x"}`}
                     className="form-control wizard-searchable__input"
-                    value={selected ? selected.name : query}
-                    onChange={e => { setQuery(e.target.value); setOpen(true) }}
+                    value={open ? query : (selected?.name || selectedLabel || query)}
+                    onChange={e => { setQuery(e.target.value); setOpen(true); if (onSearch) onSearch(e.target.value) }}
                     onFocus={() => setOpen(true)}
                     placeholder={placeholder}
                     autoComplete="off"

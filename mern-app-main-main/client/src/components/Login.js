@@ -10,7 +10,18 @@ export default function Login({ onLogin }) {
     const [user, setUser] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
-    const [error, setError] = useState("")
+    const [error, setError] = useState(() => {
+        const code = sessionStorage.getItem("oauthError")
+        sessionStorage.removeItem("oauthError")
+        return ({
+            google_cancelled: "O login com Google foi cancelado.",
+            github_cancelled: "O login com GitHub foi cancelado.",
+            oauth_state_invalid: "A tentativa de login expirou ou não pôde ser validada. Tente novamente.",
+            google_failed: "Não foi possível entrar com Google. Verifique se o e-mail da conta está confirmado.",
+            github_failed: "Não foi possível entrar com GitHub. Verifique se sua conta tem um e-mail confirmado.",
+            oauth_exchange_failed: "O código de login expirou ou já foi usado. Tente entrar novamente.",
+        })[code] || ""
+    })
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
 
