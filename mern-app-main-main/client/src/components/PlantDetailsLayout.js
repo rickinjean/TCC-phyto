@@ -48,8 +48,8 @@ export default function PlantDetailsLayout({
   const hasGallery = images.length > 0;
   const hasAny = (...fields) => fields.some((field) => value(field));
   const sections = [
-    { id: "cultivo", label: "Cultivo e cuidados", visible: hasAny("light", "water", "soil", "idealTemperature", "iluminosity", "tolerance", "protection", "watering", "manha", "amount", "pruning", "season", "tools", "planting", "station", "spacing", "exhibition", "maintenance", "fertilizing", "frequency", "NPK", "pests", "prevention", "monitoring") },
-    { id: "caracteristicas", label: "Características", visible: hasAny("height", "flowercolor", "foliage", "flowering", "size", "fruit", "propagation") },
+    { id: "cultivo", label: "Cultivo e cuidados", visible: hasAny("light", "water", "soil", "humidity", "idealTemperature", "iluminosity", "tolerance", "protection", "watering", "manha", "amount", "pruning", "season", "tools", "planting", "station", "spacing", "exhibition", "maintenance", "fertilizing", "frequency", "NPK", "pests", "prevention", "monitoring") },
+    { id: "caracteristicas", label: "Características", visible: hasAny("height", "flowercolor", "foliage", "flowering", "size", "fruit", "propagation", "lifeCycle") },
     { id: "distribuicao", label: "Distribuição", visible: true },
     { id: "taxonomia", label: "Taxonomia", visible: hasAny("Filo", "Classe", "Ordem", "Family", "Genero", "Especie") },
   ].filter(section => section.visible);
@@ -127,12 +127,12 @@ export default function PlantDetailsLayout({
         </nav>
 
         <div className="plant-detail-sections">
-        {hasAny("light", "water", "soil", "idealTemperature", "iluminosity", "tolerance", "protection", "watering", "manha", "amount", "pruning", "season", "tools", "planting", "station", "spacing", "exhibition", "maintenance", "fertilizing", "frequency", "NPK", "pests", "prevention", "monitoring") && <section className="plant-detail-section" id="cultivo">
+        {hasAny("light", "water", "soil", "humidity", "idealTemperature", "iluminosity", "tolerance", "protection", "watering", "manha", "amount", "pruning", "season", "tools", "planting", "station", "spacing", "exhibition", "maintenance", "fertilizing", "frequency", "NPK", "pests", "prevention", "monitoring") && <section className="plant-detail-section" id="cultivo">
           <SectionHeading number={slideNumber("cultivo")} eyebrow="Guia de cultivo" title="Cultivo e cuidados" />
           <div className="plant-detail-grid plant-detail-grid--two">
-            {hasAny("light", "water", "soil", "idealTemperature", "iluminosity", "tolerance", "protection") && <SectionCard title="Ambiente">
+            {hasAny("light", "water", "soil", "humidity", "idealTemperature", "iluminosity", "tolerance", "protection") && <SectionCard title="Ambiente">
               <div className="plant-detail-info-grid">
-                <Info label="Luz" value={value("light")} /><Info label="Água" value={value("water")} /><Info label="Solo" value={value("soil")} /><Info label="Temperatura" value={value("idealTemperature")} />
+                <Info label="Luz" value={value("light")} /><Info label="Água" value={value("water")} /><Info label="Solo" value={value("soil")} /><Info label="Umidade" value={value("humidity")} /><Info label="Temperatura" value={value("idealTemperature")} />
                 <Info label="Horas de sol" value={value("iluminosity")} /><Info label="Tolerância" value={value("tolerance")} /><Info label="Proteção climática" value={value("protection")} />
               </div>
             </SectionCard>}
@@ -148,10 +148,10 @@ export default function PlantDetailsLayout({
           </div>
         </section>}
 
-        {hasAny("height", "flowercolor", "foliage", "flowering", "size", "fruit", "propagation") && <section className="plant-detail-section" id="caracteristicas">
+        {hasAny("height", "flowercolor", "foliage", "flowering", "size", "fruit", "propagation", "lifeCycle") && <section className="plant-detail-section" id="caracteristicas">
           <SectionHeading number={slideNumber("caracteristicas")} eyebrow="Identificação" title="Características físicas" />
           <SectionCard title="Aspectos da planta">
-            <div className="plant-detail-info-grid plant-detail-info-grid--four"><Info label="Altura" value={value("height")} /><Info label="Cor da flor" value={value("flowercolor")} /><Info label="Folhagem" value={value("foliage")} /><Info label="Floração" value={value("flowering")} /><Info label="Tamanho" value={value("size")} /><Info label="Fruto" value={value("fruit")} /><Info label="Propagação" value={value("propagation")} /></div>
+            <div className="plant-detail-info-grid plant-detail-info-grid--four"><Info label="Altura" value={value("height")} /><Info label="Cor da flor" value={value("flowercolor")} /><Info label="Folhagem" value={value("foliage")} /><Info label="Floração" value={value("flowering")} /><Info label="Tamanho" value={value("size")} /><Info label="Fruto" value={value("fruit")} /><Info label="Propagação" value={value("propagation")} /><Info label="Ciclo de vida" value={value("lifeCycle")} /></div>
           </SectionCard>
         </section>}
 

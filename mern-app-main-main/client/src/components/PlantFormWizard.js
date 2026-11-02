@@ -27,8 +27,8 @@ const INITIAL_FORM = {
     name: "", scientificName: "", description: "", simpleDescription: "",
     fruit: "", origin: "", type: "", propagation: "", toxicity: "", dificulty: "",
     Filo: "", Classe: "", Ordem: "", Family: "", Genero: "", Especie: "",
-    height: "", flowercolor: "", foliage: "", flowering: "",
-    light: "", water: "", size: "", soil: "",
+    height: "", flowercolor: "", foliage: "", flowering: "", lifeCycle: "",
+    light: "", water: "", size: "", soil: "", humidity: "",
     watering: "", fertilizing: "", pruning: "", pests: "",
     manha: "", amount: "", frequency: "", NPK: "", season: "", tools: "", prevention: "", monitoring: "",
     planting: "", exhibition: "", maintenance: "",
@@ -54,8 +54,7 @@ const REVIEW_GRUPOS = [
         label: "🌿 Botânica e Ambiente",
         campos: [
             ["origin", "Origem"], ["toxicity", "Toxicidade"], ["dificulty", "Dificuldade"],
-            ["fruit", "Tipo de Fruto"],
-            ["light", "Luz"], ["water", "Água"], ["soil", "Solo"],
+            ["light", "Luz"], ["water", "Água"], ["soil", "Solo"], ["humidity", "Umidade"],
         ],
     },
     {
@@ -70,6 +69,7 @@ const REVIEW_GRUPOS = [
         campos: [
             ["type", "Tipo"], ["height", "Altura/Porte"], ["flowercolor", "Cor da Flor"],
             ["foliage", "Folhagem"], ["flowering", "Floração"], ["size", "Tamanho"],
+            ["fruit", "Tipo de Fruto"], ["propagation", "Propagação"], ["lifeCycle", "Ciclo de vida"],
         ],
     },
     {
@@ -89,7 +89,7 @@ const REVIEW_GRUPOS = [
     {
         label: "🌾 Cultivo",
         campos: [
-            ["planting", "Plantio"], ["propagation", "Propagação"], ["station", "Estação"], ["spacing", "Espaçamento"],
+            ["planting", "Plantio"], ["station", "Estação"], ["spacing", "Espaçamento"],
             ["exhibition", "Exposição"], ["iluminosity", "Horas de Sol"], ["protection", "Proteção"],
             ["maintenance", "Manutenção"], ["idealTemperature", "Temperatura Ideal"], ["tolerance", "Tolerância"],
         ],
@@ -947,20 +947,31 @@ export default function PlantFormWizard({
                             icon="☀️"
                             title="Necessidades Ambientais"
                             optional
-                            filled={conjuntoPreenchido(["light", "water", "soil"], form)}
-                            total={3}
+                            filled={conjuntoPreenchido(["light", "water", "soil", "humidity"], form)}
+                            total={4}
                         >
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Luminosidade</FieldLabel>
                                 { Field("light", "Necessidade de luz...") }
                             </div>
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Água</FieldLabel>
                                 { Field("water", "Necessidade de água...") }
                             </div>
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Solo</FieldLabel>
                                 { Field("soil", "Tipo de solo...") }
+                            </div>
+                            <div className="col-md-3 mb-3">
+                                <FieldLabel>Umidade</FieldLabel>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    maxLength={120}
+                                    placeholder="Umidade ambiental ideal..."
+                                    value={form.humidity || ""}
+                                    onChange={e => updateForm({ humidity: e.target.value })}
+                                />
                             </div>
                         </FieldGroup>
                     </div>
@@ -1040,6 +1051,17 @@ export default function PlantFormWizard({
                             <div className="col-md-4 mb-3">
                                 <FieldLabel>Tamanho</FieldLabel>
                                 { Field("size", "Tamanho da planta...") }
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <FieldLabel>Ciclo de vida</FieldLabel>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    maxLength={120}
+                                    placeholder="Anual, bienal, perene..."
+                                    value={form.lifeCycle || ""}
+                                    onChange={e => updateForm({ lifeCycle: e.target.value })}
+                                />
                             </div>
                         </div>
                     </div>
