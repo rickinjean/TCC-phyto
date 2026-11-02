@@ -98,12 +98,13 @@ const REVIEW_GRUPOS = [
 
 export async function loadCollectionOptions(setOpcoesBanco) {
     try {
-        const entries = await Promise.all(Object.entries(mapeamentoColecoes).map(async ([key, meta]) => {
-            const res = await fetch(`${API_URL}/collections/${encodeURIComponent(meta.colecao)}?page=1&limit=100`)
-            if (!res.ok) return [key, []]
-            const page = await res.json()
-            return [key, sortPorNome(Array.isArray(page.data) ? page.data : [], key)]
-        }))
+        const res = await fetch(`${API_URL}/collections/options`)
+        if (!res.ok) throw new Error(`Falha ao carregar opções (${res.status})`)
+        const collections = await res.json()
+        const entries = Object.entries(mapeamentoColecoes).map(([key, meta]) => [
+            key,
+            sortPorNome(Array.isArray(collections[meta.colecao]) ? collections[meta.colecao] : [], key),
+        ])
         setOpcoesBanco(Object.fromEntries(entries))
     } catch (err) {
         console.error("Erro ao carregar coleções:", err)

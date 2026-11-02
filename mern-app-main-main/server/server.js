@@ -107,6 +107,12 @@ app.use(cors({
 // dedicado /health (GET/HEAD) para não poluir os logs.
 app.use(pinoHttp({
     logger,
+    customLogLevel: function (req, res, err) {
+        if (res.statusCode === 304) return "silent"
+        if (err || res.statusCode >= 500) return "error"
+        if (res.statusCode >= 400) return "warn"
+        return "info"
+    },
     autoLogging: {
         ignore: function (req) {
             if (req.url.startsWith("/uploads")) return true

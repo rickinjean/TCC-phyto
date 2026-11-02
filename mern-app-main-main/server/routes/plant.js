@@ -678,6 +678,21 @@ plantRoutes.route("/plant/:id").delete(authenticateToken, authorizeRoles("ADM"),
    ROTAS DINÂMICAS PAGINADAS PARA TRATAR AS SELEÇÕES
 ================================================== */
 
+// Carregar as opções do formulário numa única chamada reduz o número de
+// requisições paralelas sem mudar o formato dos documentos armazenados.
+plantRoutes.route("/collections/options").get(asyncHandler(async function (req, res) {
+    const db_connect = dbo.getDb()
+    const entries = await Promise.all(COLLECTIONS.map(async name => {
+        const data = await db_connect.collection(name)
+            .find({}, { projection: { _id: 1, name: 1 } })
+            .sort({ name: 1, _id: 1 })
+            .limit(100)
+            .toArray()
+        return [name, data]
+    }))
+    res.status(200).json(Object.fromEntries(entries))
+}))
+
 // Resolver apenas os valores usados por uma ficha, sem carregar os dicionários completos.
 plantRoutes.route("/collections/resolve").post(asyncHandler(async function (req, res) {
     const requested = req.body && typeof req.body === "object" ? req.body : {}
