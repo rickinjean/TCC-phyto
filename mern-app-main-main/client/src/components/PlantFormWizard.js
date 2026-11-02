@@ -964,14 +964,7 @@ export default function PlantFormWizard({
                             </div>
                             <div className="col-md-3 mb-3">
                                 <FieldLabel>Umidade</FieldLabel>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    maxLength={120}
-                                    placeholder="Umidade ambiental ideal..."
-                                    value={form.humidity || ""}
-                                    onChange={e => updateForm({ humidity: e.target.value })}
-                                />
+                                { Field("humidity", "Umidade ambiental ideal...") }
                             </div>
                         </FieldGroup>
                     </div>
@@ -1028,40 +1021,33 @@ export default function PlantFormWizard({
                             <p>Aparência visual da planta</p>
                         </div>
                         <div className="row">
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Tipo</FieldLabel>
                                 { Field("type", "Tipo de planta...") }
                             </div>
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Altura / Porte</FieldLabel>
                                 { Field("height", "Porte da planta...") }
                             </div>
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Cor da Flor</FieldLabel>
                                 { Field("flowercolor", "Cores das flores...") }
                             </div>
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Folhagem</FieldLabel>
                                 { Field("foliage", "Tipo de folhagem...") }
                             </div>
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Época de Floração</FieldLabel>
                                 { Field("flowering", "Quando floresce...") }
                             </div>
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Tamanho</FieldLabel>
                                 { Field("size", "Tamanho da planta...") }
                             </div>
-                            <div className="col-md-4 mb-3">
+                            <div className="col-md-3 mb-3">
                                 <FieldLabel>Ciclo de vida</FieldLabel>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    maxLength={120}
-                                    placeholder="Anual, bienal, perene..."
-                                    value={form.lifeCycle || ""}
-                                    onChange={e => updateForm({ lifeCycle: e.target.value })}
-                                />
+                                { Field("lifeCycle", "Ciclo de vida...") }
                             </div>
                         </div>
                     </div>

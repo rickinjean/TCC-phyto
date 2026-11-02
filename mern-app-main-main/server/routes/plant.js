@@ -35,7 +35,7 @@ const COLLECTIONS = [
     "height", "flowercolor", "foliage", "flowering", "light", "water",
     "size", "soil", "manha", "amount", "frequency", "NPK", "season",
     "tools", "prevention", "monitoring", "station", "spacing",
-    "iluminosity", "protection", "idealTemperature", "tolerance",
+    "iluminosity", "protection", "idealTemperature", "tolerance", "humidity", "lifeCycle",
     "Filo", "Classe", "Ordem", "Family", "Genero", "Especie"
 ]
 

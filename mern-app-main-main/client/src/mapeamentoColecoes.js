@@ -26,7 +26,9 @@ const mapeamentoColecoes = {
     iluminosity: { colecao: "iluminosity", label: "Horas de Sol Diário" },
     protection: { colecao: "protection", label: "Proteção Climática" },
     idealTemperature: { colecao: "idealTemperature", label: "Temperatura Ideal" },
-    tolerance: { colecao: "tolerance", label: "Tolerância" }
+    tolerance: { colecao: "tolerance", label: "Tolerância" },
+    humidity: { colecao: "humidity", label: "Umidade" },
+    lifeCycle: { colecao: "lifeCycle", label: "Ciclo de vida" }
 }
 
 export default mapeamentoColecoes

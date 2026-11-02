@@ -46,7 +46,7 @@ const COLLECTION_MAP = Object.fromEntries(
 // NÃO como referência de ObjectId em uma coleção.
 const TEXT_FIELDS = [
   "watering", "fertilizing", "pruning", "pests",
-  "planting", "exhibition", "maintenance", "humidity", "lifeCycle",
+  "planting", "exhibition", "maintenance",
   "Filo", "Classe", "Ordem", "Family", "Genero", "Especie",
 ];
 

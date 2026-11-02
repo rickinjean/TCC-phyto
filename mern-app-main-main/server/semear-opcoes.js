@@ -28,6 +28,8 @@ const OPCOES = {
     idealTemperature: ["10–20 °C", "15–25 °C", "18–24 °C", "20–30 °C"],
     iluminosity: ["2–4 horas", "4–6 horas", "6–8 horas", "8 ou mais horas"],
     protection: ["Nenhuma", "Quebra-vento", "Telado", "Estufa", "Mulching"],
+    humidity: ["Baixa (30–40%)", "Moderada (40–60%)", "Alta (60–80%)", "Muito alta (acima de 80%)"],
+    lifeCycle: ["Anual", "Bienal", "Perene"],
 }
 
 async function semear() {
