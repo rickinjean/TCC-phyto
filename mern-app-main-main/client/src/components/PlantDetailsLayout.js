@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FavoriteButton from "./FavoriteButton";
 import ListaPicker from "./ListaPicker";
 import MapaDistribuicao from "./MapaDistribuicao";
@@ -11,7 +11,7 @@ import API_URL from "../config";
 function SectionCard({ title, children, className = "" }) {
   return (
     <section className={`plant-detail-card ${className}`}>
-      <h3 className="plant-detail-card__title">{title}</h3>
+      {title && <h3 className="plant-detail-card__title">{title}</h3>}
       {children}
     </section>
   );
@@ -48,21 +48,34 @@ export default function PlantDetailsLayout({
   const images = plant.imagesPath || [];
   const hasGallery = images.length > 0;
   const hasAny = (...fields) => fields.some((field) => value(field));
-  const [requestedSlide, setRequestedSlide] = useState(0);
   const sections = [
     { id: "cultivo", label: "Cultivo e cuidados", visible: hasAny("light", "water", "soil", "idealTemperature", "iluminosity", "tolerance", "protection", "watering", "manha", "amount", "pruning", "season", "tools", "planting", "station", "spacing", "exhibition", "maintenance", "fertilizing", "frequency", "NPK", "pests", "prevention", "monitoring") },
     { id: "caracteristicas", label: "Características", visible: hasAny("height", "flowercolor", "foliage", "flowering", "size", "fruit", "propagation") },
     { id: "distribuicao", label: "Distribuição", visible: true },
     { id: "taxonomia", label: "Taxonomia", visible: hasAny("Filo", "Classe", "Ordem", "Family", "Genero", "Especie") },
   ].filter(section => section.visible);
-  const activeIndexInfo = Math.min(requestedSlide, sections.length - 1);
-  const activeSection = sections[activeIndexInfo];
+  const [activeSectionId, setActiveSectionId] = useState(sections[0]?.id);
+  const sectionIds = sections.map(section => section.id).join("|");
+  useEffect(() => {
+    const nodes = sectionIds.split("|").filter(Boolean)
+      .map(id => document.getElementById(id)).filter(Boolean);
+    if (!nodes.length || !("IntersectionObserver" in window)) return;
+
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible[0]) setActiveSectionId(visible[0].target.id);
+    }, { rootMargin: "-20% 0px -65% 0px", threshold: 0 });
+
+    nodes.forEach(node => observer.observe(node));
+    return () => observer.disconnect();
+  }, [sectionIds]);
   const slideNumber = (id) => String(sections.findIndex(section => section.id === id) + 1).padStart(2, "0");
-  const selectSection = (index) => setRequestedSlide(Math.max(0, Math.min(index, sections.length - 1)));
 
   return (
     <div className="plant-details-page plant-detail-redesign">
-      <main className="container plant-detail-container">
+      <article className="container plant-detail-container">
         <button className="plant-detail-back" onClick={() => navigate(-1)} type="button">← <span>Voltar</span></button>
 
         <section className="plant-detail-hero" aria-labelledby="plant-detail-name">
@@ -80,7 +93,7 @@ export default function PlantDetailsLayout({
                 <button className="plant-details-carousel__arrow is-next" type="button" onClick={goNext} aria-label="Próxima imagem">›</button>
               </>}
             </div>
-            {hasGallery && images.length > 1 && <div className="plant-details-gallery" aria-label="Galeria de imagens">
+            {hasGallery && images.length > 1 && <div className="plant-details-gallery" role="group" aria-label={`Galeria de imagens de ${plant.name}`}>
               {images.map((src, index) => <button key={src} type="button" className={`plant-details-gallery__thumb ${index === activeIndex ? "is-active" : ""}`} onClick={() => setActiveIndex(index)} aria-label={`Ver imagem ${index + 1}`} aria-pressed={index === activeIndex}>
                 <PlantImage src={`${API_URL}${src}`} alt="" className="plant-details-gallery__img" fallback={PLACEHOLDER_DETAIL} sizesAttr="64px" {...imgVariantProps(plant.imagesMeta, src, API_URL)} />
               </button>)}
@@ -99,29 +112,23 @@ export default function PlantDetailsLayout({
           </div>
         </section>
 
-        <nav className="plant-detail-nav" role="tablist" aria-label="Seções da ficha">
-          {sections.map((section, index) => <button
+        <nav className="plant-detail-nav" aria-label="Seções da ficha">
+          {sections.map(section => <a
             key={section.id}
-            type="button"
-            role="tab"
-            id={`plant-tab-${section.id}`}
-            aria-selected={index === activeIndexInfo}
-            aria-controls="plant-detail-panel"
-            tabIndex={index === activeIndexInfo ? 0 : -1}
-            className={index === activeIndexInfo ? "is-active" : ""}
-            onClick={() => selectSection(index)}
-            onKeyDown={(event) => {
-              if (event.key === "ArrowRight") { event.preventDefault(); selectSection((index + 1) % sections.length); }
-              if (event.key === "ArrowLeft") { event.preventDefault(); selectSection((index - 1 + sections.length) % sections.length); }
-              if (event.key === "Home") { event.preventDefault(); selectSection(0); }
-              if (event.key === "End") { event.preventDefault(); selectSection(sections.length - 1); }
+            href={`#${section.id}`}
+            aria-current={activeSectionId === section.id ? "location" : undefined}
+            className={activeSectionId === section.id ? "is-active" : ""}
+            onClick={event => {
+              event.preventDefault();
+              setActiveSectionId(section.id);
+              document.getElementById(section.id)?.scrollIntoView({ block: "start" });
+              window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#${section.id}`);
             }}
-          >{section.label}</button>)}
+          >{section.label}</a>)}
         </nav>
 
-        <div className="plant-detail-carousel-viewport">
-          <div className="plant-detail-carousel-track" style={{ "--slide-count": sections.length, transform: `translateX(-${activeIndexInfo * 100 / sections.length}%)` }}>
-        {hasAny("light", "water", "soil", "idealTemperature", "iluminosity", "tolerance", "protection", "watering", "manha", "amount", "pruning", "season", "tools", "planting", "station", "spacing", "exhibition", "maintenance", "fertilizing", "frequency", "NPK", "pests", "prevention", "monitoring") && <section className="plant-detail-section" id="cultivo" role="tabpanel" aria-labelledby="plant-tab-cultivo" aria-hidden={activeSection.id !== "cultivo"} inert={activeSection.id !== "cultivo"}>
+        <div className="plant-detail-sections">
+        {hasAny("light", "water", "soil", "idealTemperature", "iluminosity", "tolerance", "protection", "watering", "manha", "amount", "pruning", "season", "tools", "planting", "station", "spacing", "exhibition", "maintenance", "fertilizing", "frequency", "NPK", "pests", "prevention", "monitoring") && <section className="plant-detail-section" id="cultivo">
           <SectionHeading number={slideNumber("cultivo")} eyebrow="Guia de cultivo" title="Cultivo e cuidados" />
           <div className="plant-detail-grid plant-detail-grid--two">
             {hasAny("light", "water", "soil", "idealTemperature", "iluminosity", "tolerance", "protection") && <SectionCard title="Ambiente">
@@ -142,16 +149,16 @@ export default function PlantDetailsLayout({
           </div>
         </section>}
 
-        {hasAny("height", "flowercolor", "foliage", "flowering", "size", "fruit", "propagation") && <section className="plant-detail-section" id="caracteristicas" role="tabpanel" aria-labelledby="plant-tab-caracteristicas" aria-hidden={activeSection.id !== "caracteristicas"} inert={activeSection.id !== "caracteristicas"}>
+        {hasAny("height", "flowercolor", "foliage", "flowering", "size", "fruit", "propagation") && <section className="plant-detail-section" id="caracteristicas">
           <SectionHeading number={slideNumber("caracteristicas")} eyebrow="Identificação" title="Características físicas" />
           <SectionCard title="Aspectos da planta">
             <div className="plant-detail-info-grid plant-detail-info-grid--four"><Info label="Altura" value={value("height")} /><Info label="Cor da flor" value={value("flowercolor")} /><Info label="Folhagem" value={value("foliage")} /><Info label="Floração" value={value("flowering")} /><Info label="Tamanho" value={value("size")} /><Info label="Fruto" value={value("fruit")} /><Info label="Propagação" value={value("propagation")} /></div>
           </SectionCard>
         </section>}
 
-        <section className="plant-detail-section" id="distribuicao" role="tabpanel" aria-labelledby="plant-tab-distribuicao" aria-hidden={activeSection.id !== "distribuicao"} inert={activeSection.id !== "distribuicao"}>
+        <section className="plant-detail-section" id="distribuicao">
           <SectionHeading number={slideNumber("distribuicao")} eyebrow="Onde ocorre" title="Distribuição geográfica" />
-          <SectionCard title="Distribuição geográfica">
+          <SectionCard>
             {temDistribuicao ? <>
               <MapaDistribuicao nativa={distribuicao.nativa} cultivada={distribuicao.cultivada} />
               <div className="plant-dist-meta"><p className="plant-dist-resumo"><strong>{distribuicao.nativa.length}</strong> {distribuicao.nativa.length === 1 ? "país nativo" : "países nativos"} · <strong>{distribuicao.cultivada.length}</strong> {distribuicao.cultivada.length === 1 ? "país cultivado/introduzido" : "países cultivados/introduzidos"}</p>{distribuicao.fonte && <p className="plant-dist-fonte">Fonte: {distribuicao.fonte}</p>}</div>
@@ -160,19 +167,12 @@ export default function PlantDetailsLayout({
           </SectionCard>
         </section>
 
-        {hasAny("Filo", "Classe", "Ordem", "Family", "Genero", "Especie") && <section className="plant-detail-section" id="taxonomia" role="tabpanel" aria-labelledby="plant-tab-taxonomia" aria-hidden={activeSection.id !== "taxonomia"} inert={activeSection.id !== "taxonomia"}>
+        {hasAny("Filo", "Classe", "Ordem", "Family", "Genero", "Especie") && <section className="plant-detail-section" id="taxonomia">
           <SectionHeading number={slideNumber("taxonomia")} eyebrow="Classificação científica" title="Taxonomia" />
           <SectionCard title="Classificação taxonômica"><Taxonomy value={value} /></SectionCard>
         </section>}
           </div>
-        </div>
-
-        <div className="plant-detail-carousel-controls" aria-label="Navegação do carrossel">
-          <button type="button" onClick={() => selectSection(activeIndexInfo - 1)} disabled={activeIndexInfo === 0} aria-label="Seção anterior">← <span>Anterior</span></button>
-          <span>{activeIndexInfo + 1} de {sections.length} · {activeSection.label}</span>
-          <button type="button" onClick={() => selectSection(activeIndexInfo + 1)} disabled={activeIndexInfo === sections.length - 1} aria-label="Próxima seção"><span>Próxima</span> →</button>
-        </div>
-      </main>
+      </article>
       {canFavorite && <ListaPicker aberto={pickerAberto} plantaId={realId} plantaNome={plant.name} onFechar={() => setPickerAberto(false)} />}
     </div>
   );

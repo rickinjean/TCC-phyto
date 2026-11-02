@@ -10,20 +10,27 @@ import { distribuicaoDaPlanta } from "../distribuicao";
 
 function SkeletonLoader() {
   return (
-    <div className="plant-details-skeleton">
-      <div className="plant-details-skeleton__header">
+    <div className="plant-details-skeleton" role="status" aria-busy="true" aria-label="Carregando ficha botânica">
+      <span className="visually-hidden">Carregando ficha botânica...</span>
+      <div className="container plant-detail-container">
         <div className="plant-details-skeleton__back skeleton-pulse" />
-        <div className="plant-details-skeleton__title skeleton-pulse" />
-        <div className="plant-details-skeleton__subtitle skeleton-pulse" />
-      </div>
-      <div className="container plant-details-media-shell">
-        <div className="plant-details-skeleton__image skeleton-pulse" />
-        <div className="plant-details-skeleton__badges">
-          {[1,2,3,4].map(i => <div key={i} className="plant-details-skeleton__badge skeleton-pulse" />)}
+        <div className="plant-details-skeleton__hero">
+          <div className="plant-details-skeleton__image skeleton-pulse" />
+          <div className="plant-details-skeleton__identity">
+            <div className="plant-details-skeleton__eyebrow skeleton-pulse" />
+            <div className="plant-details-skeleton__title skeleton-pulse" />
+            <div className="plant-details-skeleton__subtitle skeleton-pulse" />
+            <div className="plant-details-skeleton__badges">
+              {[1, 2, 3, 4].map(i => <div key={i} className="plant-details-skeleton__badge skeleton-pulse" />)}
+            </div>
+          </div>
         </div>
-        {[1,2].map(i => (
-          <div key={i} className="plant-details-skeleton__card skeleton-pulse" />
-        ))}
+        <div className="plant-details-skeleton__nav">
+          {[1, 2, 3, 4].map(i => <div key={i} className="plant-details-skeleton__nav-item skeleton-pulse" />)}
+        </div>
+        <div className="plant-details-skeleton__cards">
+          {[1, 2].map(i => <div key={i} className="plant-details-skeleton__card skeleton-pulse" />)}
+        </div>
       </div>
     </div>
   );
@@ -48,6 +55,8 @@ export default function PlantDetails({ canFavorite = false }) {
   const [plant, setPlant] = useState(null);
   usePageTitle(plant ? plant.name : "Planta", plant?.simpleDescription, `/plantdetails/${id}`)
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [pickerAberto, setPickerAberto] = useState(false);
@@ -64,9 +73,17 @@ export default function PlantDetails({ canFavorite = false }) {
 
     async function load() {
       setLoading(true);
+      setNotFound(false);
+      setLoadError(false);
       try {
         const response = await fetch(`${API_URL}/plant/${realId}`);
-        if (!response.ok) { if (!cancelled) setNotFound(true); return; }
+        if (!response.ok) {
+          if (!cancelled) {
+            if (response.status === 404) setNotFound(true);
+            else setLoadError(true);
+          }
+          return;
+        }
 
         const data = await response.json();
         if (!data || !data.name) { if (!cancelled) setNotFound(true); return; }
@@ -97,7 +114,7 @@ export default function PlantDetails({ canFavorite = false }) {
 
       } catch (error) {
         console.error("Erro ao carregar planta:", error);
-        if (!cancelled) setNotFound(true);
+        if (!cancelled) setLoadError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -105,7 +122,7 @@ export default function PlantDetails({ canFavorite = false }) {
 
     load();
     return () => { cancelled = true; };
-  }, [realId]);
+  }, [realId, reloadKey]);
 
   // Cor do coração = cor da coleção mais recente que contém esta planta;
   // os valores vêm do hook useColecoes, que reexecuta ao abrir/fechar o picker.
@@ -113,15 +130,34 @@ export default function PlantDetails({ canFavorite = false }) {
   if (notFound) {
     return (
       <div className="plant-details-page plant-details-loading">
-        <div style={{ textAlign: "center", padding: "4rem 1rem" }}>
-          <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🔍</div>
-          <h2>Planta não encontrada</h2>
-          <p style={{ color: "#71827a", marginBottom: "1.5rem" }}>
-            O registro que você procura não existe ou foi removido.
-          </p>
-          <button className="btn btn-primary" onClick={() => navigate("/plantlist")}>
-            Voltar ao Catálogo
-          </button>
+        <div className="container plant-detail-container">
+          <div className="plant-details-empty-state">
+            <span className="plant-details-empty-state__icon" aria-hidden="true">🌿</span>
+            <p className="plant-detail-eyebrow">Ficha botânica</p>
+            <h2>Planta não encontrada</h2>
+            <p>O registro que você procura não existe ou foi removido.</p>
+            <button className="btn btn-primary" onClick={() => navigate("/plantlist")}>
+              Voltar ao catálogo <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="plant-details-page plant-details-loading">
+        <div className="container plant-detail-container">
+          <div className="plant-details-empty-state" role="alert">
+            <span className="plant-details-empty-state__icon" aria-hidden="true">🌱</span>
+            <p className="plant-detail-eyebrow">Ficha botânica</p>
+            <h2>Não foi possível carregar a planta</h2>
+            <p>Ocorreu um problema ao buscar esta ficha. Tente novamente em instantes.</p>
+            <button className="btn btn-primary" onClick={() => setReloadKey(key => key + 1)}>
+              Tentar novamente <span aria-hidden="true">↻</span>
+            </button>
+          </div>
         </div>
       </div>
     );
