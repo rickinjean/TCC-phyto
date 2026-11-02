@@ -5,7 +5,6 @@ import MapaDistribuicao from "./MapaDistribuicao";
 import PlantImage from "./PlantImage";
 import { PLACEHOLDER_DETAIL } from "../placeholderImg";
 import { imgVariantProps } from "../getImageVariants";
-import { nomesDe } from "../distribuicao";
 import API_URL from "../config";
 
 function SectionCard({ title, children, className = "" }) {
@@ -38,19 +37,6 @@ function Taxonomy({ value }) {
 
 function SectionHeading({ number, eyebrow, title }) {
   return <div className="plant-detail-heading"><span>{number}</span><div><p>{eyebrow}</p><h2>{title}</h2></div></div>;
-}
-
-function CountryGroup({ title, countries }) {
-  return (
-    <section className="plant-dist-country-group" aria-label={title}>
-      <h4><span>{title}</span><span className="plant-dist-country-count">{countries.length}</span></h4>
-      {countries.length ? (
-        <ul className="plant-dist-country-list">
-          {countries.map(country => <li key={`${title}-${country}`}>{country}</li>)}
-        </ul>
-      ) : <p className="plant-dist-country-empty">Nenhum país registrado.</p>}
-    </section>
-  );
 }
 
 export default function PlantDetailsLayout({
@@ -175,13 +161,6 @@ export default function PlantDetailsLayout({
             {temDistribuicao ? <>
               <MapaDistribuicao nativa={distribuicao.nativa} cultivada={distribuicao.cultivada} />
               <div className="plant-dist-meta"><p className="plant-dist-resumo"><strong>{distribuicao.nativa.length}</strong> {distribuicao.nativa.length === 1 ? "país nativo" : "países nativos"} · <strong>{distribuicao.cultivada.length}</strong> {distribuicao.cultivada.length === 1 ? "país cultivado/introduzido" : "países cultivados/introduzidos"}</p>{distribuicao.fonte && <p className="plant-dist-fonte">Fonte: {distribuicao.fonte}</p>}</div>
-              <details className="plant-dist-listas">
-                <summary>Explorar países por categoria</summary>
-                <div className="plant-dist-country-groups">
-                  <CountryGroup title="Distribuição nativa" countries={nomesDe(distribuicao.nativa)} />
-                  <CountryGroup title="Cultivada / introduzida" countries={nomesDe(distribuicao.cultivada)} />
-                </div>
-              </details>
             </> : <p className="plant-dist-empty">Distribuição geográfica não registrada para esta amostra.</p>}
           </SectionCard>
         </section>
