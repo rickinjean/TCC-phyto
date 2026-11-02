@@ -672,6 +672,8 @@ export default function PlantFormWizard({
                 <button
                     type="button"
                     className="wizard-select-plus"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalDinamico"
                     onClick={() => abrirModalPara(campo)}
                     title="Gerenciar valores"
                 >
@@ -964,7 +966,7 @@ export default function PlantFormWizard({
                             </div>
                             <div className="col-md-3 mb-3">
                                 <FieldLabel>Umidade</FieldLabel>
-                                { Field("humidity", "Umidade ambiental ideal...") }
+                                { Field("humidity", "Umidade ambiental ideal") }
                             </div>
                         </FieldGroup>
                     </div>
@@ -1047,7 +1049,7 @@ export default function PlantFormWizard({
                             </div>
                             <div className="col-md-3 mb-3">
                                 <FieldLabel>Ciclo de vida</FieldLabel>
-                                { Field("lifeCycle", "Ciclo de vida...") }
+                                { Field("lifeCycle", "Ciclo de vida") }
                             </div>
                         </div>
                     </div>

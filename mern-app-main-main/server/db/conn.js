@@ -102,6 +102,27 @@ async function syncIndexes(db) {
     logger.info({ criadas, removidas, verificadas }, "Índices sincronizados")
 }
 
+// Garante opções iniciais dos campos novos sem duplicar registros existentes.
+async function seedPlantFieldOptions(db) {
+    const options = {
+        humidity: ["Baixa (30–40%)", "Moderada (40–60%)", "Alta (60–80%)", "Muito alta (acima de 80%)"],
+        lifeCycle: ["Anual", "Bienal", "Perene"],
+    }
+
+    await Promise.all(Object.entries(options).map(([name, values]) =>
+        db.collection(name).bulkWrite(
+            values.map(value => ({
+                updateOne: {
+                    filter: { name: value },
+                    update: { $setOnInsert: { name: value } },
+                    upsert: true,
+                },
+            })),
+            { ordered: false }
+        )
+    ))
+}
+
 module.exports = {
     connectToMongoDB: async function (callback) {
         try {
@@ -110,6 +131,7 @@ module.exports = {
             logger.info("Conectado ao MongoDB")
 
             await syncIndexes(_db)
+            await seedPlantFieldOptions(_db)
 
             return callback(null)
         } catch (error) {
