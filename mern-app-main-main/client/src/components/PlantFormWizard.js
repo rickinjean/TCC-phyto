@@ -924,8 +924,8 @@ export default function PlantFormWizard({
                             icon="🌿"
                             title="Botânica"
                             optional
-                            filled={conjuntoPreenchido(["origin", "toxicity", "dificulty", "fruit"], form)}
-                            total={4}
+                            filled={conjuntoPreenchido(["origin", "toxicity", "dificulty"], form)}
+                            total={3}
                         >
                             <div className="col-md-3 mb-3">
                                 <FieldLabel>Origem</FieldLabel>
@@ -938,10 +938,6 @@ export default function PlantFormWizard({
                             <div className="col-md-3 mb-3">
                                 <FieldLabel>Dificuldade</FieldLabel>
                                 { Field("dificulty", "Nível de cuidado...") }
-                            </div>
-                            <div className="col-md-3 mb-3">
-                                <FieldLabel>Tipo de Fruto</FieldLabel>
-                                { Field("fruit", "Tipo de fruto...") }
                             </div>
                         </FieldGroup>
                         <FieldGroup
@@ -1023,31 +1019,39 @@ export default function PlantFormWizard({
                             <p>Aparência visual da planta</p>
                         </div>
                         <div className="row">
-                            <div className="col-md-3 mb-3">
+                            <div className="col-md-4 mb-3">
                                 <FieldLabel>Tipo</FieldLabel>
                                 { Field("type", "Tipo de planta...") }
                             </div>
-                            <div className="col-md-3 mb-3">
+                            <div className="col-md-4 mb-3">
                                 <FieldLabel>Altura / Porte</FieldLabel>
                                 { Field("height", "Porte da planta...") }
                             </div>
-                            <div className="col-md-3 mb-3">
+                            <div className="col-md-4 mb-3">
                                 <FieldLabel>Cor da Flor</FieldLabel>
                                 { Field("flowercolor", "Cores das flores...") }
                             </div>
-                            <div className="col-md-3 mb-3">
+                            <div className="col-md-4 mb-3">
                                 <FieldLabel>Folhagem</FieldLabel>
                                 { Field("foliage", "Tipo de folhagem...") }
                             </div>
-                            <div className="col-md-3 mb-3">
+                            <div className="col-md-4 mb-3">
                                 <FieldLabel>Época de Floração</FieldLabel>
                                 { Field("flowering", "Quando floresce...") }
                             </div>
-                            <div className="col-md-3 mb-3">
+                            <div className="col-md-4 mb-3">
                                 <FieldLabel>Tamanho</FieldLabel>
                                 { Field("size", "Tamanho da planta...") }
                             </div>
-                            <div className="col-md-3 mb-3">
+                            <div className="col-md-4 mb-3">
+                                <FieldLabel>Tipo de Fruto</FieldLabel>
+                                { Field("fruit", "Tipo de fruto...") }
+                            </div>
+                            <div className="col-md-4 mb-3">
+                                <FieldLabel>Propagação</FieldLabel>
+                                { Field("propagation", "Tipo de propagação...") }
+                            </div>
+                            <div className="col-md-4 mb-3">
                                 <FieldLabel>Ciclo de vida</FieldLabel>
                                 { Field("lifeCycle", "Ciclo de vida") }
                             </div>
@@ -1148,12 +1152,11 @@ export default function PlantFormWizard({
                             icon="🌱"
                             title="Plantio"
                             optional
-                            filled={conjuntoPreenchido(["planting", "propagation", "station", "spacing"], form)}
-                            total={4}
+                            filled={conjuntoPreenchido(["planting", "station", "spacing"], form)}
+                            total={3}
                         >
                             {CampoTex("planting", "Plantio", "Como plantar...")}
                             {ColunaSelects([
-                                ["propagation", "Propagação", "Como se propaga..."],
                                 ["station", "Estação", "Estação de plantio..."],
                                 ["spacing", "Espaçamento", "Espaçamento entre mudas..."],
                             ])}

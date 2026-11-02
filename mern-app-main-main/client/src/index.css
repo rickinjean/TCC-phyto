@@ -1483,6 +1483,7 @@ html[data-theme="dark"] .plant-details-page {
 .plant-detail-card__title { margin: 0 0 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--phyto-border, #dce6de); color: var(--phyto-green-800, #174d35); font-size: 1.05rem; font-weight: 800; }
 .plant-detail-info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
 .plant-detail-info-grid--four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.plant-detail-info-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .plant-detail-info { display: flex; min-width: 0; flex-direction: column; gap: 0.3rem; padding: 0.8rem; border-radius: 0.7rem; background: var(--phyto-page, #f5f7f3); }
 .plant-detail-info span, .plant-detail-text-info h4 { margin: 0; color: var(--phyto-ink-soft, #607168); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.045em; text-transform: uppercase; }
 .plant-detail-info strong { color: var(--phyto-ink, #20352a); font-size: 0.94rem; line-height: 1.45; overflow-wrap: anywhere; }
@@ -1580,7 +1581,8 @@ html[data-theme="dark"] .plant-details-skeleton .skeleton-pulse { background: li
 }
 @media (max-width: 700px) {
   #cultivo .plant-detail-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .plant-detail-info-grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plant-detail-info-grid--four,
+  .plant-detail-info-grid--three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
   .plant-detail-redesign .plant-detail-container { width: 100%; }
