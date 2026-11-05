@@ -1,0 +1,1266 @@
+/* ========================================================================
+   Institutional visual system
+   ======================================================================== */
+:root {
+  --phyto-ink: #20342b;
+  --phyto-ink-soft: #66756c;
+  --phyto-green-900: #173f32;
+  --phyto-green-700: #2e6951;
+  --phyto-green-600: #477d63;
+  --phyto-green-100: #eaf1eb;
+  --phyto-sage: #e4ece5;
+  --phyto-cream: #f5f6f3;
+  --phyto-surface: #ffffff;
+  --phyto-card-bg: #ffffff;
+  --phyto-border: #dce4dd;
+  --phyto-shadow: 0 8px 24px rgba(25, 52, 39, 0.055);
+  --phyto-shadow-hover: 0 14px 32px rgba(25, 52, 39, 0.09);
+  --phyto-radius-lg: 16px;
+  --phyto-radius-md: 12px;
+  --phyto-radius-sm: 8px;
+  --phyto-page: #f3f6f2;
+  --phyto-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+html[data-theme="dark"] {
+  --phyto-ink: #e7eee9;
+  --phyto-ink-soft: #a9b8af;
+  --phyto-green-900: #d6e8dc;
+  --phyto-green-700: #8cb99d;
+  --phyto-green-600: #6fa585;
+  --phyto-green-100: #263b30;
+  --phyto-sage: #263a2f;
+  --phyto-cream: #131d18;
+  --phyto-surface: #1b2921;
+  --phyto-card-bg: #1b2921;
+  --phyto-border: #35463b;
+  --phyto-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  --phyto-shadow-hover: 0 14px 32px rgba(0, 0, 0, 0.24);
+  --phyto-page: #202e26;
+}
+html {
+  scroll-padding-top: 6rem;
+}
+body {
+  background: var(--phyto-cream);
+  color: var(--phyto-ink);
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+.app-main {
+  padding: clamp(1.25rem, 3vw, 2.75rem) 0;
+}
+.btn {
+  min-height: 40px;
+  border-radius: 8px;
+  font-weight: 650;
+  letter-spacing: 0;
+  box-shadow: none;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+.btn:hover, .btn:active {
+  transform: none;
+}
+.btn-primary, .plant-list-card__details, .plant-list-pagination__btn {
+  border-color: var(--phyto-green-900);
+  background: var(--phyto-green-900);
+  color: #fff;
+  box-shadow: none;
+}
+.btn-primary:hover, .btn-primary:focus, .plant-list-card__details:hover, .plant-list-pagination__btn:hover:not(:disabled) {
+  border-color: #245b45;
+  background: #245b45;
+  color: #fff;
+  box-shadow: 0 3px 9px rgba(23, 63, 50, 0.16);
+}
+.btn-outline-primary {
+  border-color: var(--phyto-green-700);
+  color: var(--phyto-green-700);
+}
+.btn-outline-primary:hover {
+  background: var(--phyto-green-100);
+  color: var(--phyto-green-900);
+}
+.form-control, .form-select, .input-group-text, textarea {
+  border-color: var(--phyto-border);
+  border-radius: 8px;
+  background-color: var(--phyto-surface);
+  color: var(--phyto-ink);
+  box-shadow: none;
+}
+.form-control:focus, .form-select:focus, textarea:focus {
+  border-color: var(--phyto-green-600);
+  background: var(--phyto-surface);
+  color: var(--phyto-ink);
+  box-shadow: 0 0 0 3px rgba(71, 125, 99, 0.16);
+}
+.input-group-text {
+  background: var(--phyto-page);
+  color: var(--phyto-green-700);
+}
+.form-check-input:checked {
+  border-color: var(--phyto-green-700);
+  background-color: var(--phyto-green-700);
+}
+.form-check-input:focus {
+  border-color: var(--phyto-green-600);
+  box-shadow: 0 0 0 3px rgba(71, 125, 99, 0.16);
+}
+.form-range::-webkit-slider-thumb {
+  background: var(--phyto-green-700);
+}
+.form-range::-moz-range-thumb {
+  background: var(--phyto-green-700);
+}
+/* Navigation */
+.custom-navbar {
+  background: var(--phyto-surface);
+  border-bottom: 1px solid var(--phyto-border);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.custom-navbar__inner {
+  max-width: 1440px;
+  min-height: 76px;
+  padding: 0.55rem clamp(1rem, 3vw, 2.25rem);
+}
+.custom-navbar__logo {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--phyto-border);
+  border-radius: 10px;
+  box-shadow: none;
+}
+.custom-navbar__brand {
+  gap: 0.65rem;
+  color: var(--phyto-ink);
+}
+.custom-navbar__brand-text {
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+.custom-navbar__menu {
+  gap: 0.2rem;
+}
+.custom-navbar__link {
+  padding: 0.55rem 0.75rem;
+  border-radius: 7px;
+  color: var(--phyto-ink-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.custom-navbar__link:hover, .custom-navbar__link.active {
+  background: var(--phyto-page);
+  color: var(--phyto-green-900);
+  transform: none;
+}
+.custom-navbar__toggle, .custom-navbar__theme-toggle, .custom-navbar__user-button {
+  border-color: var(--phyto-border);
+  border-radius: 8px;
+  background: var(--phyto-surface);
+  color: var(--phyto-ink);
+}
+.custom-navbar__toggle {
+  width: 42px;
+  height: 42px;
+}
+.custom-navbar__offcanvas {
+  background: var(--phyto-surface);
+  border-color: var(--phyto-border);
+  box-shadow: -12px 0 30px rgba(20, 40, 29, 0.12);
+}
+.custom-navbar__offcanvas-link {
+  border-radius: 7px;
+  color: var(--phyto-ink-soft);
+  font-weight: 600;
+}
+.custom-navbar__offcanvas-link:hover, .custom-navbar__offcanvas-link.active {
+  background: var(--phyto-page);
+  color: var(--phyto-green-900);
+  transform: none;
+}
+.custom-navbar__user-panel {
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(22, 42, 30, 0.14);
+}
+/* Home: academic portal hierarchy */
+.home-page {
+  background: var(--phyto-cream);
+}
+.home-hero {
+  padding: clamp(4rem, 8vw, 7rem) 1.25rem !important;
+  background: linear-gradient(112deg, #173f32 0%, #204f3d 62%, #315f49 100%);
+  text-align: left !important;
+}
+.home-hero::before {
+  right: -10rem;
+  bottom: -19rem;
+  width: 42rem;
+  height: 42rem;
+  border-color: rgba(240, 248, 241, 0.12);
+}
+.home-hero::after {
+  left: 50%;
+  top: -20rem;
+  width: 36rem;
+  height: 36rem;
+  border-color: rgba(240, 248, 241, 0.08);
+}
+.home-hero > .container, .home-section .container {
+  max-width: 1180px;
+}
+.home-hero__eyebrow {
+  margin: 0 0 0.85rem;
+  color: #b8d0bf;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.home-hero__title {
+  max-width: 740px;
+  margin: 0 0 0.45rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.7rem, 6vw, 4.6rem);
+  font-weight: 500 !important;
+  letter-spacing: -0.045em;
+}
+.home-hero__subtitle {
+  margin-bottom: 2rem !important;
+  color: rgba(244, 248, 244, 0.78);
+  font-size: 1.1rem;
+  font-weight: 450;
+}
+.home-hero form {
+  justify-content: flex-start !important;
+}
+.home-search {
+  width: min(100%, 680px);
+  margin: 0;
+  padding: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+  backdrop-filter: none;
+}
+.home-search__input {
+  min-height: 48px;
+  padding-left: 1rem;
+  color: #20342b !important;
+}
+.home-search__input::placeholder {
+  color: #7c8a81;
+}
+.home-search .btn {
+  min-width: 104px;
+  min-height: 44px;
+  margin: 0.12rem;
+  border-radius: 7px !important;
+  background: #173f32;
+}
+.home-section {
+  padding-top: clamp(2.8rem, 6vw, 4.5rem);
+  padding-bottom: clamp(2.8rem, 6vw, 4.5rem);
+}
+.home-section--quick, .home-section--featured {
+  background: var(--phyto-cream);
+}
+.home-section__title {
+  margin-bottom: 1.8rem !important;
+  color: var(--phyto-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  text-align: left !important;
+}
+.quick-card, .plant-feature-card, .stat-card, .plant-list-card {
+  overflow: hidden;
+  border: 1px solid var(--phyto-border) !important;
+  border-radius: 12px !important;
+  background: var(--phyto-surface) !important;
+  box-shadow: none !important;
+}
+.quick-card:hover, .plant-feature-card:hover, .stat-card:hover, .plant-list-card:hover {
+  transform: translateY(-2px);
+  border-color: #c6d4c9 !important;
+  box-shadow: var(--phyto-shadow) !important;
+}
+.quick-card .card-body, .plant-feature-card .card-body {
+  padding: 1.25rem;
+}
+.quick-card__title, .plant-feature-card__title {
+  color: var(--phyto-ink);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.quick-card__button {
+  border-radius: 7px;
+}
+.home-section--stats {
+  background: #e9efea;
+  color: var(--phyto-ink);
+}
+.home-section--stats .home-section__title {
+  color: var(--phyto-ink);
+}
+.stat-card {
+  min-height: 152px;
+  border-color: var(--phyto-border) !important;
+  background: var(--phyto-surface) !important;
+  color: var(--phyto-ink);
+  backdrop-filter: none;
+}
+.stat-card__value {
+  color: var(--phyto-green-900);
+  font-size: 2.3rem !important;
+}
+.stat-card__label {
+  color: var(--phyto-ink-soft);
+  letter-spacing: 0.045em;
+}
+/* Plant catalogue */
+.plant-list-page {
+  width: min(100% - 2rem, 1180px);
+  max-width: 1180px;
+  margin-top: 1.5rem !important;
+}
+.plant-list-page > .d-flex {
+  min-height: 3.5rem;
+}
+.plant-list-page__title {
+  color: var(--phyto-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  font-weight: 500 !important;
+  letter-spacing: -0.025em;
+}
+.plant-list-page__eyebrow {
+  margin: 0 0 0.15rem;
+  color: var(--phyto-green-700);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.plant-list-page__count {
+  color: var(--phyto-ink-soft);
+  font-size: 0.88rem;
+}
+.plant-list-add {
+  min-height: 40px;
+  padding-inline: 1rem;
+  border: 1px solid var(--phyto-green-900);
+  border-radius: 7px !important;
+  background: var(--phyto-green-900);
+  font-weight: 600;
+}
+.plant-search__box {
+  gap: 0.65rem;
+  padding: 0.35rem 0.4rem 0.35rem 1rem;
+  border-color: var(--phyto-border);
+  border-radius: 10px;
+  box-shadow: none;
+}
+.plant-search__box:focus-within {
+  border-color: var(--phyto-green-600);
+  box-shadow: 0 0 0 3px rgba(71, 125, 99, 0.12);
+}
+.plant-search__icon {
+  color: var(--phyto-ink-soft);
+}
+.plant-search__input {
+  min-height: 44px;
+}
+.plant-search__btn {
+  min-height: 40px;
+  padding: 0.4rem 1.1rem;
+  border-radius: 7px;
+  background: var(--phyto-green-900);
+  font-weight: 600;
+}
+.plant-filters__toggle {
+  border-radius: 7px;
+  font-weight: 600;
+}
+.plant-filters__toggle.is-open {
+  border-color: var(--phyto-border);
+  background: var(--phyto-page);
+  color: var(--phyto-ink);
+}
+.plant-filters {
+  border-color: var(--phyto-border);
+  border-radius: 10px;
+  background: var(--phyto-surface);
+  box-shadow: none;
+}
+.plant-filters__select {
+  min-height: 40px;
+  border-radius: 7px;
+}
+.plant-list-card__image-wrapper, .plant-list-card__carousel, .plant-list-card__carousel-inner {
+  aspect-ratio: 4 / 3;
+}
+.plant-list-card__body {
+  min-height: 196px;
+  padding: 1.15rem !important;
+}
+.plant-list-card__title {
+  color: var(--phyto-ink);
+  font-size: 1.08rem;
+  font-weight: 700 !important;
+}
+.plant-list-card__scientific {
+  color: var(--phyto-ink-soft);
+}
+.plant-list-card__details, .plant-list-card__edit, .plant-list-card__clone, .plant-list-card__delete {
+  min-height: 36px;
+  border-radius: 7px !important;
+  font-weight: 600;
+}
+.plant-list-card__edit, .plant-list-card__clone {
+  border-color: var(--phyto-border);
+  background: var(--phyto-page);
+  color: var(--phyto-ink);
+}
+.plant-list-card__edit:hover, .plant-list-card__clone:hover {
+  border-color: #c6d4c9;
+  background: #e9efea;
+  color: var(--phyto-green-900);
+}
+/* Plant record */
+.plant-detail-redesign {
+  background: var(--phyto-cream);
+}
+.plant-detail-container {
+  max-width: 1180px;
+}
+.plant-detail-hero {
+  grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
+  align-items: stretch;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border-color: var(--phyto-border);
+  border-radius: 14px;
+  background: var(--phyto-surface);
+  box-shadow: 0 4px 16px rgba(25, 52, 39, 0.04);
+}
+.plant-detail-hero .plant-details-carousel-inner, .plant-detail-hero .plant-details-image {
+  border-radius: 9px;
+}
+.plant-detail-hero .plant-details-carousel-inner {
+  aspect-ratio: 4 / 3;
+  background: var(--phyto-page);
+}
+.plant-detail-hero .plant-details-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.plant-detail-hero .plant-details-gallery__thumb {
+  border-radius: 7px;
+}
+.plant-detail-hero .plant-details-gallery__thumb:focus-visible {
+  outline: 3px solid var(--phyto-green-700);
+  outline-offset: 2px;
+}
+.plant-detail-hero .plant-details-gallery__thumb.is-active {
+  border-color: var(--phyto-green-700);
+  box-shadow: 0 0 0 2px var(--phyto-surface), 0 0 0 4px var(--phyto-green-700);
+}
+.plant-detail-identity h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.1rem, 4vw, 3.15rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+.plant-detail-eyebrow, .plant-detail-heading p {
+  color: var(--phyto-green-700);
+  letter-spacing: 0.09em;
+}
+.plant-detail-scientific {
+  color: var(--phyto-ink-soft);
+}
+.plant-detail-tags {
+  gap: 0.45rem;
+}
+.plant-detail-tags > span {
+  flex: 1 1 calc(50% - 0.45rem);
+  min-width: min(100%, 125px);
+  padding: 0.5rem 0.65rem;
+  border-radius: 7px;
+  background: var(--phyto-page);
+  font-weight: 600;
+}
+.plant-detail-description h2 {
+  color: var(--phyto-ink);
+  font-size: 1rem;
+  font-weight: 700;
+}
+.plant-detail-description p {
+  color: var(--phyto-ink-soft);
+  line-height: 1.7;
+}
+.plant-detail-description {
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--phyto-green-100);
+}
+.plant-detail-nav {
+  position: sticky;
+  top: 5.1rem;
+  width: 100%;
+  justify-content: flex-start;
+  margin: 1rem 0 2.25rem;
+  padding: 0.3rem;
+  border-radius: 9px;
+  background: var(--phyto-surface);
+  box-shadow: 0 3px 12px rgba(25, 52, 39, 0.045);
+}
+.plant-detail-nav a {
+  border-radius: 6px;
+  font-weight: 600;
+}
+.plant-detail-nav a.is-active {
+  background: var(--phyto-green-900);
+}
+.plant-detail-sections {
+  gap: clamp(2.5rem, 5vw, 3.75rem);
+}
+.plant-detail-heading {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+}
+.plant-detail-heading > span {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 7px;
+  background: var(--phyto-green-100);
+  color: var(--phyto-green-900);
+}
+.plant-detail-heading h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.plant-detail-card {
+  padding: clamp(1rem, 2vw, 1.3rem);
+  border-radius: 10px;
+  box-shadow: none;
+}
+.plant-detail-card:hover {
+  border-color: var(--phyto-border);
+  box-shadow: none;
+  transform: none;
+}
+.plant-detail-card__title {
+  color: var(--phyto-ink);
+  font-size: 1rem;
+  font-weight: 700;
+}
+.plant-detail-info {
+  min-height: 4.75rem;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: var(--phyto-page);
+}
+.plant-detail-info span, .plant-detail-text-info h4 {
+  color: var(--phyto-ink-soft);
+  font-weight: 650;
+  letter-spacing: 0.035em;
+}
+.plant-detail-info strong {
+  font-weight: 650;
+}
+.plant-detail-text-info {
+  border-color: var(--phyto-border);
+}
+/* Authentication */
+.app-main > .auth-page, .app-main > .min-vh-100.auth-page {
+  min-height: 650px !important;
+  margin: calc(clamp(1.25rem, 3vw, 2.75rem) * -1) auto;
+  background: var(--phyto-surface);
+}
+.app-main > .auth-page > .auth-page__aside {
+  position: relative;
+  min-height: 650px !important;
+  overflow: hidden;
+  padding: clamp(2rem, 4vw, 4rem) !important;
+  background: linear-gradient(150deg, #173f32, #244d3b) !important;
+}
+.auth-page__aside::after {
+  position: absolute;
+  right: -10rem;
+  bottom: -16rem;
+  width: 35rem;
+  height: 35rem;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3rem rgba(255,255,255,.035), 0 0 0 6rem rgba(255,255,255,.025);
+  content: "";
+  pointer-events: none;
+}
+.auth-page__aside > * {
+  position: relative;
+  z-index: 1;
+}
+.auth-page__aside h1 {
+  max-width: 11ch;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.25rem, 4vw, 3.6rem);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+.auth-page__aside p {
+  max-width: 36ch;
+  color: rgba(244, 248, 244, 0.72);
+  line-height: 1.7;
+}
+.app-main > .auth-page > .auth-page__form {
+  padding: clamp(1.5rem, 5vw, 4.5rem) !important;
+  background: var(--phyto-cream);
+}
+.auth-page__card {
+  max-width: 420px !important;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  border: 1px solid var(--phyto-border);
+  border-radius: 12px;
+  background: var(--phyto-surface);
+  box-shadow: 0 6px 22px rgba(25, 52, 39, 0.045);
+}
+.auth-page__card h2 {
+  color: var(--phyto-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.9rem;
+  font-weight: 500 !important;
+  letter-spacing: -0.025em;
+}
+.auth-page__card > p {
+  color: var(--phyto-ink-soft);
+}
+.auth-page__card .input-group-text {
+  min-width: 42px;
+}
+.auth-page__card .btn-outline-secondary {
+  border-color: var(--phyto-border);
+  color: var(--phyto-ink);
+}
+.auth-page__card .btn-outline-secondary:hover {
+  border-color: #bdcfc2;
+  background: var(--phyto-page);
+}
+.auth-page__card hr {
+  border-color: var(--phyto-border);
+}
+/* Administration and institutional pages */
+.admin-page {
+  width: min(100% - 2rem, 1180px);
+  padding: clamp(1.2rem, 3vw, 2rem);
+  border-color: var(--phyto-border);
+  border-radius: 12px;
+  background: var(--phyto-surface);
+  box-shadow: none;
+}
+.admin-page__title {
+  margin: 0 0 1.25rem !important;
+  padding: 0 !important;
+  color: var(--phyto-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.65rem, 3vw, 2.15rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+.admin-form, .plant-admin-form {
+  border-color: var(--phyto-border);
+  border-radius: 9px;
+  background: var(--phyto-cream);
+}
+.plant-admin-form .nav-tabs {
+  gap: 0.25rem;
+}
+.plant-admin-form .nav-tabs .nav-link {
+  border-radius: 7px;
+  font-weight: 600;
+}
+.wizard-group__head {
+  border-color: var(--phyto-border);
+  border-radius: 8px;
+  background: var(--phyto-surface);
+  box-shadow: none;
+}
+.wizard-group__head:hover {
+  border-color: #bdcfc2;
+  box-shadow: none;
+}
+.wizard-group__body {
+  border-color: var(--phyto-border);
+}
+.sugestao-page__title, .page-title-ambar {
+  color: var(--phyto-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500 !important;
+  letter-spacing: -0.025em;
+}
+.admin-table-wrap {
+  border-color: var(--phyto-border);
+  border-radius: 9px;
+  box-shadow: none;
+}
+.admin-table thead th {
+  background: var(--phyto-page);
+  color: var(--phyto-ink-soft);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+}
+.admin-table > :not(caption) > * > * {
+  padding: 0.9rem 1rem;
+}
+.admin-table tbody tr:hover {
+  background: var(--phyto-page);
+}
+.admin-message-card, .about-card, .about-info-item, .about-contact-form {
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+.admin-message-card:hover, .about-card:hover, .about-info-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--phyto-shadow) !important;
+}
+.about-hero {
+  background: var(--phyto-page);
+}
+.about-hero__title, .about-section__title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500 !important;
+  letter-spacing: -0.025em;
+}
+.about-badge {
+  border-radius: 6px;
+  background: var(--phyto-surface);
+}
+.about-hero__image, .about-history__image {
+  border: 1px solid var(--phyto-border);
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+.userlists-newform {
+  padding: 1rem;
+  border: 1px solid var(--phyto-border);
+  border-radius: 10px;
+  background: var(--phyto-surface);
+}
+.userlist-card {
+  border-color: var(--phyto-border);
+  border-radius: 10px;
+  box-shadow: none;
+}
+.lista-picker__modal {
+  border-radius: 12px;
+  box-shadow: 0 20px 55px rgba(10, 30, 19, 0.2);
+}
+/* Footer */
+.site-footer {
+  padding: 2.5rem 1.25rem 1.25rem;
+  border-top: 0;
+  background: #173f32;
+  box-shadow: none;
+}
+.site-footer__content {
+  max-width: 1180px;
+}
+.site-footer__grid {
+  gap: 2.5rem;
+}
+.site-footer__logo {
+  border-radius: 9px;
+}
+.site-footer__brand-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.site-footer__heading {
+  letter-spacing: 0.08em;
+}
+.site-footer__link {
+  font-weight: 550;
+}
+html[data-theme="dark"] body {
+  background: var(--phyto-cream);
+  color: var(--phyto-ink);
+}
+html[data-theme="dark"] .btn-primary, html[data-theme="dark"] .plant-list-card__details, html[data-theme="dark"] .plant-list-pagination__btn {
+  border-color: #426d53;
+  background: #426d53;
+  color: #fff;
+}
+html[data-theme="dark"] .btn-primary:hover, html[data-theme="dark"] .plant-list-card__details:hover, html[data-theme="dark"] .plant-list-pagination__btn:hover:not(:disabled) {
+  border-color: #58866a;
+  background: #58866a;
+  color: #fff;
+}
+html[data-theme="dark"] .home-search .btn {
+  background: #315d43;
+  color: #fff;
+}
+html[data-theme="dark"] .custom-navbar {
+  background: var(--phyto-surface);
+  border-color: var(--phyto-border);
+}
+html[data-theme="dark"] .custom-navbar__link {
+  color: var(--phyto-ink-soft);
+}
+html[data-theme="dark"] .custom-navbar__link:hover, html[data-theme="dark"] .custom-navbar__link.active {
+  background: var(--phyto-page);
+  color: var(--phyto-ink);
+}
+html[data-theme="dark"] .home-hero {
+  background: linear-gradient(112deg, #102a20 0%, #173a2b 62%, #204734 100%);
+}
+html[data-theme="dark"] .home-hero__eyebrow {
+  color: #b5cdbb;
+}
+html[data-theme="dark"] .home-section--stats {
+  background: #1a2920;
+  color: var(--phyto-ink);
+}
+html[data-theme="dark"] .stat-card {
+  background: var(--phyto-surface) !important;
+}
+html[data-theme="dark"] .stat-card__value {
+  color: #a8cfb5;
+}
+html[data-theme="dark"] .plant-list-card {
+  background: var(--phyto-surface) !important;
+}
+html[data-theme="dark"] .plant-list-add, html[data-theme="dark"] .plant-search__btn {
+  border-color: #426d53;
+  background: #426d53;
+  color: #fff !important;
+}
+html[data-theme="dark"] .plant-list-add:hover, html[data-theme="dark"] .plant-search__btn:hover {
+  border-color: #58866a;
+  background: #58866a;
+}
+html[data-theme="dark"] .plant-list-card__edit, html[data-theme="dark"] .plant-list-card__clone {
+  border-color: var(--phyto-border);
+  background: var(--phyto-page);
+  color: var(--phyto-ink);
+}
+html[data-theme="dark"] .plant-detail-redesign {
+  background: var(--phyto-cream);
+}
+html[data-theme="dark"] .plant-detail-hero, html[data-theme="dark"] .plant-detail-card, html[data-theme="dark"] .plant-detail-nav, html[data-theme="dark"] .auth-page__card {
+  border-color: var(--phyto-border);
+  background: var(--phyto-surface);
+}
+html[data-theme="dark"] .plant-detail-info, html[data-theme="dark"] .plant-detail-tags > span, html[data-theme="dark"] .plant-detail-taxonomy li {
+  border-color: var(--phyto-border);
+  background: var(--phyto-page);
+  color: var(--phyto-ink);
+}
+html[data-theme="dark"] .plant-detail-info strong, html[data-theme="dark"] .plant-detail-text-info p, html[data-theme="dark"] .plant-detail-identity h1, html[data-theme="dark"] .plant-detail-heading h2 {
+  color: var(--phyto-ink);
+}
+html[data-theme="dark"] .plant-detail-nav a {
+  color: var(--phyto-ink-soft);
+}
+html[data-theme="dark"] .plant-detail-nav a.is-active {
+  background: #4c8061;
+  color: #fff;
+}
+html[data-theme="dark"] .auth-page__form {
+  background: var(--phyto-cream);
+}
+html[data-theme="dark"] .admin-page, html[data-theme="dark"] .admin-table-wrap, html[data-theme="dark"] .userlists-newform, html[data-theme="dark"] .userlist-card {
+  border-color: var(--phyto-border);
+  background: var(--phyto-surface);
+}
+html[data-theme="dark"] .admin-table thead th {
+  background: var(--phyto-page);
+  color: var(--phyto-ink-soft);
+}
+html[data-theme="dark"] .plant-admin-form .nav-tabs .nav-link {
+  color: var(--phyto-ink-soft);
+}
+html[data-theme="dark"] .plant-admin-form .nav-tabs .nav-link.active {
+  border-color: #527760;
+  background: #294537;
+  color: #e2eee5;
+}
+html[data-theme="dark"] .wizard-group__head {
+  border-color: var(--phyto-border);
+  background: var(--phyto-surface);
+  color: var(--phyto-ink);
+}
+html[data-theme="dark"] .about-hero, html[data-theme="dark"] .home-section--stats {
+  background-color: var(--phyto-page);
+}
+@media (max-width: 767.98px) {
+  .custom-navbar__inner {
+    min-height: 66px;
+    padding-inline: 1rem;
+  }
+  .custom-navbar__menu {
+    display: none;
+  }
+  .custom-navbar__brand-text {
+    font-size: 1rem;
+  }
+  .home-hero {
+    padding-block: 3.5rem !important;
+  }
+  .home-hero__title {
+    font-size: clamp(2.55rem, 12vw, 3.8rem);
+  }
+  .home-section__title {
+    text-align: left !important;
+  }
+  .plant-detail-nav {
+    position: static;
+    overflow-x: auto;
+  }
+  .plant-detail-nav a {
+    flex: 0 0 auto;
+  }
+  .app-main > .auth-page > .auth-page__aside {
+    display: none !important;
+  }
+  .app-main > .auth-page > .auth-page__form {
+    min-height: 650px;
+  }
+  .auth-page__card {
+    max-width: 480px !important;
+  }
+  .admin-page {
+    width: min(100% - 1rem, 1180px);
+    padding: 1rem;
+  }
+}
+@media (max-width: 575.98px) {
+  .app-main {
+    padding-block: 1rem;
+  }
+  .home-hero {
+    padding: 3rem 1rem !important;
+  }
+  .home-hero__subtitle {
+    max-width: 32ch;
+  }
+  .home-search {
+    display: flex;
+    flex-wrap: nowrap;
+  }
+  .home-search__input {
+    min-width: 0;
+    padding-inline: 0.7rem;
+    font-size: 0.9rem;
+  }
+  .home-search .btn {
+    min-width: 82px;
+    padding-inline: 0.75rem;
+  }
+  .plant-list-page {
+    width: min(100% - 1rem, 1180px);
+  }
+  .plant-list-page > .d-flex {
+    align-items: flex-start !important;
+  }
+  .plant-list-page__title {
+    font-size: 1.65rem;
+  }
+  .plant-search__box {
+    flex-wrap: nowrap;
+  }
+  .plant-search__btn {
+    padding-inline: 0.8rem;
+  }
+  .plant-detail-container {
+    width: min(100% - 1rem, 1180px) !important;
+  }
+  .plant-detail-hero {
+    padding: 0.75rem;
+  }
+  .plant-detail-tags > span {
+    flex: 1 1 calc(50% - 0.5rem);
+  }
+  .plant-detail-info-grid--four, #cultivo .plant-detail-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .plant-detail-card {
+    padding: 0.9rem;
+  }
+  .app-main > .auth-page > .auth-page__form {
+    min-height: 0;
+    padding: 1rem !important;
+  }
+  .auth-page__card {
+    padding: 1.25rem;
+  }
+  .site-footer__grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+@media print {
+  .custom-navbar, .site-footer, .plant-detail-nav, .plant-detail-back, .lista-picker__overlay {
+    display: none !important;
+  }
+  .plant-detail-redesign, body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .plant-detail-hero, .plant-detail-card {
+    break-inside: avoid;
+    border-color: #bbb !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Priority workspace screens */
+.workspace-page__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin-bottom: 1.35rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--phyto-border);
+}
+
+.workspace-page__eyebrow {
+  margin: 0 0 0.3rem;
+  color: var(--phyto-green-700);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.105em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.workspace-page__title {
+  margin: 0;
+  color: var(--phyto-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 3vw, 2.15rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.workspace-page__description {
+  max-width: 62ch;
+  margin: 0.45rem 0 0;
+  color: var(--phyto-ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.workspace-page__metric {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 0.45rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--phyto-border);
+  border-radius: 8px;
+  background: var(--phyto-page);
+  color: var(--phyto-ink-soft);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.workspace-page__metric strong {
+  color: var(--phyto-ink);
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* My lists */
+.userlists-page {
+  width: min(100% - 2rem, 1180px);
+  max-width: 1180px;
+}
+
+.userlists-page .workspace-page__header { margin-bottom: 1.25rem; }
+
+.userlists-newform {
+  width: 100%;
+  max-width: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.userlists-newform__row { min-width: 0; gap: 0.6rem; }
+.userlists-newform__row .form-control { min-height: 44px; }
+.userlists-newform__row .btn { min-width: 118px; background: var(--phyto-green-900); color: #fff; }
+.userlists-newform__cor { justify-content: flex-end; }
+.userlist-card { display: flex; min-height: 156px; flex-direction: column; border-radius: 10px !important; background: var(--phyto-surface); transition: border-color 160ms ease, box-shadow 160ms ease; }
+.userlist-card:hover { border-color: #c6d4c9; box-shadow: var(--phyto-shadow); }
+.userlist-card__main { flex: 1; min-height: 92px; gap: 0.85rem; padding: 1rem 1.1rem; }
+.userlist-card__main:hover .userlist-card__name { color: var(--phyto-green-700); }
+.userlist-card__dot { width: 38px; height: 38px; border: 3px solid var(--phyto-surface); border-radius: 10px; box-shadow: 0 0 0 1px var(--phyto-border); }
+.userlist-card__meta { gap: 0.15rem; min-width: 0; }
+.userlist-card__name { color: var(--phyto-ink); font-size: 1rem; font-weight: 700; overflow-wrap: anywhere; }
+.userlist-card__count { color: var(--phyto-ink-soft); font-size: 0.82rem; }
+.userlist-card__actions { min-height: 55px; gap: 0.5rem; padding: 0.65rem 1rem; border-color: var(--phyto-border); }
+.userlist-card__actions .btn { min-height: 34px; padding: 0.3rem 0.65rem; font-size: 0.78rem; }
+.userlist-card__actions .btn-outline-success { border-color: var(--phyto-border); color: var(--phyto-green-700); }
+.userlist-card__actions .btn-outline-success:hover { border-color: var(--phyto-green-700); background: var(--phyto-green-100); color: var(--phyto-green-900); }
+.userlist-card__actions .btn-outline-danger { border-color: #ead6d4; color: #9d4b45; }
+.userlist-card__actions .btn-outline-danger:hover { background: #f8eceb; }
+.userlist-card__form { width: 100%; }
+.userlist-card__form .form-control { flex: 1 1 180px; max-width: none; }
+
+/* User administration table */
+.admin-page--users .admin-table-wrap { overflow-x: auto; }
+.admin-page--users .admin-table thead th { padding-block: 0.8rem; }
+.admin-page--users .admin-table tbody td { vertical-align: middle; }
+.user-role-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--phyto-border);
+  border-radius: 6px;
+  background: var(--phyto-page);
+  color: var(--phyto-ink-soft);
+  font-size: 0.74rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.user-role-badge.is-admin { border-color: #d2e2d6; background: #eaf2ec; color: #24563e; }
+.user-row-actions { display: flex; gap: 0.35rem; align-items: center; }
+.admin-table__actions { white-space: nowrap; }
+.admin-table .user-row-actions__edit,
+.admin-table .user-row-actions__delete { min-height: 32px; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.78rem; font-weight: 650; }
+.admin-table .user-row-actions__edit { color: var(--phyto-green-700); }
+.admin-table .user-row-actions__delete { color: #9d4b45; }
+.admin-table .user-row-actions__delete:hover { background: #f8eceb; color: #843b36; }
+
+/* Messages */
+.admin-page--messages:not(.admin-page--suggestions) { width: min(100% - 2rem, 1240px); }
+.admin-page--messages:not(.admin-page--suggestions) .admin-messages-list {
+  display: grid;
+  width: 100%;
+  max-width: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 1rem;
+  margin: 0 !important;
+}
+
+.admin-message-card { min-width: 0; border-radius: 10px; box-shadow: none; }
+.admin-message-card:hover { border-color: #c6d4c9; box-shadow: var(--phyto-shadow); transform: none; }
+.admin-message-card__header { padding: 1rem 1.1rem 0.85rem; }
+.admin-message-card__meta { flex-wrap: wrap; gap: 0.45rem 0.6rem; }
+.admin-message-card__icon { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 7px; background: var(--phyto-page); color: var(--phyto-green-700); }
+.admin-message-card__name { font-size: 0.94rem; font-weight: 700; }
+.admin-message-card__badge { padding: 0.18rem 0.5rem; border: 1px solid var(--phyto-border); border-radius: 5px; background: var(--phyto-page); color: var(--phyto-ink-soft); font-size: 0.68rem; font-weight: 650; letter-spacing: 0.035em; }
+.admin-message-card__header-bottom { justify-content: space-between; gap: 0.5rem 1rem; flex-wrap: wrap; margin-top: 0.55rem; font-size: 0.76rem; }
+.admin-message-card__email { overflow-wrap: anywhere; }
+.admin-message-card__date { font-variant-numeric: tabular-nums; }
+.admin-message-card__body { padding: 0 1.1rem 1rem; }
+.admin-message-card__text { min-height: 72px; margin: 0 0 0.5rem; padding: 0.8rem 0.9rem; border: 1px solid var(--phyto-border); border-radius: 7px; background: var(--phyto-page); font-size: 0.86rem; line-height: 1.65; overflow-wrap: anywhere; }
+.admin-message-card__text--truncated { -webkit-line-clamp: 4; }
+.admin-message-card__toggle { color: var(--phyto-green-700); font-weight: 650; }
+.admin-message-card__delete { width: 34px; height: 34px; display: inline-grid; place-items: center; padding: 0; border: 1px solid transparent; border-radius: 7px; }
+.admin-message-card__delete:hover { border-color: #ead6d4; background: #f8eceb; }
+
+/* Suggestion moderation */
+.admin-page--suggestions { width: min(100% - 2rem, 1240px); }
+.admin-page--suggestions .workspace-page__header { margin-bottom: 1.2rem; }
+.admin-page--suggestions .sugestao-tabs { gap: 0; margin: 0 0 1rem !important; padding: 0 0.3rem; border-bottom: 1px solid var(--phyto-border); }
+.admin-page--suggestions .sugestao-tabs__tab { min-height: 44px; padding: 0.65rem 0.9rem; border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--phyto-ink-soft); font-size: 0.84rem; font-weight: 650; white-space: nowrap; }
+.admin-page--suggestions .sugestao-tabs__tab:hover { background: transparent; color: var(--phyto-ink); }
+.admin-page--suggestions .sugestao-tabs__tab.is-active { border-bottom-color: var(--phyto-green-700); background: transparent; color: var(--phyto-green-900); }
+.admin-page--suggestions .sugestao-filtro { gap: 0.45rem; margin: 0 0 1.25rem !important; padding: 0.7rem 0.8rem; border: 1px solid var(--phyto-border); border-radius: 8px; background: var(--phyto-page); }
+.admin-page--suggestions .sugestao-filtro__label { margin-right: 0.2rem; color: var(--phyto-ink-soft); font-size: 0.76rem; font-weight: 650; }
+.admin-page--suggestions .sugestao-filtro__chip { min-height: 32px; padding: 0.3rem 0.65rem; border-radius: 6px; font-size: 0.76rem; font-weight: 600; }
+.admin-page--suggestions .sugestao-filtro__chip.is-active { border-color: var(--phyto-green-900); background: var(--phyto-green-900); color: #fff; }
+.sugestao-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0 !important; }
+.sugestao-cards .admin-message-card { border-radius: 10px; }
+.sugestao-cards .admin-message-card__header { display: flex; width: 100%; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 0.75rem; padding: 1rem 1.1rem 0.8rem; border-bottom: 1px solid var(--phyto-border); }
+.sugestao-cards .admin-message-card__meta { align-items: flex-start; }
+.sugestao-cards .admin-message-card__name { white-space: normal; overflow-wrap: anywhere; }
+.sugestao-cards .admin-message-card__body { gap: 0; padding: 0.9rem 1.1rem 1rem; }
+.sugestao-card__detalhes { gap: 0.45rem; margin-bottom: 0.9rem; padding: 0.75rem 0.85rem; border-left: 2px solid var(--phyto-green-700); border-radius: 0 6px 6px 0; background: var(--phyto-page); color: var(--phyto-ink); font-size: 0.82rem; line-height: 1.55; overflow-wrap: anywhere; }
+.sugestao-card__detalhes strong { color: var(--phyto-ink-soft); font-weight: 650; }
+.sugestao-card__info { margin: 0; padding-bottom: 0.75rem; border-bottom: 1px solid var(--phyto-border); font-size: 0.76rem; }
+.sugestao-badge { margin: 0; padding: 0.2rem 0.5rem; border: 1px solid var(--phyto-border); border-radius: 5px; font-size: 0.67rem; letter-spacing: 0.025em; white-space: nowrap; }
+.sugestao-badge--pendente { border-color: #eadfbe; background: #f7f1e2; color: #775d1e; }
+.sugestao-badge--aprovada { border-color: #cfe0d3; background: #eaf2ec; color: #285a41; }
+.sugestao-badge--concluida { border-color: #d8deea; background: #eef1f7; color: #4b5d7f; }
+.sugestao-badge--rejeitada { border-color: #ead6d4; background: #f8eceb; color: #91443e; }
+.sugestao-cards .sugestao-card__acoes { gap: 0.5rem; padding-top: 0.9rem; }
+.sugestao-cards .sugestao-card__acoes .btn { min-height: 36px; border-radius: 6px; font-size: 0.75rem; }
+
+html[data-theme="dark"] .workspace-page__header { border-color: var(--phyto-border); }
+html[data-theme="dark"] .workspace-page__metric { border-color: var(--phyto-border); background: var(--phyto-page); color: var(--phyto-ink-soft); }
+html[data-theme="dark"] .workspace-page__metric strong { color: var(--phyto-ink); }
+html[data-theme="dark"] .userlists-newform { border-color: var(--phyto-border); background: var(--phyto-surface); }
+html[data-theme="dark"] .userlist-card__actions .btn-outline-success { border-color: var(--phyto-border); color: #a8cfb5; }
+html[data-theme="dark"] .userlist-card__actions .btn-outline-success:hover { background: #263b30; color: #d6e8dc; }
+html[data-theme="dark"] .userlist-card__actions .btn-outline-danger { border-color: #5a3e3b; color: #e3a29b; }
+html[data-theme="dark"] .user-role-badge { border-color: var(--phyto-border); background: var(--phyto-page); color: var(--phyto-ink-soft); }
+html[data-theme="dark"] .user-role-badge.is-admin { border-color: #42634d; background: #263b30; color: #b7d7c0; }
+html[data-theme="dark"] .admin-table .user-row-actions__delete:hover { background: #432d2b; }
+html[data-theme="dark"] .admin-page--suggestions .sugestao-tabs__tab.is-active { border-bottom-color: #8cb99d; color: #d6e8dc; }
+html[data-theme="dark"] .admin-page--suggestions .sugestao-filtro { border-color: var(--phyto-border); background: var(--phyto-page); }
+html[data-theme="dark"] .admin-page--suggestions .sugestao-filtro__chip.is-active { border-color: #4c8061; background: #4c8061; color: #fff; }
+html[data-theme="dark"] .sugestao-cards .admin-message-card__header { border-color: var(--phyto-border); }
+html[data-theme="dark"] .sugestao-card__detalhes { background: var(--phyto-page); }
+html[data-theme="dark"] .sugestao-card__info { border-color: var(--phyto-border); }
+html[data-theme="dark"] .sugestao-badge--pendente { border-color: #625331; background: #39321f; color: #e5d39d; }
+html[data-theme="dark"] .sugestao-badge--aprovada { border-color: #42634d; background: #263b30; color: #b7d7c0; }
+html[data-theme="dark"] .sugestao-badge--concluida { border-color: #424d66; background: #252d3d; color: #bac8e5; }
+html[data-theme="dark"] .sugestao-badge--rejeitada { border-color: #5a3e3b; background: #3d2928; color: #e3a29b; }
+
+@media (max-width: 900px) {
+  .plant-detail-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .plant-detail-hero .plant-details-carousel-inner {
+    aspect-ratio: 16 / 10;
+  }
+  .plant-detail-info-grid--four,
+  #cultivo .plant-detail-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-page--messages:not(.admin-page--suggestions) .admin-messages-list,
+  .sugestao-cards { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 650px) {
+  .workspace-page__header { align-items: flex-start; flex-direction: column; gap: 0.75rem; }
+  .workspace-page__metric { align-self: flex-start; }
+  .userlists-page { width: min(100% - 1rem, 1180px); }
+  .userlists-newform { grid-template-columns: minmax(0, 1fr); padding: 0.8rem; }
+  .userlists-newform__cor { justify-content: flex-start; }
+  .userlists-newform__row { flex-direction: column; }
+  .userlists-newform__row .btn { width: 100%; }
+  .userlist-card { min-height: 0; }
+  .userlist-card__actions { align-items: stretch; }
+  .userlist-card__actions > .btn { flex: 1 1 auto; }
+  .userlist-card__form .form-control { flex-basis: 100%; }
+  .admin-page--users .admin-table { display: block; min-width: 0; }
+  .admin-page--users .admin-table thead { display: none; }
+  .admin-page--users .admin-table tbody { display: grid; gap: 0.75rem; padding: 0.75rem; }
+  .admin-page--users .admin-table tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--phyto-border); border-radius: 8px; background: var(--phyto-surface); }
+  .admin-page--users .admin-table tbody td { display: flex; min-width: 0; flex-direction: column; gap: 0.15rem; padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--phyto-border); overflow-wrap: anywhere; }
+  .admin-page--users .admin-table tbody td::before { color: var(--phyto-ink-soft); content: attr(data-label); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .admin-page--users .admin-table tbody td:last-child { grid-column: 1 / -1; flex-direction: row; align-items: center; border-bottom: 0; }
+  .admin-page--users .admin-table tbody td:last-child::before { margin-right: auto; }
+  .user-row-actions { margin-left: auto; }
+  .admin-page--messages:not(.admin-page--suggestions) { width: min(100% - 1rem, 1240px); padding: 1rem; }
+  .admin-page--suggestions { width: min(100% - 1rem, 1240px); padding: 1rem; }
+  .admin-page--suggestions .sugestao-tabs { overflow-x: auto; flex-wrap: nowrap; }
+  .admin-page--suggestions .sugestao-tabs__tab { flex: 0 0 auto; padding-inline: 0.65rem; font-size: 0.76rem; }
+}

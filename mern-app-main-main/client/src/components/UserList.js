@@ -7,14 +7,15 @@ import useAuthFetchData from "../useAuthFetchData"
 const Record = (props) => {
     return (
         <tr>
-            <td>{props.record.name}</td>
-            <td>{props.record.user}</td>
-            <td>{props.record.email || "N/A"}</td>
-            <td>{props.record.function}</td>
-            <td>
-                <Link className="btn btn-link" to={`/edit/${props.record._id}`}>Editar</Link> |
+            <td data-label="Nome">{props.record.name}</td>
+            <td data-label="Login">{props.record.user}</td>
+            <td data-label="E-mail">{props.record.email || "—"}</td>
+            <td data-label="Função"><span className={`user-role-badge ${props.record.function === "ADM" ? "is-admin" : ""}`}>{props.record.function === "ADM" ? "Administrador" : "Usuário"}</span></td>
+            <td data-label="Ações" className="admin-table__actions">
+                <Link className="btn btn-link user-row-actions__edit" to={`/edit/${props.record._id}`}>Editar</Link>
                 <button
-                    className="btn btn-link"
+                    className="btn btn-link user-row-actions__delete"
+                    type="button"
                     onClick={() => {
                         props.deleteRecord(props.record._id)
                     }}
@@ -61,7 +62,19 @@ export default function UserList() {
 
     return (
         <div className="admin-page admin-page--users">
-            <h3 className="admin-page__title ps-2">Lista de Usuários</h3>
+            <header className="workspace-page__header">
+                <div>
+                    <p className="workspace-page__eyebrow">Administração · Acessos</p>
+                    <h1 className="workspace-page__title">Lista de usuários</h1>
+                    <p className="workspace-page__description">Consulte e administre as contas cadastradas no sistema.</p>
+                </div>
+                {!loading && !error && (
+                    <span className="workspace-page__metric">
+                        <strong>{users.length}</strong>
+                        {users.length === 1 ? "usuário" : "usuários"}
+                    </span>
+                )}
+            </header>
             {loading ? (
                 <div className="text-center py-5">
                     <div className="spinner-border spinner-border-sm me-2" role="status" />
@@ -78,7 +91,7 @@ export default function UserList() {
                             <th>Login</th>
                             <th>E-mail</th>
                             <th>Função</th>
-                            <th>Ação</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>{recordList()}</tbody>

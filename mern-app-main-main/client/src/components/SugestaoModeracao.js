@@ -163,8 +163,20 @@ export default function SugestaoModeracao() {
     }
 
     return (
-        <div className="admin-page admin-page--messages">
-            <h3 className="admin-page__title ps-2">Moderar Sugestões</h3>
+        <div className="admin-page admin-page--messages admin-page--suggestions">
+            <header className="workspace-page__header">
+                <div>
+                    <p className="workspace-page__eyebrow">Administração · Colaboração</p>
+                    <h1 className="workspace-page__title">Moderação de sugestões</h1>
+                    <p className="workspace-page__description">Revise contribuições e acompanhe as sugestões em cada etapa.</p>
+                </div>
+                {!loading && !error && (
+                    <span className="workspace-page__metric">
+                        <strong>{todas.length}</strong>
+                        {todas.length === 1 ? "sugestão" : "sugestões"}
+                    </span>
+                )}
+            </header>
 
             <div className="sugestao-tabs mb-3 mx-2">
                 <button type="button" className={`sugestao-tabs__tab ${aba === "pendente" ? "is-active" : ""}`} onClick={() => setAba("pendente")}>

@@ -95,7 +95,19 @@ export default function MessageList() {
 
     return (
         <div className="admin-page admin-page--messages">
-            <h3 className="admin-page__title ps-2">Mensagens Recebidas</h3>
+            <header className="workspace-page__header">
+                <div>
+                    <p className="workspace-page__eyebrow">Administração · Comunicação</p>
+                    <h1 className="workspace-page__title">Mensagens recebidas</h1>
+                    <p className="workspace-page__description">Mensagens enviadas pelo formulário de contato do sistema.</p>
+                </div>
+                {!loading && !error && (
+                    <span className="workspace-page__metric">
+                        <strong>{messages.length}</strong>
+                        {messages.length === 1 ? "mensagem" : "mensagens"}
+                    </span>
+                )}
+            </header>
             {loading ? (
                 <div className="text-center py-5">
                     <div className="spinner-border spinner-border-sm me-2" role="status" />

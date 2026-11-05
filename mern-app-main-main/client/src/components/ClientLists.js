@@ -175,12 +175,21 @@ export default function ClientLists() {
 
     return (
         <div className="userlists-page container mt-4">
-            <h3 className="page-title-ambar fw-semibold mb-1">
-                Minhas Listas
-            </h3>
-            <p className="plant-list-page__count mb-4">
-                Organize as plantas em coleções, como "Jardim", "TCC" ou "Para estudar".
-            </p>
+            <header className="workspace-page__header">
+                <div>
+                    <p className="workspace-page__eyebrow">Área pessoal · Organização</p>
+                    <h1 className="workspace-page__title">Minhas listas</h1>
+                    <p className="workspace-page__description">
+                        Organize as plantas em coleções, como “Jardim”, “TCC” ou “Para estudar”.
+                    </p>
+                </div>
+                {!loading && (
+                    <span className="workspace-page__metric">
+                        <strong>{lists.length}</strong>
+                        {lists.length === 1 ? "lista" : "listas"}
+                    </span>
+                )}
+            </header>
 
             <form className="userlists-newform mb-4" onSubmit={criar}>
                 <div className="userlists-newform__row">

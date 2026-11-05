@@ -78,10 +78,10 @@ export default function Register() {
     };
 
     return (
-        <div className="min-vh-100 d-flex">
+        <div className="auth-page auth-page--register min-vh-100 d-flex">
 
             {/* Painel esquerdo — hero */}
-            <div className="d-none d-md-flex flex-column justify-content-between col-md-5 p-5">
+            <div className="auth-page__aside d-none d-md-flex flex-column justify-content-between col-md-5 p-5">
                 {/* Logo */}
                 <div className="d-flex align-items-center gap-2">
                     <i className="fas fa-leaf"></i>
@@ -101,8 +101,8 @@ export default function Register() {
             </div>
 
             {/* Painel direito — formulário */}
-            <div className="col-12 col-md-7 d-flex align-items-center justify-content-center p-4">
-                <div className="w-100" style={{ maxWidth: 400 }}>
+            <div className="auth-page__form col-12 col-md-7 d-flex align-items-center justify-content-center p-4">
+                <div className="auth-page__card w-100" style={{ maxWidth: 400 }}>
 
                     {/* Logo mobile */}
                     <div className="d-flex d-md-none align-items-center gap-2 mb-4">

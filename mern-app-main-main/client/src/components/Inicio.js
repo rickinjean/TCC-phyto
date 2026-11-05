@@ -201,6 +201,7 @@ export default function Home({ token = null }) {
             {/* ── Hero + Busca ── */}
             <section className="home-hero text-center px-3 py-5">
                 <div className="container">
+                    <p className="home-hero__eyebrow">IFC Campus Sombrio · Pesquisa botânica</p>
                     <h1 className="home-hero__title fw-bold">Phytografia</h1>
                     <h5 className="home-hero__subtitle mb-4">Sistema de Pesquisa Botânica</h5>
 

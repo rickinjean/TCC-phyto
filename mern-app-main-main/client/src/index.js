@@ -8,6 +8,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import "leaflet/dist/leaflet.css";
 import "bootstrap/dist/js/bootstrap.bundle";
 import "./index.css";
+import "./visual-system.css";
 
 const storedTheme = window.localStorage.getItem("phyto-theme");
 const initialTheme = storedTheme === "dark" || storedTheme === "light"
