@@ -96,25 +96,25 @@ const QUICK_ACCESS_CARDS = [
         title: "Explorar Catálogo",
         text: "Navegue pela coleção de plantas com filtros por cor, luz, solo e mais",
         href: "/plantlist",
-        icon: "🔍",
+
     },
     {
         title: "Minhas Listas",
         text: "Organize plantas em coleções personalizadas com cores, como 'Jardim' ou 'TCC'",
         href: "/minhas-listas",
-        icon: "📚",
+
     },
     {
         title: "Sugerir / Reportar",
         text: "Proponha uma nova planta ou avise sobre um erro no catálogo",
         href: "/sugerir",
-        icon: "💡",
+
     },
     {
         title: "Sobre o Projeto",
         text: "Conheça a equipe, a missão e os recursos do Phytografia",
         href: "/Sobre",
-        icon: "📖",
+
     },
 ]
 
@@ -255,10 +255,9 @@ export default function Home({ token = null }) {
                     <div className="row g-4">
                         {(token ? QUICK_ACCESS_CARDS : QUICK_ACCESS_CARDS.filter(c => !["/minhas-listas", "/sugerir"].includes(c.href))).map((card, index) => {
                             return (
-                                <div key={index} className="col-12 col-md-4">
+                                <div key={index} className="col-12 col-md-6">
                                     <div className="quick-card card h-100 shadow-sm">
                                         <div className="card-body d-flex flex-column">
-                                            <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>{card.icon}</div>
                                             <h5 className="quick-card__title card-title">{card.title}</h5>
                                             <p className="quick-card__text card-text mb-4">{card.text}</p>
                                             <Link to={card.href} className="quick-card__button btn btn-primary mt-auto">
