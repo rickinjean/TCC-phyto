@@ -1,12 +1,10 @@
 const express = require("express")
 const userRoutes = express.Router()
 const dbo = require("../db/conn")
-const crypto = require("crypto")
 const ObjectId = require("mongodb").ObjectId
 const { validationResult } = require("express-validator")
 const { authenticateToken, authorizeRoles, signToken } = require("../middleware/auth")
 const { createSession } = require("./sessions")
-const { enviarEmailConfirmacao, smtpConfigurado } = require("../mailer")
 const bcrypt = require("bcrypt")
 const { escapeRegex } = require("../utils")
 const { registerValidation, loginValidation } = require("../middleware/validate")
@@ -65,10 +63,6 @@ userRoutes.route('/user/login').post(loginValidation, checkValidation, async fun
             return res.status(400).json({ mensagem: 'Usuário ou senha incorretos' });
         }
 
-        if (usuario.emailVerified === false) {
-            return res.status(403).json({ mensagem: 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada (e o spam).' });
-        }
-
         const token = signToken({ userId: usuario._id, tipo: usuario.function, name: usuario.name || usuario.user, avatar: usuario.avatar || null })
         const refreshToken = await createSession(db_connect, usuario)
 
@@ -82,165 +76,23 @@ userRoutes.route('/user/login').post(loginValidation, checkValidation, async fun
 
 userRoutes.route('/user/register').post(registerValidation, checkValidation, async function (req, res) {
     const db_connect = dbo.getDb()
-
-    const user = (req.body.user || req.body.nome || "").toString().trim()
-    const email = (req.body.email || "").toString().trim().toLowerCase()
+    const user = (req.body.user || req.body.nome || '').toString().trim()
     const senha = req.body.senha
-    const tipoUsuario = "User"
-
-    if (!smtpConfigurado) {
-        return res.status(503).json({
-            mensagem: 'O cadastro exige confirmação por e-mail, mas o envio ainda não está configurado. Configure SMTP_HOST, SMTP_USER e SMTP_PASS no servidor.',
-        })
-    }
-
     try {
-        if (!user || !email || !senha) {
-            return res.status(400).json({ mensagem: 'Nome de usuário, email e senha são obrigatórios' });
-        }
-
-        if (!/^[a-zA-Z0-9._]{3,20}$/.test(user)) {
-            return res.status(400).json({ mensagem: 'Nome de usuário deve ter de 3 a 20 caracteres (letras, números, ponto ou underline)' });
-        }
-
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return res.status(400).json({ mensagem: 'Email inválido' });
-        }
-
-        const erroSenha = validarSenha(senha);
-        if (erroSenha) {
-            return res.status(400).json({ mensagem: erroSenha });
-        }
-
+        if (!user || !senha) return res.status(400).json({ mensagem: 'Nome de usuario e senha sao obrigatorios' })
+        const erroSenha = validarSenha(senha)
+        if (erroSenha) return res.status(400).json({ mensagem: erroSenha })
         const expUser = escapeRegex(user)
-        const userExistente = await db_connect.collection("users").findOne({ user: { $regex: new RegExp(`^${expUser}$`, "i") } })
-        if (userExistente) {
-            const podeReenviar = userExistente.emailVerified === false
-                && String(userExistente.email || "").toLowerCase() === email
-                && typeof userExistente.senha === "string"
-            return res.status(400).json({ mensagem: 'Este nome de usuário já está em uso', podeReenviar });
-        }
-
-        const expEmail = escapeRegex(email)
-        const emailExistente = await db_connect.collection("users").findOne({ email: { $regex: new RegExp(`^${expEmail}$`, "i") } })
-        if (emailExistente) {
-            const podeReenviar = emailExistente.emailVerified === false && typeof emailExistente.senha === "string"
-            return res.status(409).json({
-                mensagem: podeReenviar
-                    ? 'Este e-mail já tem um cadastro pendente. Reenvie a confirmação para ativar a conta.'
-                    : 'Este email já está cadastrado',
-                podeReenviar,
-            });
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const senhaHash = await bcrypt.hash(senha, salt);
-
-        const novoUsuario = {
-            name: user,
-            user,
-            email,
-            senha: senhaHash,
-            function: tipoUsuario,
-            emailVerified: false,
-        }
-
-        novoUsuario.verificationToken = crypto.randomBytes(32).toString("hex")
-        novoUsuario.verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
-
-        const result = await db_connect.collection("users").insertOne(novoUsuario);
-
-        const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
-        const link = `${FRONTEND_URL}/verify?token=${novoUsuario.verificationToken}`
-        try {
-            await enviarEmailConfirmacao(user, email, link)
-        } catch (erroEmail) {
-            logger.error({ err: erroEmail, userId: result.insertedId }, "Erro ao enviar email de confirmação")
-            return res.status(502).json({
-                mensagem: 'Sua conta foi criada, mas não conseguimos enviar o e-mail de confirmação. Tente reenviar o link.',
-                podeReenviar: true,
-            })
-        }
-
-        return res.status(201).json({
-            mensagem: 'Cadastro realizado! Confirme seu e-mail no link que enviamos para ativar a conta.',
-            precisaConfirmarEmail: true,
-        });
+        const userExistente = await db_connect.collection('users').findOne({ user: { $regex: new RegExp('^' + expUser + '$', 'i') } })
+        if (userExistente) return res.status(409).json({ mensagem: 'Este nome de usuario ja esta em uso' })
+        const senhaHash = await bcrypt.hash(senha, 10)
+        await db_connect.collection('users').insertOne({ name: user, user, senha: senhaHash, function: 'User' })
+        return res.status(201).json({ mensagem: 'Conta criada com sucesso. Voce ja pode entrar.' })
     } catch (error) {
-        logger.error(error, "Erro ao cadastrar usuário")
-        return res.status(500).json({ mensagem: 'Erro ao cadastrar usuário' });
+        logger.error(error, 'Erro ao cadastrar usuario')
+        return res.status(500).json({ mensagem: 'Erro ao cadastrar usuario' })
     }
-}
-);
-
-userRoutes.route('/user/resend-verification').post(async function (req, res) {
-    if (!smtpConfigurado) {
-        return res.status(503).json({ mensagem: 'O envio de e-mail ainda não está configurado no servidor.' })
-    }
-
-    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : ""
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return res.status(400).json({ mensagem: 'Informe um e-mail válido.' })
-    }
-
-    try {
-        const db_connect = dbo.getDb()
-        const usuario = await db_connect.collection("users").findOne({ email, emailVerified: false, senha: { $type: "string" } })
-
-        // Resposta genérica para não revelar se um e-mail está cadastrado.
-        if (!usuario) {
-            return res.json({ mensagem: 'Se houver uma conta pendente para esse endereço, enviaremos um novo link.' })
-        }
-
-        const token = crypto.randomBytes(32).toString("hex")
-        await db_connect.collection("users").updateOne(
-            { _id: usuario._id, emailVerified: false },
-            { $set: { verificationToken: token, verificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000) } }
-        )
-
-        const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
-        const link = `${FRONTEND_URL}/verify?token=${token}`
-        await enviarEmailConfirmacao(usuario.name || usuario.user, email, link)
-        return res.json({ mensagem: 'Se houver uma conta pendente para esse endereço, enviaremos um novo link.' })
-    } catch (error) {
-        logger.error(error, "Erro ao reenviar email de confirmação")
-        return res.status(502).json({ mensagem: 'Não foi possível enviar o e-mail agora. Tente novamente mais tarde.' })
-    }
-})
-
-userRoutes.route('/user/verify').get(async function (req, res) {
-    const db_connect = dbo.getDb()
-    const { token } = req.query
-
-    if (!token) {
-        return res.status(400).json({ mensagem: 'Token de verificação ausente' })
-    }
-
-    try {
-        const usuario = await db_connect.collection("users").findOne({ verificationToken: token })
-
-        if (!usuario) {
-            return res.status(400).json({ mensagem: 'Link de verificação inválido ou já utilizado' })
-        }
-
-        const expirado = usuario.verificationExpires && new Date(usuario.verificationExpires) < new Date()
-        if (expirado) {
-            return res.status(400).json({ mensagem: 'Link de verificação expirado. Faça o cadastro novamente.' })
-        }
-
-        await db_connect.collection("users").updateOne(
-            { _id: usuario._id },
-            { $set: { emailVerified: true }, $unset: { verificationToken: "", verificationExpires: "" } }
-        )
-
-        return res.json({ mensagem: 'E-mail confirmado com sucesso! Você já pode entrar.' })
-    } catch (erro) {
-        logger.error(erro, "Erro na verificação de e-mail")
-        return res.status(500).json({ mensagem: 'Erro no servidor' })
-    }
-}
-);
-
+});
 
 // This section will help you get a list of all the users.
 userRoutes.route("/user").get(authenticateToken, authorizeRoles("ADM"), async function (req, res) {
@@ -248,7 +100,7 @@ userRoutes.route("/user").get(authenticateToken, authorizeRoles("ADM"), async fu
 
     try {
         const result = await db_connect.collection("users")
-            .find({}, { projection: { senha: 0, verificationToken: 0, verificationExpires: 0 } })
+            .find({}, { projection: { senha: 0 } })
             .toArray()
         res.status(200).json(result)
     } catch (error) {
@@ -264,7 +116,7 @@ userRoutes.route("/user/:id").get(authenticateToken, authorizeRoles("ADM"), asyn
     }
     const myquery = { _id: new ObjectId(req.params.id) }
     try {
-        const result = await db_connect.collection("users").findOne(myquery, { projection: { senha: 0, verificationToken: 0, verificationExpires: 0 } })
+        const result = await db_connect.collection("users").findOne(myquery, { projection: { senha: 0,  } })
         if (!result) {
             return res.status(404).json({ message: "Usuário não encontrado" })
         }

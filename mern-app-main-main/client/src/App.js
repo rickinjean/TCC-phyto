@@ -10,7 +10,6 @@ import Editplant from './components/EditPlant';
 import Createplant from "./components/CreatePlant"
 import Login from "./components/Login"
 import Register from "./components/Register"
-import Verify from "./components/Verify"
 import PlantDetails from './components/PlantDetails';
 import Inicio from './components/Inicio'
 import Sobre from './components/Sobre'
@@ -245,7 +244,6 @@ const App = () => {
                     <Routes>
                         <Route path="/login" element={token ? <Navigate to="/inicio" replace /> : <Login onLogin={handleLogin} />} />
                         <Route path="/register" element={token ? <Navigate to="/inicio" replace /> : <Register />} />
-                        <Route path="/verify" element={<Verify />} />
                         <Route path="/" element={token ? (role === "ADM" ? <UserList /> : <Navigate to="/inicio" replace />) : <Inicio token={token} />} />
                         <Route path="/plantlist" element={<PlantList role={role} canFavorite={Boolean(token)} />} />
                         <Route path="/userlist" element={token && role === "ADM" ? <UserList /> : <Navigate to={token ? "/" : "/login"} replace />} />

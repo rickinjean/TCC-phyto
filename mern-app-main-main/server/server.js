@@ -193,7 +193,6 @@ const refreshLimiter = rateLimit({
 
 app.use("/user/login", loginLimiter)
 app.use("/user/register", loginLimiter)
-app.use("/user/resend-verification", loginLimiter)
 app.use("/auth/refresh", refreshLimiter)
 
 process.on("unhandledRejection", (reason) => {

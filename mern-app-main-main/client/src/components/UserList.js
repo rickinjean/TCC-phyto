@@ -9,7 +9,7 @@ const Record = (props) => {
         <tr>
             <td>{props.record.name}</td>
             <td>{props.record.user}</td>
-            <td>{props.record.email}</td>
+            <td>{props.record.email || "N/A"}</td>
             <td>{props.record.function}</td>
             <td>
                 <Link className="btn btn-link" to={`/edit/${props.record._id}`}>Editar</Link> |

@@ -27,7 +27,6 @@ function calcularForca(valor) {
 export default function Register() {
     usePageTitle("Cadastro")
     const [usuario, setUsuario] = useState('');
-    const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [confirmarSenha, setConfirmarSenha] = useState('');
     const [forca, setForca] = useState('');
@@ -36,8 +35,6 @@ export default function Register() {
     const [mensagem, setMensagem] = useState('');
     const [sucesso, setSucesso] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [podeReenviar, setPodeReenviar] = useState(false);
-    const [reenviando, setReenviando] = useState(false);
     const navigate = useNavigate();
 
     const handleRegister = async (e) => {
@@ -61,45 +58,22 @@ export default function Register() {
             const response = await fetch(`${API_URL}/user/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user: usuario, email, senha }),
+                body: JSON.stringify({ user: usuario, senha }),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                setPodeReenviar(Boolean(data.podeReenviar));
                 return setMensagem(data.mensagem || 'Erro ao registrar');
             }
 
-            setPodeReenviar(false);
             setSucesso(true);
-            setMensagem('Cadastro realizado! Enviamos um link de confirmação para seu e-mail. Confira também a caixa de spam.');
-            setTimeout(() => navigate('/login'), 3000);
+            setMensagem('Conta criada com sucesso! Voc\u00ea j\u00e1 pode entrar.');
+            setTimeout(() => navigate('/login'), 2000);
         } catch (error) {
             setMensagem('Erro ao conectar com o servidor');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const reenviarConfirmacao = async () => {
-        setReenviando(true);
-        setMensagem('');
-        try {
-            const response = await fetch(`${API_URL}/user/resend-verification`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-            });
-            const data = await response.json();
-            setSucesso(response.ok);
-            setMensagem(data.mensagem || (response.ok ? 'Verifique sua caixa de entrada.' : 'Não foi possível reenviar o link.'));
-            if (response.ok) setPodeReenviar(false);
-        } catch (error) {
-            setSucesso(false);
-            setMensagem('Erro ao conectar com o servidor. Tente novamente.');
-        } finally {
-            setReenviando(false);
         }
     };
 
@@ -144,11 +118,6 @@ export default function Register() {
                             {mensagem}
                         </div>
                     )}
-                    {podeReenviar && (
-                        <button type="button" className="btn btn-outline-primary btn-sm mb-3" onClick={reenviarConfirmacao} disabled={reenviando || !email}>
-                            {reenviando ? 'Reenviando...' : 'Reenviar e-mail de confirmação'}
-                        </button>
-                    )}
 
                     <form onSubmit={handleRegister}>
 
@@ -166,25 +135,6 @@ export default function Register() {
                                     placeholder="Seu nome de usuário"
                                     value={usuario}
                                     onChange={(e) => setUsuario(e.target.value)}
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        {/* Campo email */}
-                        <div className="mb-3">
-                            <label htmlFor="email" className="form-label small fw-medium">E-mail</label>
-                            <div className="input-group">
-                                <span className="input-group-text">
-                                    <i className="fas fa-envelope"></i>
-                                </span>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    className="form-control"
-                                    placeholder="seu@email.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
                                     required
                                 />
                             </div>

@@ -1,7 +1,6 @@
 const { body } = require("express-validator")
 
 const USERNAME_RE = /^[a-zA-Z0-9._]{3,20}$/
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const registerValidation = [
     body("user")
@@ -9,12 +8,6 @@ const registerValidation = [
         .notEmpty().withMessage("Nome de usuário é obrigatório")
         .bail()
         .matches(USERNAME_RE).withMessage("Nome de usuário deve ter de 3 a 20 caracteres (letras, números, ponto ou underline)"),
-    body("email")
-        .trim()
-        .normalizeEmail({ gmail_remove_dots: false })
-        .notEmpty().withMessage("Email é obrigatório")
-        .bail()
-        .matches(EMAIL_RE).withMessage("Email inválido"),
     body("senha")
         .isString().withMessage("Senha inválida")
         .bail()
