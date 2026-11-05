@@ -196,29 +196,55 @@ export default function Home({ token = null }) {
         return plantasDoDia()
     }, [activeTab, plantasDoDia, emDestaque, recemAdicionadas])
 
+    const heroPlant = plantasDoDia()[0] || plants[0]
+    const heroPlantPath = heroPlant ? getPlantImagePath(heroPlant) : ""
+
     return (
         <div className="home-page">
             {/* ── Hero + Busca ── */}
-            <section className="home-hero text-center px-3 py-5">
-                <div className="container">
-                    <p className="home-hero__eyebrow">IFC Campus Sombrio · Pesquisa botânica</p>
-                    <h1 className="home-hero__title fw-bold">Phytografia</h1>
-                    <h5 className="home-hero__subtitle mb-4">Sistema de Pesquisa Botânica</h5>
+            <section className="home-hero px-3 py-5">
+                <div className="container home-hero__layout">
+                    <div className="home-hero__content">
+                        <p className="home-hero__eyebrow">IFC Campus Sombrio · Pesquisa botânica</p>
+                        <h1 className="home-hero__title fw-bold">Phytografia</h1>
+                        <h5 className="home-hero__subtitle mb-4">Sistema de Pesquisa Botânica</h5>
 
-                    <form onSubmit={handleSearch} className="d-flex justify-content-center">
-                        <div className="home-search input-group">
-                            <input
-                                type="text"
-                                className="home-search__input form-control"
-                                placeholder="Pesquise por nome comum ou científico..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                        <form onSubmit={handleSearch} className="d-flex justify-content-center">
+                            <div className="home-search input-group">
+                                <input
+                                    type="text"
+                                    className="home-search__input form-control"
+                                    placeholder="Pesquise por nome comum ou científico..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <button type="submit" className="btn btn-primary">
+                                    Buscar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <aside className="home-hero__visual" aria-label={heroPlant ? `Planta em destaque: ${heroPlant.name}` : "Imagem botânica em destaque"}>
+                        <div className="home-hero__image-frame">
+                            <PlantImage
+                                src={heroPlant && heroPlantPath ? getPlantImageUrl(heroPlant) : PLACEHOLDER_CARD}
+                                alt={heroPlant?.name || "Ilustração botânica"}
+                                className="home-hero__image"
+                                fallback={PLACEHOLDER_CARD}
+                                {...(heroPlant ? imgVariantProps(heroPlant.imagesMeta, heroPlantPath, API_URL) : {})}
+                                sizesAttr="(max-width: 800px) 100vw, 42vw"
+                                loading="eager"
+                                fetchPriority="high"
                             />
-                            <button type="submit" className="btn btn-primary">
-                                Buscar
-                            </button>
                         </div>
-                    </form>
+                        {heroPlant && (
+                            <div className="home-hero__caption">
+                                <span>Planta em destaque</span>
+                                <strong>{heroPlant.name}</strong>
+                                {heroPlant.scientificName && <em>{heroPlant.scientificName}</em>}
+                            </div>
+                        )}
+                    </aside>
                 </div>
             </section>
 
