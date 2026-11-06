@@ -4,10 +4,10 @@ import { NavLink } from "react-router-dom";
 import Logo from "./logo.jpeg";
 
 const ADMIN_LINKS = [
-    { to: "/userlist", icon: "📋", titulo: "Lista de Usuários", curto: "L. Usuários" },
-    { to: "/messages", icon: "✉️", titulo: "Mensagens", curto: "Mensagens" },
-    { to: "/moderar-sugestoes", icon: "🗂", titulo: "Moderar Sugestões", curto: "Moderar Sugestões" },
-    { to: "/createplant", icon: "🌱", titulo: "Cadastrar Planta", curto: "C. Plantas" },
+    { to: "/userlist", icon: "fa-users", titulo: "Lista de Usuários", curto: "L. Usuários" },
+    { to: "/messages", icon: "fa-envelope", titulo: "Mensagens", curto: "Mensagens" },
+    { to: "/moderar-sugestoes", icon: "fa-clipboard-check", titulo: "Moderar Sugestões", curto: "Moderar Sugestões" },
+    { to: "/createplant", icon: "fa-leaf", titulo: "Cadastrar Planta", curto: "C. Plantas" },
 ];
 
 const getInitialTheme = () => {
@@ -110,7 +110,7 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                             </svg>
                         </button>
 
-                        <div className={`custom-navbar__user-panel ${userMenuOpen ? "is-open" : ""}`}>
+                        <div className={`custom-navbar__user-panel ${role === "ADM" ? "custom-navbar__user-panel--admin" : ""} ${userMenuOpen ? "is-open" : ""}`}>
                             <div className="custom-navbar__user-panel-header">
                                 {userAvatar ? (
                                     <img className="custom-navbar__user-panel-avatar" src={userAvatar} alt="" decoding="async" referrerPolicy="no-referrer" />
@@ -128,11 +128,12 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                             </div>
 
                             {role === "ADM" && (
-                                <div className="custom-navbar__user-panel-section">
+                                <div className="custom-navbar__user-panel-section custom-navbar__user-panel-section--admin">
                                     <span className="custom-navbar__user-panel-caption">Administração</span>
                                     {ADMIN_LINKS.map(link => (
                                         <NavLink key={link.to} className="custom-navbar__user-panel-link" to={link.to} onClick={closeUserMenu}>
-                                            {link.icon} {link.titulo}
+                                            <i className={`fas ${link.icon} custom-navbar__panel-icon`} aria-hidden="true"></i>
+                                            <span>{link.titulo}</span>
                                         </NavLink>
                                     ))}
                                 </div>
@@ -140,9 +141,9 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
 
                             {role !== "ADM" && (
                                 <div className="custom-navbar__user-panel-section">
-                                    <span className="custom-navbar__user-panel-caption">Minha Conta</span>
+                                    <span className="custom-navbar__user-panel-caption">Ações da conta</span>
                                     <NavLink className="custom-navbar__user-panel-link" to="/sugerir" onClick={closeUserMenu}>
-                                        <i className="fas fa-lightbulb custom-navbar__panel-icon" aria-hidden="true"></i>
+                                        <i className="fas fa-seedling custom-navbar__panel-icon" aria-hidden="true"></i>
                                         <span>Sugerir Planta / Reportar Erro</span>
                                     </NavLink>
                                 </div>
@@ -156,7 +157,7 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     onClick={toggleTheme}
                                 >
                                     <i className={`fas ${theme === "dark" ? "fa-sun" : "fa-moon"} custom-navbar__panel-icon`} aria-hidden="true"></i>
-                                    Tema: {theme === "dark" ? "Claro" : "Escuro"}
+                                    <span>Ativar tema {theme === "dark" ? "claro" : "escuro"}</span>
                                 </button>
                             </div>
 
@@ -168,7 +169,8 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     onLogout();
                                 }}
                             >
-                                Sair
+                                <i className="fas fa-sign-out-alt custom-navbar__panel-icon" aria-hidden="true"></i>
+                                <span>Sair da conta</span>
                             </button>
                         </div>
                     </div>

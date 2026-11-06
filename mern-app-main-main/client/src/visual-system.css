@@ -187,6 +187,11 @@ body {
   border-radius: 10px;
   box-shadow: 0 16px 38px rgba(22, 42, 30, 0.16);
 }
+.custom-navbar__user-panel--admin {
+  width: min(352px, calc(100vw - 2rem));
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
+}
 .custom-navbar__user-panel-header {
   gap: 0.75rem;
   margin-bottom: 0.15rem;
@@ -209,6 +214,29 @@ body {
   gap: 0.25rem;
   padding: 0.4rem 0.1rem;
   border-bottom: 1px solid var(--phyto-border);
+}
+.custom-navbar__user-panel-section--admin {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+.custom-navbar__user-panel-section--admin .custom-navbar__user-panel-caption {
+  grid-column: 1 / -1;
+}
+.custom-navbar__user-panel-section--admin .custom-navbar__user-panel-link {
+  min-height: 72px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.65rem;
+  border: 1px solid var(--phyto-border);
+  background: var(--phyto-page);
+  line-height: 1.35;
+}
+.custom-navbar__user-panel-section--admin .custom-navbar__user-panel-link:hover {
+  border-color: #c6d4c9;
+  background: var(--phyto-green-100);
 }
 .custom-navbar__user-panel-caption {
   padding: 0.1rem 0.55rem 0.2rem;
@@ -263,6 +291,14 @@ html[data-theme="dark"] .custom-navbar__user-panel-header {
 }
 html[data-theme="dark"] .custom-navbar__user-panel-section {
   border-color: var(--phyto-border);
+}
+html[data-theme="dark"] .custom-navbar__user-panel-section--admin .custom-navbar__user-panel-link {
+  border-color: var(--phyto-border);
+  background: var(--phyto-page);
+}
+html[data-theme="dark"] .custom-navbar__user-panel-section--admin .custom-navbar__user-panel-link:hover {
+  border-color: #4c8061;
+  background: #263b30;
 }
 html[data-theme="dark"] .custom-navbar__user-panel-logout:hover {
   border-color: #5a3e3b;
