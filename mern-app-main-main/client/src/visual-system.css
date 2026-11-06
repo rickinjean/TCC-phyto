@@ -180,8 +180,93 @@ body {
   transform: none;
 }
 .custom-navbar__user-panel {
+  width: min(320px, calc(100vw - 2rem));
+  min-width: 0;
+  gap: 0.15rem;
+  padding: 0.65rem;
   border-radius: 10px;
-  box-shadow: 0 12px 32px rgba(22, 42, 30, 0.14);
+  box-shadow: 0 16px 38px rgba(22, 42, 30, 0.16);
+}
+.custom-navbar__user-panel-header {
+  gap: 0.75rem;
+  margin-bottom: 0.15rem;
+  padding: 0.65rem;
+  border: 1px solid var(--phyto-border);
+  border-radius: 8px;
+  background: var(--phyto-page);
+}
+.custom-navbar__user-panel-avatar,
+.custom-navbar__user-panel-avatar--fallback {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+.custom-navbar__user-panel-role {
+  color: var(--phyto-ink-soft);
+  font-size: 0.76rem;
+}
+.custom-navbar__user-panel-section {
+  gap: 0.25rem;
+  padding: 0.4rem 0.1rem;
+  border-bottom: 1px solid var(--phyto-border);
+}
+.custom-navbar__user-panel-caption {
+  padding: 0.1rem 0.55rem 0.2rem;
+  color: var(--phyto-ink-soft);
+  font-size: 0.65rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+}
+.custom-navbar__user-panel-link,
+.custom-navbar__user-panel-action {
+  min-height: 40px;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 7px;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+.custom-navbar__user-panel-link:hover,
+.custom-navbar__user-panel-action:hover {
+  background: var(--phyto-page);
+}
+.custom-navbar__panel-icon {
+  display: inline-grid;
+  width: 1rem;
+  flex: 0 0 1rem;
+  place-items: center;
+  color: var(--phyto-green-700);
+  font-size: 0.9rem;
+}
+.custom-navbar__user-panel-logout {
+  min-height: 40px;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.65rem;
+  border-color: transparent;
+  border-radius: 7px;
+  text-align: left;
+  font-size: 0.84rem;
+}
+.custom-navbar__user-panel-logout:hover {
+  border-color: #ead6d4;
+  background: #f8eceb;
+}
+.custom-navbar__user-panel-link:focus-visible,
+.custom-navbar__user-panel-action:focus-visible,
+.custom-navbar__user-panel-logout:focus-visible {
+  outline: 3px solid rgba(71, 125, 99, 0.35);
+  outline-offset: 1px;
+}
+html[data-theme="dark"] .custom-navbar__user-panel-header {
+  border-color: var(--phyto-border);
+  background: var(--phyto-page);
+}
+html[data-theme="dark"] .custom-navbar__user-panel-section {
+  border-color: var(--phyto-border);
+}
+html[data-theme="dark"] .custom-navbar__user-panel-logout:hover {
+  border-color: #5a3e3b;
+  background: #3d2928;
 }
 /* Home: academic portal hierarchy */
 .home-page {

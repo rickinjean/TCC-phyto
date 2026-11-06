@@ -142,7 +142,8 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                 <div className="custom-navbar__user-panel-section">
                                     <span className="custom-navbar__user-panel-caption">Minha Conta</span>
                                     <NavLink className="custom-navbar__user-panel-link" to="/sugerir" onClick={closeUserMenu}>
-                                        💡 Sugerir Planta / Reportar Erro
+                                        <i className="fas fa-lightbulb custom-navbar__panel-icon" aria-hidden="true"></i>
+                                        <span>Sugerir Planta / Reportar Erro</span>
                                     </NavLink>
                                 </div>
                             )}
@@ -154,7 +155,7 @@ export default function Navbar({ token, role, userName, userAvatar, onLogout }) 
                                     className="custom-navbar__user-panel-action"
                                     onClick={toggleTheme}
                                 >
-                                    <span aria-hidden="true">{theme === "dark" ? "☀" : "☾"}</span>
+                                    <i className={`fas ${theme === "dark" ? "fa-sun" : "fa-moon"} custom-navbar__panel-icon`} aria-hidden="true"></i>
                                     Tema: {theme === "dark" ? "Claro" : "Escuro"}
                                 </button>
                             </div>
