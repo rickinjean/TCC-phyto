@@ -3582,6 +3582,10 @@ html[data-theme="dark"] .about-section .alert-success {
 }
 
 @media (max-width: 767.98px) {
+  .about-section .row.g-5 {
+    --bs-gutter-x: 1rem;
+  }
+
   .about-hero__image,
   .about-history__image {
     min-height: 220px;

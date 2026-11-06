@@ -28,7 +28,8 @@ const Record = (props) => {
 }
 
 export default function UserList() {
-    const { data: users = [], setData: setUsers, loading, error, setError } = useAuthFetchData(`${API_URL}/user/`, [], "Erro ao carregar usuários")
+    const { data: usuariosCarregados, setData: setUsers, loading, error, setError } = useAuthFetchData(`${API_URL}/user/`, [], "Erro ao carregar usuários")
+    const users = Array.isArray(usuariosCarregados) ? usuariosCarregados : []
 
     async function deleteRecord(id) {
         const result = window.confirm("Deseja remover desta lista?")

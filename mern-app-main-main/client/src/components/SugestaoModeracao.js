@@ -111,7 +111,10 @@ function SugestaoCard({ sug, executar, onEditar }) {
 export default function SugestaoModeracao() {
     usePageTitle("Moderar Sugestões")
     const navigate = useNavigate()
-    const { data: todas = [], setData: setTodas, loading, error, setError } = useAuthFetchData(`${API_URL}/suggestions`, [], "Erro ao carregar sugestões")
+    const { data: sugestoes, setData: setTodas, loading, error, setError } = useAuthFetchData(`${API_URL}/suggestions`, [], "Erro ao carregar sugestões")
+    // O hook começa com `data: null`; normalizar aqui evita executar `.filter`
+    // antes da resposta chegar e derrubar a página inteira no primeiro render.
+    const todas = Array.isArray(sugestoes) ? sugestoes : []
     const [aba, setAba] = useState("pendente")
     const [filtroTipo, setFiltroTipo] = useState("todos")
     const [aviso, setAviso] = useState("")

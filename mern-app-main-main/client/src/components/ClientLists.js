@@ -95,7 +95,8 @@ function ListaCard({ lista, onRename, onDelete }) {
 
 export default function ClientLists() {
     usePageTitle("Minhas Listas")
-    const { data: lists = [], setData: setLists, loading, error, setError } = useAuthFetchData(`${API_URL}/userlists`, [], "Erro ao carregar listas")
+    const { data: listasCarregadas, setData: setLists, loading, error, setError } = useAuthFetchData(`${API_URL}/userlists`, [], "Erro ao carregar listas")
+    const lists = Array.isArray(listasCarregadas) ? listasCarregadas : []
     const [novaLista, setNovaLista] = useState("")
     const [novaCor, setNovaCor] = useState(COR_PADRAO)
     const [criando, setCriando] = useState(false)
@@ -183,7 +184,7 @@ export default function ClientLists() {
                         Organize as plantas em coleções, como “Jardim”, “TCC” ou “Para estudar”.
                     </p>
                 </div>
-                {!loading && (
+                {!loading && !error && (
                     <span className="workspace-page__metric">
                         <strong>{lists.length}</strong>
                         {lists.length === 1 ? "lista" : "listas"}
