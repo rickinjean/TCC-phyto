@@ -1,304 +1,133 @@
-# Relatório de Auditoria - Phytografia (TCC)
+# Auditoria atual — Phytografia
 
-**Data:** 26/08/2026
-**Stack:** MERN (MongoDB, Express.js, React 18, Node.js)
+**Revisão:** 06/11/2026
 
----
+**Stack:** React 18, React Router 7, Express 4, MongoDB e Node.js
 
-## 1. Visão Geral
+**Escopo:** inspeção estática, criação de testes unitários/HTTP e execução das suítes de servidor e cliente. Não foi usado MongoDB real, ambiente de produção ou serviço OAuth externo.
 
-Projeto de TCC com CRUD de plantas, upload de imagens, autenticação JWT com roles (ADM/User), catálogo com busca, dark mode e coleções dinâmicas.
+## Resumo executivo
 
----
+O Phytografia é uma aplicação web MERN para consulta de fichas botânicas, organização de plantas em listas pessoais, envio e moderação de sugestões. A auditoria antiga continha pendências já resolvidas e itens desatualizados. Nesta rodada, além de atualizar a cobertura de testes, foram corrigidos dois problemas encontrados anteriormente: a verificação de mesma origem no CORS e a rotação concorrente de refresh tokens.
 
-## 2. Problemas Críticos
+O cadastro por e-mail continua divergente da documentação: o README descreve confirmação SMTP, mas a rota encontrada cria a conta diretamente. A análise do registro npm também deixou um alerta alto em uma dependência direta não utilizada no código (`nodemailer`).
 
-| # | Problema | Localização |
-|---|----------|-------------|
-| 1 | JWT Secret hardcoded `"secret-key"` | `server/middleware/auth.js:3` |
-| 2 | Credenciais MongoDB hardcoded (usuario/senha no código) | `server/db/conn.js:4` |
-| 3 | Rotas de coleção dinâmica sem autenticação (qualquer pessoa pode ler/escrever/deletar) | `server/routes/plant.js:231-276` |
-| 4 | Registro permite qualquer role via body injection (cadastro como ADM) | `server/routes/user.js:39` |
+## Alterações realizadas nesta rodada
 
----
+### CORS
 
-## 3. Problemas Altos
+O callback `origin` do pacote `cors` não recebe `req`; a implementação anterior tentava usá-lo para descobrir a própria origem. A política foi extraída para `server/corsPolicy.js`. Um middleware externo detecta a origem própria com acesso à requisição e deixa chamadas same-origin seguirem sem cabeçalhos CORS; o callback do pacote fica responsável pelas origens explicitamente permitidas e por requisições sem `Origin`.
 
-| # | Problema | Localização |
-|---|----------|-------------|
-| 5 | Rota `/user/add` cria usuário sem senha (impossível fazer login) | `server/routes/user.js:96-111` |
-| 6 | CORS aberto para qualquer origem | `server/server.js:8` |
-| 7 | Upload sem validação de tipo/tamanho (aceita executáveis) | `server/routes/plant.js:24` |
-| 8 | Incompatibilidade `"User"` vs `"Usuario"` no registro | `Register.js:33` / `user.js:40` |
-| 9 | Deletar itens do banco sem autenticação | `createplant.js:163-188` |
+**Cobertura adicionada:** normalização da origem, allowlist, origem sem header e detecção de mesma origem com `req`.
 
----
+### Rotação de refresh token
 
-## 4. Código Duplicado
+A rota `/auth/refresh` agora consome a sessão com `findOneAndDelete`, condicionada ao hash e à validade, e somente emite uma nova sessão quando o consumo atômico retorna um documento. Isso impede que duas requisições concorrentes usem a mesma sessão original.
 
-| # | Descrição | Arquivos |
-|---|-----------|----------|
-| 10 | `createplant.js` (579 linhas) e `Registerplant.js` (539 linhas) são praticamente idênticos — o segundo é arquivo morto | `createplant.js` / `Registerplant.js` |
-| 11 | `mapeamentoColecoes` definido 3 vezes com nomes inconsistentes (`"fruit"` vs `"fruits"`) | `createplant.js:6` / `editplant.js:6` / `Registerplant.js:8` |
-| 12 | `RenderSelectComBotaoPlus` duplicado em 3 componentes | `createplant.js` / `editplant.js` / `Registerplant.js` |
-| 13 | `salvarNovoItem()` e `deletarItem()` 100% duplicados | `createplant.js:126-188` / `editplant.js:146-208` |
-| 14 | Objeto `form` inicial (~45 campos) re-declarado 4 vezes | 4 arquivos |
-| 15 | `navbar.css` e `footer.css` duplicados em `index.css` com temas diferentes | `navbar.css` / `footer.css` / `index.css` |
+**Cobertura adicionada:** teste HTTP concorrente: duas requisições com o mesmo refresh token resultam em uma resposta 200 e uma 401, com somente uma nova sessão criada.
 
----
+## Testes encontrados e estratégia adotada
 
-## 5. URL Hardcoded (11 arquivos)
+Antes desta rodada havia sete testes de unidade: paginação (3), CSP (1) e OAuth (3). Foram preservados e ampliados com testes de unidade e de integração HTTP, executados pelo runner nativo `node:test` no servidor e pelo Jest/CRA no cliente.
 
-A constante `REACT_APP_YOUR_HOSTNAME = 'http://localhost:5050'` está duplicada em:
+| Área | Tipo | Cobertura adicionada ou existente |
+|---|---|---|
+| Paginação | Unidade | Parsing de parâmetros, metadados e aplicação de skip/limit em cursor simulado. |
+| CSP/CORS | Unidade | Allowlist CSP existente; agora também política e normalização de origens CORS. |
+| OAuth | Unidade | Aleatoriedade e comparação de `state`, hash, uso único e expiração de código. |
+| Autenticação | Unidade | Token ausente, assinatura inválida, claims válidas, autorização por papel e segredo de refresh separado. |
+| Dados botânicos | Unidade | Escape de regex, normalização de distribuição, whitelist de campos e validação de países/fontes. |
+| Rotas de usuário e mensagens | Integração HTTP | Cadastro, validação de senha, papel fixo `User`, hash bcrypt, validação do contato e proteção administrativa. |
+| Sessões | Integração HTTP | Concorrência no refresh token com Express real e MongoDB simulado. |
+| Utilitários do cliente | Unidade | Codificação de IDs, normalização textual, distribuição geográfica e busca de países. |
 
-- `Login.js:6`
-- `Register.js:6`
-- `inicio.js:4`
-- `PlantList.js:4`
-- `PlantDetails.js:4`
-- `createplant.js:4`
-- `editplant.js:4`
-- `create.js:4`
-- `edit.js:4`
-- `userList.js:4`
-- `Sobre.js:3`
-- `Registerplant.js:5`
-
----
-
-## 6. Problemas no Código
-
-| # | Problema | Localização |
-|---|----------|-------------|
-| 16 | `useEffect` com `[users.length]` causa re-render infinito potencial | `userList.js:50` |
-| 17 | Links quebrados no navbar (`/dashboardplant`, `/favoritos`, `/configuracoes`, `/perfil`) | `navbar.js:119,130-143` |
-| 18 | Links quebrados no card "Acesso Rápido" | `inicio.js:78-89` |
-| 19 | `parseJwt()` não valida assinatura — qualquer JWT malicioso é aceito no frontend | `App.js:17-26` |
-| 20 | Botões de login social (Google/GitHub) são apenas visuais | `Login.js:159-169` |
-| 21 | Formulário de contato na página Sobre não envia dados | `Sobre.js:39-43` |
-| 22 | "Lembrar de mim" checkbox não faz nada | `Login.js:132-141` |
-| 23 | Rota `/update/:id` usa POST em vez de PUT/PATCH | `user.js:114` |
-| 24 | Delete retorna status 204 com JSON body (inválido) | `user.js:142-144` |
-
----
-
-## 7. Dependências
-
-| # | Problema | Detalhes |
-|---|----------|----------|
-| 25 | `multer` no `client/package.json` (irrelevante no frontend) | `client/package.json:14` |
-| 26 | `cloudinary` e `multer-storage-cloudinary` não utilizados | `server/package.json:17,24` |
-| 27 | `@fortawesome/*` duplicadas em server e client | `server/package.json` / `client/package.json` |
-| 28 | CRA (create-react-app) depreciado pela Facebook | `client/package.json:17` |
-| 29 | Pacotes de teste instalados mas zero testes escritos | `client/package.json:9-11,18` |
-
----
-
-## 8. Ausências
-
-- **Zero testes** escritos
-- **Sem variáveis de ambiente** (tudo hardcoded)
-- **Sem Docker/compose** para deploy
-- **Sem rate limiting** nos endpoints de login/registro
-
----
-
-## 9. Arquivos Pessoais no Repositório
-
-- `.bash_profile`, `.bashrc`, `.gitconfig`, `.zshrc`, `.profile`
-- `.ripgreprc`, `.idea`, `.vscode`
-- `.gitmodules` e `.mcp.json` vazios
-
----
-
-## 10. Configuração HTML
-
-| Arquivo | Problema |
-|---------|----------|
-| `index.html:2` | `lang="en"` — deveria ser `pt-BR` |
-| `index.html:10` | Meta description genérica do CRA |
-| `index.html:27` | Title "React App" em vez de "Phytografia" |
-
----
-
-## Resumo
-
-| Métrica | Valor |
-|---------|-------|
-| Componentes React | 15 |
-| Endpoints server | ~15 |
-| Linhas de CSS | ~2.300 |
-| Arquivos com código duplicado | 3 pares |
-| Hardcodes de URL | 12 arquivos, 45 ocorrências |
-| Dependências não utilizadas | 4 |
-| Testes | 0 |
-| Arquivos mortos | 1 (`Registerplant.js` — 539 linhas) |
-
----
-
-## Recomendações
-
-### Prioridade 1 — Segurança
-1. Mover JWT_SECRET para variável de ambiente (`.env` com `dotenv`)
-2. Mover URI do MongoDB para variável de ambiente
-3. Adicionar autenticação ADM nas rotas de coleção dinâmica
-4. Validar campo `function` no registro (nunca aceitar "ADM")
-5. Adicionar validação no multer (tipo MIME e tamanho máximo)
-6. Configurar CORS com lista de origens permitidas
-7. Adicionar rate limiting com `express-rate-limit`
-
-### Prioridade 2 — Arquitetura
-8. Extrair URL base para `REACT_APP_API_URL` (remover 11 hardcodes)
-9. Extrair `mapeamentoColecoes` para módulo compartilhado
-10. Extrair `RenderSelectComBotaoPlus`, `salvarNovoItem`, `deletarItem` para hook customizado
-11. Unificar/remover `Registerplant.js`
-12. Remover CSS duplicado (`navbar.css`, `footer.css`)
-13. Usar `process.env.PORT` no server
-
-### Prioridade 3 — Código
-14. Corrigir `userList.js:50` — usar `[]` como dependência
-15. Corrigir role do registro (`"User"` vs `"Usuario"`)
-16. Adicionar senha na rota `/user/add` com hash bcrypt
-17. Corrigir links quebrados no navbar e na página inicial
-18. Remover `multer` do `client/package.json`
-19. Remover dependências não utilizadas
-
-### Prioridade 4 — Qualidade
-20. Escrever testes de integração para endpoints críticos
-21. ~~Atualizar `public/index.html` (title, lang, meta description)~~ ✅
-22. Limpar arquivos pessoais da raiz do repositório
-23. ~~Adicionar `.env.example`~~ ✅
-24. Migrar de CRA para Vite
-
----
-
-## Correções Aplicadas (26/08/2026)
-
-### Segurança
-| # | Correção | Arquivo |
-|---|----------|---------|
-| 1 | JWT_SECRET movido para variável de ambiente | `server/middleware/auth.js` |
-| 2 | URI do MongoDB movida para variável de ambiente | `server/db/conn.js` |
-| 3 | Autenticação ADM adicionada nas rotas de coleção dinâmica | `server/routes/plant.js` |
-| 4 | Campo `function` fixo como "User" no registro público | `server/routes/user.js` |
-| 5 | Validação de tipo MIME e tamanho (5MB) no upload | `server/routes/plant.js` |
-| 6 | CORS configurado com origem específica | `server/server.js` |
-| 7 | Rate limiting (20 req/15min) em login e registro | `server/server.js` |
-
-### Backend
-| # | Correção | Arquivo |
-|---|----------|---------|
-| 8 | Rota `/user/add` agora gera hash bcrypt da senha | `server/routes/user.js` |
-| 9 | Rota `/update/:id` alterada de POST para PUT | `server/routes/user.js` |
-| 10 | Resposta 204 com body removida (agora usa 200) | `server/routes/user.js` |
-
-### Frontend
-| # | Correção | Arquivos |
-|---|----------|----------|
-| 11 | URL base extraída para `REACT_APP_API_URL` via `config.js` | 12 arquivos |
-| 12 | `mapeamentoColecoes` extraído para módulo compartilhado | `createplant.js`, `editplant.js` |
-| 13 | `useEffect` em `userList.js` usa `[]` (sem re-render infinito) | `userList.js` |
-| 14 | Links quebrados no navbar corrigidos (`/createplant`, `/plantlist`, `/Sobre`) | `navbar.js` |
-| 15 | Links quebrados na página inicial apontam para `/plantlist` | `inicio.js` |
-| 16 | Registro não envia mais `function` do body (sempre "User") | `Register.js` |
-| 17 | `deletarItem()` agora envia token de autenticação | `createplant.js`, `editplant.js` |
-| 18 | `create.js` inclui campo senha e envia no formulário | `create.js` |
-| 19 | `edit.js` usa PUT em vez de POST | `edit.js` |
-
-### Limpeza
-| # | Correção | Arquivo |
-|---|----------|---------|
-| 20 | `Registerplant.js` removido (539 linhas mortas) | `client/src/components/` |
-| 21 | `multer` removido do `client/package.json` | `client/package.json` |
-| 22 | Dependências não utilizadas removidas do server | `server/package.json` |
-| 23 | `index.html`: lang="pt-BR", title "Phytografia", meta description | `client/public/index.html` |
-| 24 | Arquivos `.env`, `.env.example` criados no server | `server/` |
-| 25 | Arquivo `.env` criado no client | `client/` |
-| 26 | `express-rate-limit` instalado no server | `server/` |
-
-### Pendente (requer ação manual)
-- ~~Limpar arquivos pessoais da raiz do repositório~~ ✅ (Fase 1 — 27/08/2026)
-- Remover `node_modules/` commitados do git (se aplicável)
-- Escrever testes de integração
-- Migrar de CRA para Vite
-
----
-
-## Fase 1 — Concluída (27/08/2026)
-
-### Segurança / Limpeza do repositório
-| # | Correção | Detalhes |
-|---|----------|----------|
-| A | Arquivos pessoais removidos da raiz | `.bashrc`, `.bash_profile`, `.gitconfig`, `.zshrc`, `.zprofile`, `.profile`, `.ripgreprc`, `.idea/`, `.vscode/`, `.mcp.json`, `.gitmodules` — removidos do controle de versão e do disco. Backup em `%TEMP%\opencode\tcc-phyto-backup`. |
-| B | `.gitignore` criado na raiz | Impede o retorno de arquivos pessoais e `.env` ao repositório. |
-| C | Correção da role `"Usuario"` → `"User"` | Radios do painel ADM (`create.js`, `edit.js`) passam a enviar `"User"`, alinhado ao backend (`/user/add` e `/user/register`). |
-
-> Observação: usuários previamente cadastrados com `function: "Usuario"` precisam de backfill manual no MongoDB, caso existam.
-
-### Commit
-- `125e06e` — `chore: remover arquivos pessoais da raiz; corrigir role Usuario para User em create/edit`
-- Push realizado para `origin/main` em 27/08/2026.
-
----
-
-## Fase 2 — Concluída (10/09/2026)
-
-### Segurança / Correção de bugs
-| # | Correção | Arquivo |
-|---|----------|---------|
-| 27 | Bug do `setInterval` recursivo corrigido: `agendarLimpezaSugestoes` re-registrava um timer a cada execução (crescimento exponencial). Agora `executarLimpezaSugestoes()` roda no startup e é agendada **uma única vez** | `server/server.js` |
-| 28 | `JWT_REFRESH_SECRET` deixa de cair silenciosamente para `JWT_SECRET` — agora é obrigatório | `server/middleware/auth.js` |
-| 29 | `uncaughtException` agora chama `process.exit(1)` (estado não definido não deve continuar servindo) | `server/server.js` |
-| 30 | `refreshLimiter` reduzido de 300 para 30 req/15min | `server/server.js` |
-| 31 | Body validation com `express-validator` aplicada em login, registro, mensagens e sugestões | `server/middleware/validate.js` (novo), `user.js`, `messages.js`, `suggestions.js` |
-| 32 | Índices de banco criados automaticamente na conexão (users, sessions, userlist_items, favorites, suggestions, messages) | `server/db/conn.js` |
-| 33 | `npm audit fix` — 7 vulnerabilidades corrigidas (multer, nodemailer, jws, etc.) | `server/package-lock.json` |
-
-### Frontend
-| # | Correção | Arquivo |
-|---|----------|---------|
-| 34 | `createplant.js` e `editplant.js` agora usam `authFetch` (não lêem token do localStorage) | `CreatePlant.js`, `EditPlant.js` |
-| 35 | `PlantFormWizard.js`: clone e carregamento de sugestão via `authFetch` | `PlantFormWizard.js` |
-| 36 | `useAuthFetchData`: deps dinâmicas estabilizadas com `JSON.stringify(deps)` | `useAuthFetchData.js` |
-| 37 | `PlantDetails.js`: `COLLECTION_MAP` derivado do módulo compartilhado (sem duplicação) | `PlantDetails.js` |
-| 38 | Página inicial deixa de buscar o catálogo inteiro: novo endpoint `/plant/featured` (aleatório e recentes) + `/stats` agora inclui `familyCount` | `plant.js`, `stats.js`, `Inicio.js` |
-| 39 | Padronização de nomenclatura: `createplant`→`CreatePlant`, `editplant`→`EditPlant`, `userList`→`UserList`, `edit`→`EditUser`, `inicio`→`Inicio` | `components/` + `App.js` |
-
-### Observabilidade
-| # | Correção | Arquivo |
-|---|----------|---------|
-| 40 | Logging estruturado com `pino` + `pino-http` (redação automática de senhas/tokens, logs de requisição HTTP) | `server/logger.js` (novo), `server.js`, `auth.js`, `user.js`, `conn.js` |
-
-### Pendente (requer ação manual)
-- Migrar de CRA para Vite
-- Escrever testes de integração
-- Mover tokens OAuth de query string da URL para código de autorização de curto prazo
-- ~~Upgrade Express 4 → 5~~ — superado: override `qs@^6.16.0` zerou as vulnerabilidades (ver Fase 3, item 46)
-
----
-
-## Fase 3 — Concluída (10/09/2026)
-
-### Incidente de produção — crash por índice único em `users.user`
-| # | Item | Detalhes |
-|---|------|----------|
-| 41 | Crash de produção (E11000) | O índice `unique: true` em `users.user` criado na Fase 2 falhou ao ser construído em produção: existiam registros legados com `user: null` — o MongoDB trata `null` como valor para unicidade (`E11000 dup key: { user: null }`). O `throw` no callback de conexão virou *unhandled rejection* e o deploy foi cancelado pelo Render. |
-| 42 | Índices únicos PARCIAIS | `users.user` e `users.email` agora usam `unique: true` + `partialFilterExpression: { campo: { $type: "string" } }` — unicidade só em documentos com o campo string; legados com null ficam fora do índice | `server/db/conn.js` |
-| 43 | Boot resiliente a índices | `Promise.all` → `Promise.allSettled`: falha em UM índice vira warning e não derruba o boot | `server/db/conn.js` |
-| 44 | Autocura de spec divergente | `alignUniqueIndexes()` remove índices legados com spec divergente (ex.: `email_1` único completo deixado pelo deploy que crashou) e recria como parciais — idempotente a cada boot | `server/db/conn.js` |
-| 45 | Erro de conexão tratado | `throw error` substituído por `logger.fatal` + `process.exit(1)` — container reinicia limpo, sem estado inconsistente | `server/server.js` |
-
-Commits: `627970c` (índices parciais), `7d9a96d` (boot resiliente + fatal), `ac2ccb2` (autocura).
-
-### Dependências — segurança
-| # | Correção | Detalhes |
-|---|----------|----------|
-| 46 | `npm audit` servidor zerado | Override `qs@^6.16.0` resolve as 2 vulnerabilidades `qs` (GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g) herdadas do Express 4/body-parser — **sem migrar para Express 5** | `server/package.json` |
-| 47 | React Router 7 | `react-router-dom` 6 → 7.18.3: remove 2 advisories de código shipped (open redirect via backslash, deserializeErrors SSR). API usada no app não mudou; build verificado | `client/package.json` |
-| 48 | Cliente: override `qs` | `qs@^6.16.0` também no client (transitivo do express do webpack-dev-server) | `client/package.json` |
-| 49 | Cliente: 32 restantes são build/dev-only | Todas as 15 high e o restante vêm da árvore do `react-scripts` (CRA, descontinuado): webpack-dev-server, workbox, serialize-javascript, svgo, underscore, jest, css-minimizer. **Nada disso entra no bundle de produção.** Limpeza total exige migração CRA → Vite | `client/package.json` |
-
-### Pendente (requer ação manual)
-- Migrar de CRA para Vite (limpar as 32 vulnerabilidades restantes do client — todas build/dev-time, não vão para produção)
-- Escrever testes de integração
-- Mover tokens OAuth de query string da URL para código de autorização de curto prazo
+### Resultados observados
+
+- Servidor: `npm test` — **20 testes passaram, 0 falharam**.
+- Cliente: `CI=true npm test -- --watchAll=false --runInBand` — **6 testes passaram, 0 falharam**.
+- Banco real e integrações externas: não utilizados pelos testes.
+- Build de produção: não executado.
+
+### Limites da cobertura
+
+Os testes HTTP montam routers Express com persistência simulada; não são testes contra MongoDB real nem cobrem o servidor completo, proxy, deploy, GridFS, upload, integração de ponta a ponta do OAuth ou todas as rotas de domínio. As unidades também não substituem testes de interface por navegador, avaliação de usabilidade, teste de carga ou teste de segurança. A suíte serve para verificar comportamentos delimitados, não para afirmar ausência geral de defeitos.
+
+## Achados que permanecem
+
+### Alto — cadastro implementado não corresponde ao fluxo documentado
+
+O README instrui configurar SMTP e afirma que o cadastro fica pendente até confirmação por e-mail. A rota `POST /user/register` cria diretamente um usuário com papel `User`; não exige e-mail nem confirmação. `server/.env.example` não contém configuração SMTP. `nodemailer` está declarado como dependência direta, mas não foi localizado no código do servidor.
+
+**Ação sugerida:** definir o fluxo de cadastro desejado e alinhar rota, interface, configuração e README. Se a confirmação for requisito, implementar e testar esse fluxo; se não for, corrigir a documentação e remover a dependência sem uso após confirmar que ela não faz parte de uma funcionalidade planejada.
+
+### Alto — uma dependência de produção tem alerta de segurança
+
+Após `npm audit fix` sem `--force`, a auditoria npm de produção (`npm audit --omit=dev`) encontrou **1 vulnerabilidade alta** em `nodemailer`, dependência direta que não aparece importada pelo código atual. A correção indicada pelo registro npm é `nodemailer@10.3.1`, fora da faixa major declarada no projeto. Antes desta atualização segura, o npm informava 10 vulnerabilidades de produção; o lockfile foi atualizado dentro das faixas compatíveis.
+
+**Ação sugerida:** esclarecer o fluxo SMTP. Se Nodemailer permanecer necessário, revisar a migração major e adicionar testes do envio; se não for usado, removê-lo do manifesto/lockfile. Reexecutar `npm audit --omit=dev` depois da decisão.
+
+### Médio — tokens acessíveis ao JavaScript do navegador
+
+O frontend armazena access token e refresh token em `localStorage` (`client/src/App.js` e `client/src/authFetch.js`). Isso permite restaurar e renovar a sessão, mas qualquer JavaScript executado na origem pode ler os tokens. A autorização de servidor é mantida separadamente; claims decodificadas no frontend não substituem essa validação.
+
+**Ação sugerida:** considerar refresh token em cookie `HttpOnly`, `Secure` e `SameSite` apropriado, com proteção CSRF correspondente, caso o modelo de sessão seja alterado.
+
+### Médio — validação de imagens depende em parte do MIME enviado pelo cliente
+
+O upload limita arquivos a 5 MB, aceita tipos MIME selecionados e processa imagens com Sharp. O MIME é fornecido pelo cliente e não comprova o formato real do conteúdo. Há fallback que grava o original quando o processamento falha.
+
+**Ação sugerida:** validar formato detectado/conteúdo antes de gravar o fallback e definir a resposta para arquivos malformados.
+
+### Baixo — validação de payload de sugestão é parcial
+
+O middleware valida o tipo de sugestão, mas a estrutura completa de `data`, limites de cada campo e demais valores ainda depende de validações parciais da rota.
+
+**Ação sugerida:** formalizar esquemas por tipo, impor limites de tamanho e testar rejeição de payloads inválidos.
+
+### Baixo — listagens administrativas sem paginação
+
+`GET /user` e `GET /messages` carregam todos os documentos. Isso pode aumentar memória, latência e tráfego conforme o crescimento da base. Sugestões já têm limite de resultados.
+
+**Ação sugerida:** aplicar paginação e projeção mínima se a escala de uso exigir.
+
+## Estado técnico confirmado
+
+- Segredos JWT e URI MongoDB exigidos por ambiente; sem fallback de segredo fixo.
+- Senhas de cadastro armazenadas com bcrypt e papel público definido no servidor.
+- JWT de acesso e refresh com segredos distintos; sessões e códigos OAuth têm hash/expiração.
+- Rotas administrativas protegidas por autenticação e papel `ADM`.
+- OAuth usa `state` validado e código temporário de uso único.
+- CORS por allowlist e exceção same-origin agora separados e cobertos por teste de unidade.
+- Upload limitado a 5 MB e no máximo cinco imagens nas rotas de manutenção.
+- Coleções dinâmicas usam allowlist; escrita exige papel administrativo.
+- Catálogo e opções de coleção oferecem paginação.
+- CRA continua sendo usado no frontend; migração para Vite permanece como possibilidade de manutenção.
+- O README ainda descreve confirmação de e-mail não localizada na implementação.
+
+## Próximas prioridades
+
+1. Decidir e implementar/documentar o cadastro e o uso de SMTP; resolver a dependência Nodemailer e seu alerta npm.
+2. Ampliar a integração HTTP para login, upload, listas, moderação e isolamento de dados entre usuários.
+3. Criar testes contra MongoDB temporário ou banco de teste para índices, GridFS, queries e migrações críticas.
+4. Avaliar o armazenamento de refresh tokens e validação de conteúdo de imagem.
+5. Paginar listagens administrativas e validar payloads de sugestões.
+6. Planejar a migração do CRA se houver disponibilidade para tratar o legado da cadeia de build.
+
+## Como reproduzir
+
+```bash
+cd mern-app-main-main/server
+npm test
+
+cd ../client
+CI=true npm test -- --watchAll=false --runInBand
+```
+
+Para consultar advisories das dependências de produção do servidor:
+
+```bash
+cd mern-app-main-main/server
+npm audit --omit=dev
+```
+
+O resultado do audit é temporal e pode mudar com novos advisories publicados.

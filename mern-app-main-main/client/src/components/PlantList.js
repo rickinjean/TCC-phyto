@@ -9,6 +9,7 @@ import PlantCard from "./PlantCard"
 import PlantFilters, { FILTER_FIELDS, PAGE_SIZES, PAGE_SIZE_KEY, DEFAULT_PAGE_SIZE } from "./PlantFilters"
 import PlantPagination from "./PlantPagination"
 import useColecoes from "../useColecoes"
+import PlantScanner from "./PlantScanner"
 
 const EmptyState = ({ hasActiveFilters, onClear }) => (
     <div className="plant-list-empty col-12 text-center py-5">
@@ -242,6 +243,8 @@ export default function PlantList({ role, canFavorite = false }) {
                     </button>
                 </div>
             </form>
+
+            <PlantScanner />
 
             <PlantFilters
                 filters={filters}

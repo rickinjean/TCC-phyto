@@ -12,6 +12,7 @@ const pinoHttp = require("pino-http")
 const logger = require("./logger")
 const { getBucket } = require("./gridfs")
 const { parseConnectSources } = require("./csp")
+const { isAllowedOrigin, isSameOriginRequest } = require("./corsPolicy")
 
 if (!process.env.JWT_SECRET) {
     logger.error("ERRO: JWT_SECRET não está definida. Crie um arquivo .env na pasta server/ com essa variável.")
@@ -49,7 +50,7 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-eval'", "https://unpkg.com"],
+            scriptSrc: ["'self'", "'unsafe-eval'", "https://unpkg.com", "https://cdn.jsdelivr.net"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
             imgSrc: ["'self'", "data:", "blob:", "https://lh3.googleusercontent.com", "https://avatars.githubusercontent.com"],
             fontSrc: ["'self'", "data:"],
@@ -71,36 +72,23 @@ const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")
     .map(s => s.trim().replace(/\/+$/, "").toLowerCase())
     .filter(Boolean)
 
-function normalizeOrigin(origin) {
-    if (!origin) return ""
-    return origin.trim().replace(/\/+$/, "").toLowerCase()
-}
-
-function isSameOrigin(req, origin) {
-    const { protocol, host } = req
-    if (!host) return false
-    return normalizeOrigin(`${protocol}://${host}`) === normalizeOrigin(origin)
-}
-
-app.use(cors({
+const corsHandler = cors({
     origin: function (origin, callback) {
-        const norm = normalizeOrigin(origin)
-
-        // Requisições sem header Origin (server-to-server, health checks etc.) são liberadas
-        if (!origin || corsOrigins.includes(norm)) {
+        if (isAllowedOrigin(origin, corsOrigins)) {
             return callback(null, true)
         }
-
-        // Permite a própria origem do servidor (quando o Express serve o frontend estático
-        // na mesma porta, como no deploy do Render)
-        if (isSameOrigin(req, origin)) {
-            return callback(null, true)
-        }
-
         callback(new Error("Origin not allowed by CORS"))
     },
     credentials: true
-}))
+})
+
+// O callback `origin` do pacote cors não recebe req. A mesma origem é detectada
+// neste middleware externo; requisições same-origin não precisam de cabeçalhos CORS.
+app.use(function (req, res, next) {
+    const origin = req.get("Origin")
+    if (origin && isSameOriginRequest(req, origin)) return next()
+    corsHandler(req, res, next)
+})
 
 // Log estruturado de requisições HTTP (pino-http). Ignora /uploads (excesso
 // de tráfego de imagem), os health checks do Render (HEAD /) e o endpoint

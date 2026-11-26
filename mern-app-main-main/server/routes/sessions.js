@@ -53,10 +53,13 @@ sessionsRoutes.route("/auth/refresh").post(async function (req, res) {
     try {
         const decoded = await verifyRefreshToken(refreshToken)
 
-        const session = await db_connect.collection("sessions").findOne({
+        // O consumo atômico impede que duas renovações concorrentes usem a
+        // mesma sessão antes de qualquer uma delas removê-la.
+        const consumed = await db_connect.collection("sessions").findOneAndDelete({
             tokenHash: hashToken(refreshToken),
             expiresAt: { $gt: new Date() },
         })
+        const session = consumed && consumed.value
 
         if (!session) {
             return res.status(401).json({ mensagem: "Sessão inválida" })
@@ -67,8 +70,6 @@ sessionsRoutes.route("/auth/refresh").post(async function (req, res) {
             await db_connect.collection("sessions").deleteOne({ _id: session._id })
             return res.status(401).json({ mensagem: "Sessão inválida" })
         }
-
-        await db_connect.collection("sessions").deleteOne({ _id: session._id })
 
         const newRefreshToken = await createSession(db_connect, usuario, session._id)
 
